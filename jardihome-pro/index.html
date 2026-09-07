@@ -366,7 +366,7 @@ html.jh-skip-intro .intro-overlay{display:none;}
 @keyframes introWordIn{ to{opacity:1; transform:translateY(0);} }
 
 /* ---------- SCROLL REVEAL — subtle fade + rise, applied via JS ---------- */
-.reveal{opacity:0; transform:translateY(20px); transition:opacity .65s ease, transform .65s cubic-bezier(.16,.8,.3,1);}
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .5s ease, transform .5s cubic-bezier(.16,.8,.3,1);}
 .reveal.is-visible{opacity:1; transform:translateY(0);}
 
 /* ============ SKELVO WATERMARK — dissuades screenshots during outreach.
@@ -951,8 +951,12 @@ if (prefersReducedMotion) {
 } else {
   revealTargets.forEach((el, i) => {
     el.classList.add('reveal');
-    el.style.transitionDelay = (i % 4) * 90 + 'ms';
+    el.style.transitionDelay = (i % 4) * 70 + 'ms';
   });
+  // Trigger as soon as an element starts entering the viewport from the
+  // bottom (small negative margin, near-zero threshold) rather than waiting
+  // until it's nearly fully on screen — on shorter mobile viewports the old
+  // settings made the reveal feel like it was lagging behind the scroll.
   const revealIO = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -960,8 +964,31 @@ if (prefersReducedMotion) {
         revealIO.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  }, { threshold: 0.01, rootMargin: '0px 0px -5% 0px' });
   revealTargets.forEach(el => revealIO.observe(el));
+
+  // Safety net: a fast fling scroll (common on mobile) can skip rendered
+  // frames and make the observer miss an element entirely. On every scroll,
+  // manually reveal anything already at or above the viewport bottom so
+  // nothing is ever left permanently invisible.
+  function catchUpReveals() {
+    const vh = window.innerHeight;
+    revealTargets.forEach(el => {
+      if (!el.classList.contains('is-visible') && el.getBoundingClientRect().top < vh + 40) {
+        el.classList.add('is-visible');
+      }
+    });
+  }
+  let catchUpTicking = false;
+  window.addEventListener('scroll', () => {
+    if (!catchUpTicking) {
+      catchUpTicking = true;
+      requestAnimationFrame(() => { catchUpReveals(); catchUpTicking = false; });
+    }
+  }, { passive: true });
+  window.addEventListener('load', catchUpReveals);
+  setTimeout(catchUpReveals, 1200);
+  setTimeout(catchUpReveals, 3000);
 }
 </script>
 
