@@ -239,35 +239,64 @@
     .society-item.tall img{min-height:190px;}
   }
 
-  /* ===== PRELOADER — stamp slam ===== */
+  /* ===== PRELOADER — rubber-stamp impact on paper ===== */
   #preloader{
-    position:fixed; inset:0; z-index:500; background:var(--ink);
+    position:fixed; inset:0; z-index:500; background:var(--paper);
     display:flex; align-items:center; justify-content:center; flex-direction:column;
-    transition:opacity .25s ease, visibility .25s ease;
+    transition:opacity .3s ease, visibility .3s ease;
+    overflow:hidden;
+  }
+  #preloader::before{
+    content:''; position:absolute; inset:0; opacity:.07; mix-blend-mode:multiply; pointer-events:none;
+    background-image:radial-gradient(circle, #000 .6px, transparent .6px); background-size:3px 3px;
+  }
+  #preloader::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(36,29,20,.12) 100%);
   }
   #preloader.mj-gone{opacity:0; visibility:hidden; pointer-events:none;}
-  .stamp-wrap{position:relative; width:220px; height:220px; display:flex; align-items:center; justify-content:center;}
-  .stamp-ring{
-    position:absolute; inset:0; border:4px solid var(--red); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; text-align:center;
-    transform:scale(3.2) rotate(-14deg); opacity:0;
-    animation:stampSlam .5s cubic-bezier(.2,1.4,.4,1) forwards; animation-delay:.15s;
+  #preloader.mj-gone .stamp-wrap{ animation:stampSettle .35s ease forwards; }
+  @keyframes stampSettle{ to{ transform:scale(1.04); opacity:0; } }
+
+  .stamp-impact-flash{
+    position:absolute; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, rgba(138,53,57,.35) 0%, transparent 70%);
+    opacity:0; transform:scale(.4);
   }
-  .stamp-ring .stamp-text{
-    font-family:'Special Elite',monospace; color:var(--red); text-transform:uppercase; line-height:1.3;
+  .stamp-land .stamp-impact-flash{ animation:impactFlash .45s ease-out forwards; }
+  @keyframes impactFlash{ 0%{opacity:0; transform:scale(.4);} 30%{opacity:1;} 100%{opacity:0; transform:scale(1.5);} }
+
+  .stamp-wrap{
+    position:relative; width:270px; height:270px; display:flex; align-items:center; justify-content:center;
+    transform:translateY(-340px) rotate(-22deg) scale(1.15); opacity:0;
+    animation:stampFall .58s cubic-bezier(.55,0,.85,.35) forwards; animation-delay:.1s;
   }
-  .stamp-ring .stamp-text .l1{font-size:1.5rem; letter-spacing:.06em;}
-  .stamp-ring .stamp-text .l2{font-size:.7rem; letter-spacing:.2em; margin-top:4px;}
-  @keyframes stampSlam{
-    0%{ transform:scale(3.2) rotate(-14deg); opacity:0; }
-    55%{ transform:scale(.92) rotate(-4deg); opacity:1; }
-    75%{ transform:scale(1.06) rotate(-6deg); }
-    100%{ transform:scale(1) rotate(-5deg); opacity:1; }
+  @keyframes stampFall{
+    0%{ transform:translateY(-340px) rotate(-22deg) scale(1.15); opacity:0; }
+    75%{ transform:translateY(0) rotate(-6deg) scale(1); opacity:1; }
+    100%{ transform:translateY(0) rotate(-6deg) scale(1); opacity:1; }
   }
-  .mj-brand{margin-top:26px; text-align:center; opacity:0; animation:mjFade .5s ease forwards; animation-delay:.05s;}
+  .stamp-land .stamp-wrap{ animation:stampFall .58s cubic-bezier(.55,0,.85,.35) forwards, stampShake .32s ease-out .58s; }
+  @keyframes stampShake{
+    0%{ transform:translateY(0) rotate(-6deg) scale(1); }
+    22%{ transform:translate(3px,1px) rotate(-7deg) scale(1); }
+    44%{ transform:translate(-3px,0) rotate(-5deg) scale(1); }
+    66%{ transform:translate(2px,-1px) rotate(-6.5deg) scale(1); }
+    100%{ transform:translateY(0) rotate(-6deg) scale(1); }
+  }
+  .stamp-wrap svg{ width:100%; height:100%; overflow:visible; }
+  .stamp-ink{ fill:none; stroke:var(--red); }
+
+  .mj-brand{margin-top:22px; text-align:center; opacity:0; animation:mjFade .5s ease forwards; animation-delay:.68s;}
   @keyframes mjFade{ to{opacity:1;} }
-  .mj-brand .name{font-family:'Playfair Display',serif; color:var(--paper); font-size:1.05rem; font-weight:700;}
-  .mj-brand .tag{font-family:'Inter',sans-serif; color:rgba(242,234,211,.5); font-size:.68rem; text-transform:uppercase; letter-spacing:.16em; margin-top:5px;}
+  .mj-brand .name{font-family:'Playfair Display',serif; color:var(--ink); font-size:1.05rem; font-weight:700;}
+  .mj-brand .tag{font-family:'Inter',sans-serif; color:rgba(36,29,20,.5); font-size:.68rem; text-transform:uppercase; letter-spacing:.16em; margin-top:5px;}
+
+  @media(max-width:480px){
+    .stamp-wrap{width:210px; height:210px;}
+    .stamp-impact-flash{width:280px; height:280px;}
+  }
+
   html.mj-skip-intro #preloader{display:none !important;}
   html.mj-skip-intro body.mj-loading{overflow:visible; height:auto;}
 </style>
@@ -311,13 +340,32 @@
 </svg>
 
 <div id="preloader">
+  <div class="stamp-impact-flash"></div>
   <div class="stamp-wrap">
-    <div class="stamp-ring">
-      <div class="stamp-text">
-        <div class="l1">Le Majestic</div>
-        <div class="l2">Depuis toujours</div>
-      </div>
-    </div>
+    <svg viewBox="0 0 300 300" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        <filter id="inkRough" x="-30%" y="-30%" width="160%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.09" numOctaves="2" seed="9" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="9"/>
+        </filter>
+        <filter id="inkRoughSoft" x="-30%" y="-30%" width="160%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.02 0.12" numOctaves="2" seed="4" result="noise2"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise2" scale="5"/>
+        </filter>
+        <path id="arcTop" d="M 38,158 A 112,112 0 0 1 262,158" fill="none"/>
+      </defs>
+      <circle class="stamp-ink" cx="150" cy="150" r="128" stroke-width="5" filter="url(#inkRough)" opacity=".9"/>
+      <circle class="stamp-ink" cx="150" cy="150" r="104" stroke-width="1.6" filter="url(#inkRoughSoft)" opacity=".55"/>
+      <text font-family="'Special Elite',monospace" font-size="25" letter-spacing="3" fill="var(--red)" filter="url(#inkRoughSoft)">
+        <textPath href="#arcTop" xlink:href="#arcTop" startOffset="50%" text-anchor="middle">LE MAJESTIC</textPath>
+      </text>
+      <text x="150" y="170" font-family="'Special Elite',monospace" font-size="12" letter-spacing="4" fill="var(--red)" text-anchor="middle" filter="url(#inkRoughSoft)" opacity=".92">DEPUIS TOUJOURS</text>
+      <line x1="95" y1="188" x2="205" y2="188" stroke="var(--red)" stroke-width="1.4" filter="url(#inkRoughSoft)" opacity=".7"/>
+      <text x="150" y="212" font-family="'Special Elite',monospace" font-size="10" letter-spacing="2" fill="var(--red)" text-anchor="middle" filter="url(#inkRoughSoft)" opacity=".8">SAINT-JEAN-DE-LUZ</text>
+      <circle cx="66" cy="222" r="2.2" fill="var(--red)" opacity=".35" filter="url(#inkRough)"/>
+      <circle cx="238" cy="90" r="1.6" fill="var(--red)" opacity=".3" filter="url(#inkRough)"/>
+      <circle cx="220" cy="228" r="1.8" fill="var(--red)" opacity=".3" filter="url(#inkRough)"/>
+    </svg>
   </div>
   <div class="mj-brand">
     <div class="name">La Gazette du Majestic</div>
@@ -563,12 +611,15 @@
     if(preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
   } else {
     setTimeout(function(){
+      preloader.classList.add('stamp-land');
+    }, 680);
+    setTimeout(function(){
       preloader.classList.add('mj-gone');
       body.classList.remove('mj-loading');
-    }, 1300);
+    }, 1550);
     setTimeout(function(){
       if(preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
-    }, 1650);
+    }, 1950);
   }
 })();
 
