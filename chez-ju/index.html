@@ -300,12 +300,10 @@ footer.site{
 }
 footer.site a{color:var(--brass-soft);}
 
-/* ---------- WATERMARK ---------- */
-.wm-overlay{
-  position:fixed;inset:0;z-index:9998;pointer-events:none;
-  opacity:.06;mix-blend-mode:screen;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Ctext x='-20' y='150' font-family='Inter,sans-serif' font-size='34' font-weight='700' letter-spacing='2' fill='%23f2ece1' transform='rotate(-24 130 130)'%3ESKELVO%3C/text%3E%3C/svg%3E");
-  background-size:260px 260px;background-repeat:repeat;
+/* ---------- WATERMARK (meme technique que les autres sites Skelvo) ---------- */
+.demo-watermark{
+  position:absolute;top:0;left:0;right:0;height:calc(var(--doc-height,100%));
+  z-index:500;pointer-events:none;background-repeat:repeat;opacity:.9;
 }
 </style>
 </head>
@@ -489,9 +487,17 @@ footer.site a{color:var(--brass-soft);}
   <div class="wrap">Site conçu par <a href="https://skelvo.github.io/" target="_blank" rel="noopener">Skelvo</a></div>
 </footer>
 
-<div class="wm-overlay" aria-hidden="true"></div>
+<div class="demo-watermark" id="demoWatermark" aria-hidden="true" style="background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTQwIj4KICA8dGV4dCB4PSIwIiB5PSI5MiIgdHJhbnNmb3JtPSJyb3RhdGUoLTMwIDExMCA3MCkiIGZvbnQtZmFtaWx5PSJDb3Jtb3JhbnQgR2FyYW1vbmQsIEdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNjAwIiBsZXR0ZXItc3BhY2luZz0iNCIgZmlsbD0iI2YyZWNlMSIgZmlsbC1vcGFjaXR5PSIwLjE2Ij5TS0VMVk88L3RleHQ+Cjwvc3ZnPg==');"></div>
 
 <script>
+(function(){
+  function updateDocHeight(){ document.documentElement.style.setProperty('--doc-height', document.documentElement.scrollHeight + 'px'); }
+  updateDocHeight();
+  window.addEventListener('load', updateDocHeight);
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(updateDocHeight, 150); });
+  setTimeout(updateDocHeight, 1500);
+})();
+
 const topbar = document.getElementById('topbar');
 window.addEventListener('scroll', () => {
   topbar.classList.toggle('scrolled', window.scrollY > 40);
