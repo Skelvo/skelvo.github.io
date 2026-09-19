@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Un jardin pour toi 🌷</title>
+<meta name="description" content="Un petit jeu cosy de réflexion, fait avec amour." />
+<meta name="theme-color" content="#fdf6ec" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <section id="screen-menu" class="screen active">
+    <div class="menu-header">
+      <h1 class="menu-title">Un jardin pour toi</h1>
+      <p class="menu-subtitle">un petit jeu cosy, fait avec amour 💛</p>
+      <div class="menu-flowers">🌷 🐰 🌼</div>
+    </div>
+
+    <div id="level-grid" class="level-grid"></div>
+
+    <p class="menu-footer">Pousse les pots 🪴 sur les parterres jusqu'à ce qu'ils fleurissent 🌸</p>
+  </section>
+
+  <section id="screen-game" class="screen">
+    <div class="game-header">
+      <button id="btn-menu" class="icon-btn" aria-label="Retour au menu">🏠</button>
+      <div class="game-title">
+        <h2 id="level-name">Niveau</h2>
+        <span id="level-number">Niveau 1</span>
+      </div>
+      <button id="btn-reset" class="icon-btn" aria-label="Recommencer">↺</button>
+    </div>
+
+    <div class="hud">
+      <span>Coups : <b id="moves-count">0</b></span>
+      <button id="btn-undo" class="icon-btn" aria-label="Annuler" style="width:auto;padding:0 12px;">⤺ Annuler</button>
+    </div>
+
+    <div class="board-wrap">
+      <div id="board" class="board"></div>
+    </div>
+
+    <div class="controls">
+      <button class="pad-btn pad-up" data-dir="up" aria-label="Haut">↑</button>
+      <button class="pad-btn pad-left" data-dir="left" aria-label="Gauche">←</button>
+      <button class="pad-btn pad-right" data-dir="right" aria-label="Droite">→</button>
+      <button class="pad-btn pad-down" data-dir="down" aria-label="Bas">↓</button>
+    </div>
+
+    <p class="hint">Glisse du doigt sur le jardin, ou utilise les flèches 🌱</p>
+  </section>
+
+  <div id="win-overlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🌸💛🌸</div>
+      <h3>Bravo !</h3>
+      <p>Ce petit coin de jardin est tout fleuri.</p>
+      <div class="overlay-actions">
+        <button id="btn-replay" class="btn btn-secondary">Rejouer</button>
+        <button id="btn-next" class="btn btn-primary">Niveau suivant</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="final-overlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-emoji">🌷🐰🌷</div>
+      <h3>Tout le jardin est fleuri</h3>
+      <p>Merci d'avoir joué jusqu'au bout. Ce petit jardin, c'est pour toi. 💛</p>
+      <div class="overlay-actions">
+        <button id="btn-final-menu" class="btn btn-primary">Retour au menu</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
