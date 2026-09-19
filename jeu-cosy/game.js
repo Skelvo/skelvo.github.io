@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "jardin-cosy-progress";
 
-  /** @type {{level:number, x:number, y:number, grid:string[][], moves:number, history:Array}} */
+  /** @type {{level:number, x:number, y:number, grid:string[][], moves:number, carrots:Set<string>, carrotsTotal:number, carrotsCollected:number, history:Array}} */
   let state = null;
 
   const screens = {
@@ -16,18 +16,33 @@
   const levelNameEl = document.getElementById("level-name");
   const levelNumberEl = document.getElementById("level-number");
   const movesEl = document.getElementById("moves-count");
+  const carrotLineEl = document.getElementById("carrot-line");
+  const carrotCountEl = document.getElementById("carrot-count");
+  const carrotTotalEl = document.getElementById("carrot-total");
   const winOverlay = document.getElementById("win-overlay");
+  const winStarsEl = document.getElementById("win-stars");
+  const winCarrotStatusEl = document.getElementById("win-carrot-status");
   const finalOverlay = document.getElementById("final-overlay");
 
   function loadProgress() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { completed: [] };
+      if (!raw) return { levels: {} };
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.completed)) return { completed: [] };
-      return parsed;
+      if (parsed && typeof parsed.levels === "object" && parsed.levels) {
+        return { levels: parsed.levels };
+      }
+      // migration depuis l'ancien format { completed: [indices] }
+      if (Array.isArray(parsed.completed)) {
+        const levels = {};
+        parsed.completed.forEach((i) => {
+          levels[i] = { completed: true, stars: 1, carrots: false };
+        });
+        return { levels };
+      }
+      return { levels: {} };
     } catch (e) {
-      return { completed: [] };
+      return { levels: {} };
     }
   }
 
@@ -43,7 +58,16 @@
 
   function isLevelUnlocked(index) {
     if (index === 0) return true;
-    return progress.completed.includes(index - 1);
+    const prev = progress.levels[index - 1];
+    return !!(prev && prev.completed);
+  }
+
+  function starsMarkup(count) {
+    let out = "";
+    for (let i = 0; i < 3; i++) {
+      out += i < count ? "★" : "☆";
+    }
+    return out;
   }
 
   function buildLevelMenu() {
@@ -52,11 +76,16 @@
       const btn = document.createElement("button");
       btn.className = "level-tile";
       const unlocked = isLevelUnlocked(index);
-      const done = progress.completed.includes(index);
+      const record = progress.levels[index];
+      const done = !!(record && record.completed);
       btn.disabled = !unlocked;
+      const stars = done ? `<span class="level-tile-stars">${starsMarkup(record.stars || 0)}</span>` : "";
+      const carrotBadge = done && record.carrots ? `<span class="level-tile-carrot">🥕</span>` : "";
       btn.innerHTML = `
+        ${carrotBadge}
         <span class="level-tile-num">${index + 1}</span>
         <span class="level-tile-icon">${done ? "🌼" : unlocked ? "🌱" : "🔒"}</span>
+        ${stars}
       `;
       if (unlocked) {
         btn.addEventListener("click", () => startLevel(index));
@@ -85,21 +114,49 @@
     return { x: 0, y: 0 };
   }
 
+  function carrotKey(x, y) {
+    return x + "," + y;
+  }
+
+  function updateCarrotHud() {
+    if (!state || state.carrotsTotal === 0) {
+      carrotLineEl.hidden = true;
+      return;
+    }
+    carrotLineEl.hidden = false;
+    carrotCountEl.textContent = String(state.carrotsCollected);
+    carrotTotalEl.textContent = String(state.carrotsTotal);
+  }
+
+  function collectCarrotAt(x, y) {
+    const key = carrotKey(x, y);
+    if (state.carrots.has(key)) {
+      state.carrots.delete(key);
+      state.carrotsCollected++;
+    }
+  }
+
   function startLevel(index) {
     const level = LEVELS[index];
     const grid = parseGrid(level.grid);
     const player = findPlayer(grid);
+    const carrots = new Set((level.carrots || []).map(([x, y]) => carrotKey(x, y)));
     state = {
       level: index,
       x: player.x,
       y: player.y,
       grid,
       moves: 0,
+      carrots,
+      carrotsTotal: carrots.size,
+      carrotsCollected: 0,
       history: [],
     };
+    collectCarrotAt(player.x, player.y);
     levelNameEl.textContent = level.name;
     levelNumberEl.textContent = `Niveau ${index + 1} / ${LEVELS.length}`;
     movesEl.textContent = "0";
+    updateCarrotHud();
     winOverlay.classList.remove("show");
     finalOverlay.classList.remove("show");
     showScreen("game");
@@ -135,7 +192,8 @@
         cell.className = "cell " + classForCell(ch);
         cell.style.gridRowStart = y + 1;
         cell.style.gridColumnStart = x + 1;
-        cell.textContent = glyphForCell(ch);
+        const hasCarrot = ch !== "#" && state.carrots.has(carrotKey(x, y));
+        cell.textContent = hasCarrot ? "🥕" : glyphForCell(ch);
         boardEl.appendChild(cell);
       }
     }
@@ -201,13 +259,22 @@
     }
 
     // sauvegarde avant de jouer le coup, pour l'annulation
-    state.history.push({ grid: snapshotGrid(), x, y, moves: state.moves });
+    state.history.push({
+      grid: snapshotGrid(),
+      x,
+      y,
+      moves: state.moves,
+      carrots: new Set(state.carrots),
+      carrotsCollected: state.carrotsCollected,
+    });
 
+    let boxDest = null;
     if (target === "$" || target === "*") {
       const bx = nx + dx;
       const by = ny + dy;
       const beyond = cellAt(bx, by);
       setCellAt(bx, by, isTargetLike(beyond) ? "*" : "$");
+      boxDest = { x: bx, y: by };
     }
 
     // libère la case de départ
@@ -220,6 +287,10 @@
     state.moves++;
     movesEl.textContent = String(state.moves);
 
+    collectCarrotAt(nx, ny);
+    if (boxDest) collectCarrotAt(boxDest.x, boxDest.y);
+    updateCarrotHud();
+
     render();
     checkWin();
   }
@@ -231,22 +302,47 @@
     state.x = last.x;
     state.y = last.y;
     state.moves = last.moves;
+    state.carrots = last.carrots;
+    state.carrotsCollected = last.carrotsCollected;
     movesEl.textContent = String(state.moves);
+    updateCarrotHud();
     render();
+  }
+
+  function starsForMoves(moves, par) {
+    if (moves <= par) return 3;
+    if (moves <= Math.ceil(par * 1.6)) return 2;
+    return 1;
   }
 
   function checkWin() {
     const hasRemainingBox = state.grid.some((row) => row.includes("$"));
     if (!hasRemainingBox) {
-      const already = progress.completed.includes(state.level);
-      if (!already) {
-        progress.completed.push(state.level);
-        saveProgress(progress);
-      }
+      const level = LEVELS[state.level];
+      const stars = starsForMoves(state.moves, level.par || state.moves);
+      const carrotsFull = state.carrotsTotal === 0 || state.carrotsCollected === state.carrotsTotal;
+
+      const prevRecord = progress.levels[state.level] || {};
+      progress.levels[state.level] = {
+        completed: true,
+        stars: Math.max(prevRecord.stars || 0, stars),
+        carrots: !!prevRecord.carrots || (state.carrotsTotal > 0 && carrotsFull),
+      };
+      saveProgress(progress);
+
       setTimeout(() => {
         if (state.level === LEVELS.length - 1) {
           finalOverlay.classList.add("show");
         } else {
+          winStarsEl.textContent = starsMarkup(stars);
+          if (state.carrotsTotal === 0) {
+            winCarrotStatusEl.hidden = true;
+          } else {
+            winCarrotStatusEl.hidden = false;
+            winCarrotStatusEl.textContent = carrotsFull
+              ? "🥕 Toutes les carottes récoltées !"
+              : `🥕 ${state.carrotsCollected}/${state.carrotsTotal} carottes — rejoue pour les avoir toutes`;
+          }
           winOverlay.classList.add("show");
         }
       }, 200);

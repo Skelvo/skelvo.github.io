@@ -2,9 +2,12 @@
 // Légende : # mur (haie) | espace = herbe | . parterre (cible)
 //           $ pot de fleur | * pot posé sur un parterre
 //           @ toi | + toi sur un parterre
+// par : nombre de coups optimal (3 étoiles) | carrots : carottes bonus [x, y]
 const LEVELS = [
   {
     name: "Premiers pas",
+    par: 1,
+    carrots: [],
     grid: [
       "#####",
       "#@$.#",
@@ -13,6 +16,8 @@ const LEVELS = [
   },
   {
     name: "L'autre sens",
+    par: 1,
+    carrots: [],
     grid: [
       "#####",
       "#.$@#",
@@ -21,6 +26,8 @@ const LEVELS = [
   },
   {
     name: "Petit détour",
+    par: 5,
+    carrots: [[3, 2]],
     grid: [
       "#####",
       "#@  #",
@@ -31,6 +38,8 @@ const LEVELS = [
   },
   {
     name: "Deux poussées",
+    par: 2,
+    carrots: [[3, 1]],
     grid: [
       "######",
       "#@$ .#",
@@ -39,6 +48,8 @@ const LEVELS = [
   },
   {
     name: "Le tour du massif",
+    par: 7,
+    carrots: [[6, 2], [5, 2]],
     grid: [
       "#########",
       "#@$.  $.#",
@@ -48,6 +59,8 @@ const LEVELS = [
   },
   {
     name: "Le grand jardin",
+    par: 10,
+    carrots: [[6, 1], [8, 2]],
     grid: [
       "############",
       "#@ $.  $  .#",
@@ -57,6 +70,8 @@ const LEVELS = [
   },
   {
     name: "Les deux voisins",
+    par: 8,
+    carrots: [[8, 2], [9, 1]],
     grid: [
       "###########",
       "#@$.   $. #",
@@ -66,6 +81,8 @@ const LEVELS = [
   },
   {
     name: "Le coin ombragé",
+    par: 9,
+    carrots: [[4, 1], [1, 3]],
     grid: [
       "#######",
       "#@    #",
@@ -78,6 +95,8 @@ const LEVELS = [
   },
   {
     name: "Le passage étroit",
+    par: 9,
+    carrots: [[11, 1], [10, 0]],
     grid: [
       "#           #",
       "#@ $.  $ .  #",
@@ -87,6 +106,8 @@ const LEVELS = [
   },
   {
     name: "Le pilier",
+    par: 10,
+    carrots: [[2, 0], [1, 4]],
     grid: [
       "#     #",
       "#@    #",
@@ -99,6 +120,8 @@ const LEVELS = [
   },
   {
     name: "La pièce carrée",
+    par: 10,
+    carrots: [[5, 1], [4, 2], [1, 3]],
     grid: [
       "########",
       "#@     #",
@@ -111,6 +134,8 @@ const LEVELS = [
   },
   {
     name: "La haie fleurie",
+    par: 14,
+    carrots: [[2, 2], [4, 2], [13, 2]],
     grid: [
       "###############",
       "#@ $.  $.  $. #",
@@ -120,6 +145,8 @@ const LEVELS = [
   },
   {
     name: "Le grand parterre",
+    par: 16,
+    carrots: [[12, 3], [11, 3], [11, 1]],
     grid: [
       "###############",
       "#@  $.   $.   #",
@@ -130,6 +157,8 @@ const LEVELS = [
   },
   {
     name: "Le bouquet final",
+    par: 20,
+    carrots: [[1, 2], [13, 1], [14, 3], [10, 0]],
     grid: [
       "#                 #",
       "#@ $.  $.  $.  $. #",
@@ -139,6 +168,8 @@ const LEVELS = [
   },
   {
     name: "Les deux alcôves",
+    par: 21,
+    carrots: [[9, 1], [4, 1], [9, 3]],
     grid: [
       "#############",
       "#@    #     #",
@@ -149,6 +180,8 @@ const LEVELS = [
   },
   {
     name: "Le jardin secret",
+    par: 23,
+    carrots: [[6, 5], [5, 4], [8, 2], [1, 5]],
     grid: [
       "#################",
       "#@   $.     $.  #",
@@ -161,6 +194,8 @@ const LEVELS = [
   },
   {
     name: "La longue allée",
+    par: 31,
+    carrots: [[4, 3], [1, 4], [10, 3]],
     grid: [
       "#############",
       "#@          #",
@@ -175,6 +210,8 @@ const LEVELS = [
   },
   {
     name: "La dernière fleur",
+    par: 33,
+    carrots: [[3, 3], [3, 9], [5, 3]],
     grid: [
       "#######",
       "#@    #",

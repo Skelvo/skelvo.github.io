@@ -36,6 +36,7 @@
 
     <div class="hud">
       <span>Coups : <b id="moves-count">0</b></span>
+      <span id="carrot-line" hidden>🥕 <b id="carrot-count">0</b>/<b id="carrot-total">0</b></span>
       <button id="btn-undo" class="icon-btn" aria-label="Annuler" style="width:auto;padding:0 12px;">⤺ Annuler</button>
     </div>
 
@@ -58,6 +59,8 @@
       <div class="overlay-emoji">🌸💛🌸</div>
       <h3>Bravo !</h3>
       <p>Ce petit coin de jardin est tout fleuri.</p>
+      <div class="stars-row" id="win-stars">★★★</div>
+      <p class="carrot-status" id="win-carrot-status" hidden></p>
       <div class="overlay-actions">
         <button id="btn-replay" class="btn btn-secondary">Rejouer</button>
         <button id="btn-next" class="btn btn-primary">Niveau suivant</button>

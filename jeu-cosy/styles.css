@@ -130,6 +130,7 @@ body {
 }
 
 .level-tile {
+  position: relative;
   aspect-ratio: 1;
   border: none;
   border-radius: 20px;
@@ -163,6 +164,19 @@ body {
 
 .level-tile-icon {
   font-size: 1.6rem;
+}
+
+.level-tile-stars {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: var(--pink-deep);
+}
+
+.level-tile-carrot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.9rem;
 }
 
 .menu-footer {
@@ -219,11 +233,13 @@ body {
 
 .hud {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin: 10px 0 16px;
   font-size: 0.9rem;
   color: var(--brown-soft);
   align-items: center;
+  justify-content: center;
 }
 
 .hud b {
@@ -383,6 +399,19 @@ body {
   margin: 0 0 18px;
   color: var(--brown-soft);
   font-size: 0.95rem;
+}
+
+.stars-row {
+  font-size: 1.8rem;
+  letter-spacing: 4px;
+  color: var(--pink-deep);
+  margin: 0 0 10px;
+}
+
+.carrot-status {
+  margin: 0 0 18px;
+  font-size: 0.85rem;
+  color: var(--brown-soft);
 }
 
 .overlay-actions {
