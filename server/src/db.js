@@ -26,6 +26,17 @@ export function openDb(path) {
       bat       INTEGER,                -- mV
       csq       INTEGER                 -- qualité signal 0-31 (99 = inconnu)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL                -- JSON
+    );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      endpoint   TEXT PRIMARY KEY,
+      data       TEXT NOT NULL,          -- abonnement Web Push complet (JSON)
+      created_at INTEGER NOT NULL
+    );
   `);
 
   const insertPos = db.prepare(`
@@ -41,6 +52,17 @@ export function openDb(path) {
   const range = db.prepare(
     'SELECT t, lat, lng, spd, alt, crs, hdop, sat FROM positions WHERE t BETWEEN ? AND ? ORDER BY t LIMIT ?'
   );
+
+  const getSetting = db.prepare('SELECT value FROM settings WHERE key = ?');
+  const putSetting = db.prepare(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  const addSub = db.prepare(`
+    INSERT INTO push_subscriptions (endpoint, data, created_at) VALUES (?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET data = excluded.data
+  `);
+  const delSub = db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?');
+  const allSubs = db.prepare('SELECT data FROM push_subscriptions');
 
   return {
     saveReport({ points, bat, csq, now }) {
@@ -59,6 +81,16 @@ export function openDb(path) {
     latest: () => latest.get() ?? null,
     status: () => status.get() ?? null,
     range: (from, to, limit) => range.all(from, to, limit),
+    get(key, fallback = null) {
+      const row = getSetting.get(key);
+      return row ? JSON.parse(row.value) : fallback;
+    },
+    set(key, value) {
+      putSetting.run(key, JSON.stringify(value));
+    },
+    addSubscription: (sub) => addSub.run(sub.endpoint, JSON.stringify(sub), Math.floor(Date.now() / 1000)),
+    removeSubscription: (endpoint) => delSub.run(endpoint),
+    listSubscriptions: () => allSubs.all().map((r) => JSON.parse(r.data)),
     close: () => db.close(),
   };
 }

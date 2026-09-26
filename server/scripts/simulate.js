@@ -1,12 +1,11 @@
 // Simule le tracker pour tester le serveur et la carte sans le matériel.
 //   npm run simulate            -> crée 3 trajets dans l'historique (jours précédents)
 //   npm run simulate -- live    -> simule un trajet en direct (un envoi toutes les 5 s)
-const URL_BASE = process.env.SIM_URL ?? 'http://localhost:3000';
-const KEY = process.env.DEVICE_KEY;
-if (!KEY) {
-  console.error('DEVICE_KEY manquante (fichier .env)');
-  process.exit(1);
-}
+import { loadConfig } from '../src/config.js';
+
+const cfg = loadConfig();
+const URL_BASE = process.env.SIM_URL ?? `http://localhost:${cfg.port}`;
+const KEY = cfg.deviceKey;
 
 const HOME = { lat: 45.764, lng: 4.8357 }; // Lyon, à changer à volonté
 

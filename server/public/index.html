@@ -5,20 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111418">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ma moto">
   <title>Ma moto</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="map"></div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
 
   <section id="panel" class="card">
     <header class="panel-head">
       <h1>Ma moto</h1>
-      <span id="badge" class="badge">…</span>
+      <div class="head-right">
+        <span id="badge" class="badge">…</span>
+        <button id="btn-settings" class="icon-btn" type="button" aria-label="Réglages">⚙︎</button>
+      </div>
     </header>
 
     <div id="view-live">
+      <button id="btn-arm" class="arm" type="button">…</button>
       <p id="ago" class="big">Chargement…</p>
       <dl class="stats">
         <div><dt>Vitesse</dt><dd id="s-speed">–</dd></div>
@@ -36,7 +48,7 @@
 
     <div id="view-trips" hidden>
       <div class="actions">
-        <button id="btn-back" type="button">← Position actuelle</button>
+        <button class="btn-back" type="button">← Position actuelle</button>
       </div>
       <ul id="trips" class="trips"></ul>
       <div id="replay" hidden>
@@ -52,12 +64,44 @@
         </div>
       </div>
     </div>
+
+    <div id="view-settings" hidden>
+      <div class="actions">
+        <button class="btn-back" type="button">← Retour</button>
+      </div>
+
+      <h2>Notifications</h2>
+      <p id="push-status" class="muted"></p>
+      <p id="ios-hint" class="hint" hidden>
+        Sur iPhone, les notifications ne marchent que depuis l'app installée :
+        dans Safari, touche <strong>Partager</strong> puis <strong>« Sur l'écran d'accueil »</strong>.
+        Ouvre ensuite <strong>Ma moto</strong> depuis la nouvelle icône et reviens ici.
+      </p>
+      <div class="actions">
+        <button id="btn-push" type="button" hidden>Activer les notifications</button>
+        <button id="btn-push-test" type="button" hidden>Envoyer un test</button>
+      </div>
+
+      <h2>Armement automatique</h2>
+      <p class="muted">Arme la surveillance tout seul quand la moto est garée depuis :</p>
+      <select id="auto-arm" aria-label="Délai d'armement automatique">
+        <option value="0">Jamais</option>
+        <option value="5">5 minutes</option>
+        <option value="15">15 minutes</option>
+        <option value="30">30 minutes</option>
+        <option value="60">1 heure</option>
+      </select>
+
+      <h2>Accès</h2>
+      <button id="btn-logout" type="button">Changer de clé</button>
+    </div>
+    <!--demo-->
   </section>
 
   <dialog id="login">
     <form method="dialog" id="login-form">
       <h2>Clé d'accès</h2>
-      <p class="muted">La clé de lecture (READ_KEY) définie sur le serveur.</p>
+      <p class="muted">La clé de l'app, affichée par <code>npm run keys</code> sur le serveur.</p>
       <input id="login-key" type="password" autocomplete="current-password" required>
       <p id="login-error" class="error" hidden>Clé refusée.</p>
       <button type="submit">Valider</button>

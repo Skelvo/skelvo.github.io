@@ -8,13 +8,15 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "start": "node --env-file-if-exists=.env src/server.js",
-    "dev": "node --env-file-if-exists=.env --watch src/server.js",
-    "simulate": "node --env-file-if-exists=.env scripts/simulate.js",
-    "test": "node --test"
+    "start": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env --watch src/server.js",
+    "simulate": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env scripts/simulate.js",
+    "test": "node --test",
+    "keys": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/keys.js"
   },
   "dependencies": {
     "express": "^5.2.1",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "web-push": "^3.6.7"
   }
 }

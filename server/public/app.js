@@ -1,20 +1,33 @@
 'use strict';
 
-const REFRESH_MS = 20_000;
-const HEARTBEAT_S = 3600; // doit correspondre à PARKED_HEARTBEAT_MS du firmware
+const REFRESH_MS = 20_000;         // moto garée
+const REFRESH_MOVING_MS = 5_000;   // moto en mouvement : suivi quasi en direct
+const HEARTBEAT_S = 3600;          // doit correspondre à PARKED_HEARTBEAT_MS du firmware
+const DEMO = window.DEMO ?? null;  // défini uniquement par la page de démo
 const $ = (id) => document.getElementById(id);
 
-// ---------------------------------------------------------------- API / clé
-let apiKey = localStorage.getItem('moto-key') || '';
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* navigation privée */ } },
+  del(k) { try { localStorage.removeItem(k); } catch { /* idem */ } },
+};
 
-async function api(path) {
-  const res = await fetch(path, { headers: { 'x-api-key': apiKey } });
+// ---------------------------------------------------------------- API / clé
+let apiKey = DEMO ? 'demo' : store.get('moto-key') || '';
+
+async function api(path, { method = 'GET', body } = {}) {
+  if (DEMO) return DEMO.api(path, { method, body });
+  const res = await fetch(path, {
+    method,
+    headers: { 'x-api-key': apiKey, ...(body ? { 'content-type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
   if (res.status === 401) {
     askKey(true);
     throw new Error('401');
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return res.status === 204 ? null : res.json();
 }
 
 function askKey(rejected) {
@@ -24,20 +37,40 @@ function askKey(rejected) {
 
 $('login-form').addEventListener('submit', () => {
   apiKey = $('login-key').value.trim();
-  localStorage.setItem('moto-key', apiKey);
+  store.set('moto-key', apiKey);
   refresh();
 });
+
+// ---------------------------------------------------------------- Messages
+let toastTimer;
+function toast(title, body = '', alert = false) {
+  const el = $('toast');
+  el.innerHTML = '';
+  const strong = document.createElement('strong');
+  strong.textContent = title;
+  el.append(strong, body);
+  el.className = alert ? 'alert' : '';
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (el.hidden = true), alert ? 8000 : 4000);
+}
+window.appNotify = toast; // utilisé par la démo pour simuler une notification
 
 // ---------------------------------------------------------------- Carte
 const map = L.map('map', { zoomControl: false }).setView([46.6, 2.4], 6);
 L.control.zoom({ position: 'topright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-}).addTo(map);
+if (DEMO) {
+  DEMO.baseLayer(L).addTo(map);
+} else {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+}
 
 const motoIcon = L.divIcon({ className: 'moto-icon', html: '🏍️', iconSize: [30, 30], iconAnchor: [15, 15] });
 const liveMarker = L.marker([0, 0], { icon: motoIcon });
+const liveTrail = L.polyline([], { color: '#ff4d4d', weight: 4, opacity: 0.9 });
 let liveLayerShown = false;
 let lastPosition = null;
 let firstCenter = true;
@@ -82,8 +115,35 @@ function signalText(csq) {
   return csq >= 20 ? `bon (${csq})` : csq >= 10 ? `moyen (${csq})` : `faible (${csq})`;
 }
 
+// ---------------------------------------------------------------- Surveillance
+let armed = false;
+
+function renderArm() {
+  const btn = $('btn-arm');
+  btn.classList.toggle('armed', armed);
+  btn.innerHTML = armed
+    ? '🔒 Surveillance activée<small>Tu seras alerté si la moto bouge. Touche pour désarmer avant de rouler.</small>'
+    : '🔓 Surveillance désactivée<small>Touche pour armer quand tu laisses la moto.</small>';
+}
+
+$('btn-arm').addEventListener('click', async () => {
+  try {
+    const res = await api('/api/settings', { method: 'POST', body: { armed: !armed } });
+    armed = res.armed;
+    renderArm();
+    toast(armed ? '🔒 Moto armée' : '🔓 Moto désarmée', armed ? 'Alerte au moindre mouvement.' : 'Bonne route !');
+  } catch {
+    toast('Impossible de changer la surveillance', 'Vérifie ta connexion et réessaie.');
+  }
+});
+
 // ---------------------------------------------------------------- Vue direct
+let refreshTimer;
+let moving = false;
+
 async function refresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(refresh, moving ? REFRESH_MOVING_MS : REFRESH_MS);
   if (!apiKey) return askKey(false);
   let data;
   try {
@@ -94,26 +154,28 @@ async function refresh() {
   if ($('login').open) $('login').close();
 
   const { position: p, status: s, server_time: now } = data;
-  const badge = $('badge');
+  armed = data.armed;
+  renderArm();
+  moving = Boolean(p && p.spd >= 10 && now - p.t < 600);
 
-  if (s) {
-    const silent = now - s.last_seen;
-    $('seen').textContent = `Dernier contact du tracker : ${fmtAgo(silent)} (${fmtTime(s.last_seen)})`;
-    $('s-bat').textContent = batteryText(s.bat);
-    $('s-csq').textContent = signalText(s.csq);
-    if (silent > HEARTBEAT_S * 2.5) {
-      badge.textContent = 'Muet';
-      badge.className = 'badge bad';
-    } else if (p && p.spd >= 10 && now - p.t < 600) {
-      badge.textContent = 'En mouvement';
-      badge.className = 'badge warn';
-    } else {
-      badge.textContent = 'En ligne';
-      badge.className = 'badge ok';
-    }
-  } else {
+  const badge = $('badge');
+  if (!s) {
     badge.textContent = 'Jamais vu';
     badge.className = 'badge';
+  } else if (now - s.last_seen > HEARTBEAT_S * 2.5) {
+    badge.textContent = 'Muet';
+    badge.className = 'badge bad';
+  } else if (moving) {
+    badge.textContent = armed ? 'Alerte' : 'En mouvement';
+    badge.className = armed ? 'badge bad' : 'badge warn';
+  } else {
+    badge.textContent = 'En ligne';
+    badge.className = 'badge ok';
+  }
+  if (s) {
+    $('seen').textContent = `Dernier contact du tracker : ${fmtAgo(now - s.last_seen)} (${fmtTime(s.last_seen)})`;
+    $('s-bat').textContent = batteryText(s.bat);
+    $('s-csq').textContent = signalText(s.csq);
   }
 
   if (!p) {
@@ -125,14 +187,23 @@ async function refresh() {
   $('s-speed').textContent = p.spd != null ? `${Math.round(p.spd)} km/h` : '–';
   $('s-sats').textContent = p.sat ?? '–';
   $('btn-go').href = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
-
   liveMarker.setLatLng([p.lat, p.lng]).bindPopup(`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}<br>${fmtTime(p.t)}`);
-  if (!liveLayerShown && !tripLayer) {
+
+  if (tripLayer) return; // on regarde un ancien trajet : ne pas toucher à la carte
+  if (!liveLayerShown) {
     liveMarker.addTo(map);
+    liveTrail.addTo(map);
     liveLayerShown = true;
   }
-  if (firstCenter) {
-    focusOn([p.lat, p.lng], 16);
+  if (moving) {
+    // En mouvement : trace de la dernière demi-heure et carte qui suit la moto
+    const pts = await api(`/api/positions?from=${now - 1800}&to=${now + 60}`).catch(() => []);
+    liveTrail.setLatLngs(pts.map((q) => [q.lat, q.lng]));
+    focusOn([p.lat, p.lng], firstCenter ? 16 : map.getZoom());
+    firstCenter = false;
+  } else {
+    liveTrail.setLatLngs([]);
+    if (firstCenter) focusOn([p.lat, p.lng], 16);
     firstCenter = false;
   }
 }
@@ -141,14 +212,27 @@ $('btn-center').addEventListener('click', () => {
   if (lastPosition) focusOn([lastPosition.lat, lastPosition.lng], 17);
 });
 
+// ---------------------------------------------------------------- Vues
+function showView(name) {
+  for (const v of ['live', 'trips', 'settings']) $(`view-${v}`).hidden = v !== name;
+}
+
+document.querySelectorAll('.btn-back').forEach((btn) =>
+  btn.addEventListener('click', () => {
+    clearTrip();
+    showView('live');
+    if (!liveLayerShown) {
+      liveMarker.addTo(map);
+      liveTrail.addTo(map);
+      liveLayerShown = true;
+    }
+    if (lastPosition) focusOn([lastPosition.lat, lastPosition.lng], 16);
+  })
+);
+
 // ---------------------------------------------------------------- Trajets
 let tripLayer = null;
 let replay = null;
-
-function showView(name) {
-  $('view-live').hidden = name !== 'live';
-  $('view-trips').hidden = name !== 'trips';
-}
 
 $('btn-trips').addEventListener('click', async () => {
   showView('trips');
@@ -176,14 +260,6 @@ $('btn-trips').addEventListener('click', async () => {
   }
 });
 
-$('btn-back').addEventListener('click', () => {
-  clearTrip();
-  showView('live');
-  liveMarker.addTo(map);
-  liveLayerShown = true;
-  if (lastPosition) focusOn([lastPosition.lat, lastPosition.lng], 16);
-});
-
 function clearTrip() {
   stopReplay();
   if (tripLayer) tripLayer.remove();
@@ -197,6 +273,7 @@ async function loadTrip(trip) {
   const pts = await api(`/api/positions?from=${trip.start}&to=${trip.end}`);
   if (pts.length < 2) return;
   liveMarker.remove();
+  liveTrail.remove();
   liveLayerShown = false;
 
   const line = L.polyline(pts.map((p) => [p.lat, p.lng]), { color: '#ff6a1a', weight: 4, opacity: 0.85 });
@@ -258,7 +335,120 @@ $('r-play').addEventListener('click', () => {
 
 $('r-slider').addEventListener('input', (e) => replay && seek(Number(e.target.value)));
 
+// ---------------------------------------------------------------- Réglages et notifications
+const pushSupported = !DEMO && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let settings = null;
+
+if (pushSupported) navigator.serviceWorker.register('sw.js').catch((err) => console.warn('service worker', err));
+
+function b64ToBytes(b64) {
+  const s = atob((b64 + '='.repeat((4 - (b64.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(s, (c) => c.charCodeAt(0));
+}
+
+async function currentSubscription() {
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+async function renderPush() {
+  const status = $('push-status'), btn = $('btn-push'), test = $('btn-push-test');
+  $('ios-hint').hidden = true;
+  btn.hidden = true;
+  test.hidden = true;
+  if (DEMO) {
+    status.textContent =
+      "Dans cette démo, les alertes s'affichent en haut de l'écran. Dans ta vraie app, ce seront de vraies notifications, même téléphone verrouillé.";
+    return;
+  }
+  if (!pushSupported) {
+    if (isIOS && !installed) {
+      status.textContent = 'Pas encore disponibles dans Safari.';
+      $('ios-hint').hidden = false;
+    } else {
+      status.textContent = "Ce navigateur ne gère pas les notifications (il faut une adresse en https://).";
+    }
+    return;
+  }
+  const sub = await currentSubscription();
+  btn.hidden = false;
+  if (sub) {
+    status.textContent = `✅ Activées sur cet appareil (${settings?.devices ?? 1} appareil(s) au total).`;
+    btn.textContent = 'Désactiver sur cet appareil';
+    test.hidden = false;
+  } else if (Notification.permission === 'denied') {
+    status.textContent = 'Bloquées : autorise-les dans les réglages du téléphone (Notifications → Ma moto).';
+    btn.hidden = true;
+  } else {
+    status.textContent = 'Désactivées sur cet appareil.';
+    btn.textContent = 'Activer les notifications';
+  }
+}
+
+$('btn-settings').addEventListener('click', async () => {
+  clearTrip();
+  showView('settings');
+  try {
+    settings = await api('/api/settings');
+    $('auto-arm').value = String(settings.auto_arm_min);
+  } catch {
+    /* affiché quand même */
+  }
+  renderPush();
+});
+
+$('btn-push').addEventListener('click', async () => {
+  try {
+    const existing = await currentSubscription();
+    if (existing) {
+      await api('/api/push/unsubscribe', { method: 'POST', body: { endpoint: existing.endpoint } });
+      await existing.unsubscribe();
+      toast('Notifications désactivées sur cet appareil');
+    } else {
+      // Sur iPhone, la demande d'autorisation doit suivre directement le geste de l'utilisateur
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return renderPush();
+      const reg = await navigator.serviceWorker.ready;
+      const key = settings?.push_public_key ?? (await api('/api/settings')).push_public_key;
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
+      await api('/api/push/subscribe', { method: 'POST', body: sub.toJSON() });
+      toast('🔔 Notifications activées', 'Tu seras prévenu si la moto bouge alors qu’elle est armée.');
+    }
+    settings = await api('/api/settings');
+  } catch (err) {
+    console.error(err);
+    toast('Échec', 'Impossible de changer les notifications. Réessaie.');
+  }
+  renderPush();
+});
+
+$('btn-push-test').addEventListener('click', async () => {
+  try {
+    await api('/api/push/test', { method: 'POST' });
+    toast('Test envoyé', 'La notification devrait arriver dans quelques secondes.');
+  } catch {
+    toast('Échec du test', 'Le serveur n’a pas pu envoyer la notification.');
+  }
+});
+
+$('auto-arm').addEventListener('change', async (e) => {
+  try {
+    await api('/api/settings', { method: 'POST', body: { auto_arm_min: Number(e.target.value) } });
+    toast('Réglage enregistré');
+  } catch {
+    toast('Échec', "Le réglage n'a pas été enregistré.");
+  }
+});
+
+$('btn-logout').addEventListener('click', () => {
+  store.del('moto-key');
+  apiKey = '';
+  askKey(false);
+});
+
 // ---------------------------------------------------------------- Démarrage
 refresh();
-setInterval(refresh, REFRESH_MS);
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && refresh());
+window.appRefresh = refresh;

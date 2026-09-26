@@ -1,173 +1,195 @@
 # Tracker GPS moto (DIY, usage perso)
 
-Tracker antivol maison pour une moto : une carte **LILYGO T-SIM7000G** envoie sa position
-via une SIM **1NCE** à un petit serveur, et une page web affiche la moto sur une carte.
+Tracker antivol maison : une carte **LILYGO T-SIM7000G** cachée sur la moto envoie sa position
+via une SIM **1NCE** à ton serveur, et l'app **Ma moto** sur ton téléphone affiche la moto,
+ses trajets, et t'envoie une **notification si elle bouge alors qu'elle est armée**.
+
+## En bref : les 4 grandes étapes
+
+| # | Étape | Où | Temps |
+|---|---|---|---|
+| 1 | **Louer un petit serveur et lancer une commande** : tout s'installe tout seul | Téléphone ou PC | 20 min |
+| 2 | **Installer l'app** sur ton iPhone (Safari → Partager → Sur l'écran d'accueil) | Téléphone | 2 min |
+| 3 | **Programmer la carte** : ouvrir le dossier `firmware` dans VS Code, coller 2 lignes, cliquer sur Upload | PC | 30 min la 1re fois |
+| 4 | **Brancher la carte sur la moto** | Garage | selon le montage |
+
+Le détail de chaque étape suit. Tout le reste du document est de la référence : tu n'as pas
+besoin de tout lire.
 
 ```
-firmware/   Projet PlatformIO pour la T-SIM7000G (C++/Arduino)
-  src/gps_test.cpp   étape 1 : lit le GPS et l'affiche sur le port série
-  src/tracker.cpp    étape 2 : envoie les positions en HTTP au serveur
-  src/board.cpp      brochage, allumage du modem, lecture GNSS, batterie
-server/     Backend Node.js (Express + SQLite intégré à Node) + page web Leaflet
+firmware/   Programme de la carte T-SIM7000G (PlatformIO)
+server/     Serveur + app web (Node.js, SQLite)
+deploy/     Script d'installation du serveur en une commande
 ```
 
 ---
 
-## 1. Installer l'environnement (Windows)
+## Étape 1 — Le serveur
 
-1. **Git** : `git --version` dans PowerShell ; sinon https://git-scm.com/download/win
-2. **VS Code** + extension **PlatformIO IDE** (onglet Extensions, chercher « PlatformIO »).
-3. **Driver USB CH9102** (puce USB de ta variante) : driver « CH343SER » sur
-   https://www.wch-ic.com/downloads/CH343SER_EXE.html. Une fois la carte branchée, elle doit
-   apparaître dans le Gestionnaire de périphériques → *Ports (COM et LPT)* → « USB-Enhanced-SERIAL CH9102 (COMx) ».
-4. **Node.js 22.13 ou plus** (LTS) : https://nodejs.org — pour le serveur.
+Il faut une petite machine allumée en permanence sur Internet, qui reçoit les positions et
+envoie les notifications.
 
-Récupérer le projet :
+**1. Louer un VPS** (le plus simple : [Hetzner Cloud](https://www.hetzner.com/cloud), modèle
+le moins cher, ~4 €/mois, image **Ubuntu 24.04**). À la création, note l'**adresse IP** du serveur.
 
-```powershell
-git clone -b claude/gps-tracker-moto-4fh2jq https://github.com/Skelvo/skelvo.github.io.git moto-tracker
-cd moto-tracker
+**2. Avoir une adresse pour le serveur**, par exemple `mamoto.duckdns.org` :
+- gratuit : crée un compte sur [duckdns.org](https://www.duckdns.org), choisis un nom et
+  mets-y l'IP du serveur ;
+- ou, si tu as déjà un nom de domaine, crée un enregistrement DNS `A` vers cette IP.
+
+**3. Lancer l'installation.** Connecte-toi au serveur (depuis le PC : `ssh root@IP_DU_SERVEUR`
+dans PowerShell ; depuis l'iPhone : app *Termius*), puis colle **cette seule ligne** en
+remplaçant l'adresse :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Skelvo/skelvo.github.io/claude/gps-tracker-moto-4fh2jq/deploy/install.sh | sudo bash -s mamoto.duckdns.org
 ```
 
-## 2. Étape 1 — tester le GPS
+À la fin, le script affiche :
+- l'adresse de ton app (`https://mamoto.duckdns.org`) ;
+- la **clé de l'app** (à taper une fois dans l'app) ;
+- la **clé du tracker** (à mettre dans le programme de la carte, étape 3).
 
-Avant de brancher : **antenne GPS** (la carrée, céramique) sur le connecteur *GPS* et
-**antenne LTE** sur *SIM/LTE* ; une 18650 chargée dans le support (le modem tire des pics
-de courant que l'USB seul encaisse mal).
+Tu peux les réafficher plus tard avec
+`cd /opt/moto-tracker/server && sudo -u moto DB_PATH=/var/lib/moto-tracker/tracker.db npm run keys`.
+Pour mettre à jour le serveur, il suffit de relancer la même ligne.
 
-1. Dans VS Code : *File → Open Folder…* → dossier `firmware`. PlatformIO télécharge tout seul
-   la plateforme ESP32 et les bibliothèques (TinyGSM, ArduinoHttpClient) la première fois.
-2. Copier `firmware/include/secrets.example.h` en `firmware/include/secrets.h`
-   (pas nécessaire pour le test GPS, mais le tracker en aura besoin).
-3. Barre du bas de PlatformIO : choisir l'environnement **`env:gps_test`**, puis *Upload*
-   (→) et *Serial Monitor* (prise). En ligne de commande : `pio run -e gps_test -t upload -t monitor`.
+## Étape 2 — L'app sur ton téléphone
 
-Sortie attendue :
+1. Ouvre `https://ton-adresse` dans **Safari** et tape la clé de l'app.
+2. **Partager → « Sur l'écran d'accueil »** : l'icône **Ma moto** apparaît, et l'app s'ouvre
+   en plein écran.
+3. Ouvre l'app **depuis l'icône**, puis **⚙︎ → Activer les notifications** et accepte.
+   Touche **Envoyer un test** pour vérifier que tu reçois bien la notification.
+
+(Sur iPhone, les notifications ne marchent que dans l'app ajoutée à l'écran d'accueil,
+et avec iOS 16.4 ou plus récent.)
+
+### Comment marche la surveillance
+
+- **🔒 Armée** : si la moto s'éloigne de plus de 80 m de sa place ou roule à plus de 10 km/h,
+  tu reçois **« 🚨 Ta moto bouge ! »**, puis un rappel toutes les 5 min tant qu'elle bouge.
+  L'app suit alors la moto en direct avec sa trace.
+- **🔓 Désarmée** : tu roules sans recevoir d'alerte. Pense à désarmer avant de partir.
+- **Armement automatique** (⚙︎) : la surveillance se réarme toute seule quand la moto est
+  garée depuis 5, 15, 30 ou 60 min.
+- **⚠️ Tracker muet** : notification si le tracker ne donne plus de nouvelles depuis 2 h 30
+  (fils coupés, boîtier arraché, pas de réseau).
+
+Une démo avec de fausses données est visible ici : https://claude.ai/artifact/GgHitGEp1gMFy2ozCyLj3Z
+
+## Étape 3 — Programmer la carte
+
+### À installer une fois sur le PC (Windows)
+
+1. **VS Code** : https://code.visualstudio.com puis, dans l'onglet Extensions, installer **PlatformIO IDE**.
+2. **Driver USB** de la carte (puce CH9102) : https://www.wch-ic.com/downloads/CH343SER_EXE.html
+3. Télécharger le projet : sur GitHub, branche `claude/gps-tracker-moto-4fh2jq`,
+   bouton **Code → Download ZIP**, puis dézipper (ou `git clone` si tu as Git).
+
+Avant de brancher la carte, visse les antennes : la carrée (céramique) sur *GPS*, l'autre
+sur *LTE*. Mets aussi une **18650 chargée** dans le support : le modem tire trop de courant
+pour l'USB seul. Utilise un câble USB-C qui transfère des données (pas un câble de charge seule).
+
+### Premier test : le GPS
+
+1. VS Code → *File → Open Folder…* → dossier **`firmware`**. La première fois, PlatformIO
+   télécharge ce qu'il faut, ce qui prend quelques minutes.
+2. Barre bleue en bas : choisir **`env:gps_test`**, cliquer sur **→ (Upload)**, puis sur
+   **🔌 (Serial Monitor)**.
+3. Pose la carte dehors ou contre une fenêtre. Au bout de 1 à 5 min :
 
 ```
-=== Tracker moto : test GPS ===
-Modem   : SIM7000G R1529 ...
-[  12s] pas de fix — satellites visibles : 3
-...
 >>> Premier fix obtenu en 94 s
-[  94s] lat=45.764012 lng=4.835712 alt=182m vitesse=0.4km/h cap=0° hdop=1.1 sats=8/14 t=1790421367
-        https://www.openstreetmap.org/?mlat=45.764012&mlon=4.835712#map=17/45.764012/4.835712
+[  94s] lat=45.764012 lng=4.835712 alt=182m vitesse=0.4km/h cap=0° hdop=1.1 sats=8/14
 ```
 
-Le premier fix peut prendre **1 à 5 min** : dehors ou collé à une fenêtre, antenne côté ciel.
-La LED verte clignote pendant la recherche et reste allumée une fois le fix obtenu.
+La LED clignote pendant la recherche et reste allumée une fois la position trouvée.
+Si l'upload échoue, maintiens le bouton **BOOT** de la carte pendant l'upload.
 
-**Si ça coince** : `Modem injoignable` → vérifier la batterie / appuyer sur *RST* ;
-échec d'upload → maintenir *BOOT* pendant l'upload, vérifier le port COM et le driver.
+### Le vrai programme : le tracker
 
-## 3. Le serveur
+1. Active la SIM dans le portail 1NCE et insère-la, **carte éteinte**.
+2. Copie `firmware/include/secrets.example.h` en `secrets.h` et remplis 2 lignes avec ce
+   qu'a affiché l'installation du serveur :
+   ```c
+   #define CFG_SERVER_HOST "mamoto.duckdns.org"
+   #define CFG_DEVICE_KEY  "la-clé-du-tracker"
+   ```
+3. Choisis **`env:tracker`** → Upload → Serial Monitor. Tu dois voir `[net] connecté`,
+   puis `HTTP 204`. La moto apparaît alors dans l'app.
+
+## Étape 4 — Sur la moto
+
+- **Alimentation** : convertisseur 12 V → 5 V (Pololu D24V22F5 ou module 12 V → USB-C),
+  **fusible 2 A** sur le +, branché en **permanent** (pas après contact), sur l'entrée USB-C.
+  Laisse la **18650** dans son support : elle se recharge toute seule et prend le relais si on coupe les fils.
+- **Emplacement** : caché (sous la selle, derrière un cache), avec l'antenne GPS tournée
+  vers le ciel et **pas sous du métal**.
+- **Boîtier** étanche pour commencer, puis un boîtier définitif (impression 3D) plus tard.
+
+---
+
+## Référence
+
+### Ce que fait le tracker
+
+| Situation | GPS | Envoi réseau |
+|---|---|---|
+| Garée | lu toutes les 15 s, en local | 1 fois par heure (position + batterie) |
+| Sort d'un rayon de 80 m ou > 10 km/h | — | **immédiat** |
+| En trajet | 1 point / 15 s | 1 envoi / minute (4 points) |
+| Immobile depuis 5 min | — | repasse en mode garée |
+| Pas de réseau | — | jusqu'à 240 points gardés, renvoyés ensuite |
+
+Réglages en haut de `firmware/src/tracker.cpp`.
+
+**Budget data 1NCE** : 500 Mo pour 10 ans, soit ~4 Mo/mois. Une requête ≈ 1 Ko :
+battement de cœur horaire ≈ 0,7 Mo/mois, 20 h de roulage ≈ 1,5 Mo/mois. C'est pour ça que
+le tracker envoie en HTTP simple (le TLS coûterait ~5 Ko par connexion). La clé du tracker
+circule donc en clair : au pire, quelqu'un pourrait envoyer de fausses positions, mais pas
+lire les tiennes (l'app passe par HTTPS avec l'autre clé).
+
+### Serveur en local (pour bidouiller sur le PC)
+
+Il faut Node.js 22.13 ou plus récent (https://nodejs.org).
 
 ```powershell
 cd server
 npm install
-copy .env.example .env      # puis éditer .env
-npm start                   # http://localhost:3000
+npm start                   # http://localhost:3000 — les clés sont créées automatiquement
+npm run keys                # affiche les clés
+npm run simulate            # 3 faux trajets dans l'historique
+npm run simulate -- live    # une moto qui roule en direct
+npm test
 ```
 
-Dans `.env`, deux clés **différentes** (au moins 16 caractères) :
-
-- `DEVICE_KEY` : utilisée par le tracker pour **écrire** des positions ;
-- `READ_KEY` : celle que tu tapes dans la page web pour **lire**.
-
-Générer une clé : `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`
-
-Sans le matériel, on peut remplir la base avec de faux trajets :
-
-```powershell
-npm run simulate            # 3 trajets dans l'historique
-npm run simulate -- live    # une moto qui roule en direct (Ctrl+C pour arrêter)
-npm test                    # tests de l'API
-```
+Les notifications demandent une adresse en `https://` : elles ne marchent pas en local, sauf sur `localhost` dans Chrome.
 
 ### API
 
+Clé dans l'en-tête `X-API-Key` (ou `?key=`).
+
 | Méthode | Chemin | Clé | Rôle |
 |---|---|---|---|
-| POST | `/api/positions` | `DEVICE_KEY` | Le tracker envoie `{bat, csq, pts:[{t,lat,lng,spd,alt,crs,hdop,sat}]}` → `204` |
-| GET | `/api/latest` | `READ_KEY` | Dernière position + dernier contact / batterie / signal |
-| GET | `/api/positions?from=&to=` | `READ_KEY` | Points entre deux timestamps Unix (défaut : 24 h) |
-| GET | `/api/trips?from=&to=` | `READ_KEY` | Trajets découpés automatiquement (défaut : 30 jours) |
+| POST | `/api/positions` | tracker | `{bat, csq, pts:[{t,lat,lng,spd,alt,crs,hdop,sat}]}` → `204` |
+| GET | `/api/latest` | app | Dernière position, dernier contact, armée ou non |
+| GET | `/api/positions?from=&to=` | app | Points entre deux timestamps Unix (défaut : 24 h) |
+| GET | `/api/trips?from=&to=` | app | Trajets découpés automatiquement (défaut : 30 jours) |
+| GET / POST | `/api/settings` | app | `{armed, auto_arm_min}` |
+| POST | `/api/push/subscribe`, `/unsubscribe`, `/test` | app | Notifications |
 
-La clé passe dans l'en-tête `X-API-Key` (ou `?key=` pour tester dans le navigateur).
-Les points sont dédoublonnés sur l'heure GPS : le tracker peut renvoyer un lot sans risque.
+Les clés et les clés de notification (VAPID) sont créées au premier lancement, dans
+`secrets.json` à côté de la base. Les points sont dédoublonnés sur l'heure GPS.
 
-### Page web
+### Points encore ouverts
 
-`http://<serveur>/` : dernière position, statut (*En ligne*, *En mouvement*, *Muet* si
-plus de nouvelles depuis 2 h 30), batterie, signal, bouton **Y aller** (itinéraire Google Maps
-jusqu'à la moto), liste des trajets des 30 derniers jours et **replay** (×10 / ×30 / ×100).
-Fonds de carte OpenStreetMap, aucune clé API. Pensée pour le téléphone.
-
-### Hébergement
-
-Il faut une machine allumée en permanence avec un disque persistant (SQLite) :
-
-- **Petit VPS** (Hetzner, OVH… ~4 €/mois) ou **Raspberry Pi** à la maison (+ redirection
-  de port et un nom DuckDNS) : le plus simple et le plus fiable ;
-- Offres gratuites avec disque persistant (Oracle Cloud Free Tier…).
-
-Le tracker envoie en **HTTP simple** (le TLS coûte ~5 Ko de data par connexion, voir
-budget ci-dessous). Le port 80 doit donc rester accessible **sans redirection forcée vers
-HTTPS** pour `/api/positions`. Avec **Caddy** devant Node, la page web a son HTTPS
-automatique et le tracker garde son HTTP :
-
-```
-moto.mondomaine.fr {
-    reverse_proxy localhost:3000
-}
-http://moto.mondomaine.fr/api/positions {
-    reverse_proxy localhost:3000
-}
-```
-
-La clé d'écriture circule donc en clair : au pire quelqu'un pourrait injecter de fausses
-positions, pas lire les tiennes (la lecture passe par HTTPS avec l'autre clé).
-
-## 4. Étape 2 — le tracker
-
-1. Remplir `firmware/include/secrets.h` : `CFG_SERVER_HOST` (domaine ou IP publique du serveur,
-   sans `http://`), `CFG_SERVER_PORT`, `CFG_DEVICE_KEY` (= `DEVICE_KEY` du serveur).
-   L'APN 1NCE (`iot.1nce.net`) est déjà renseigné.
-2. Activer la SIM dans le portail 1NCE, l'insérer (carte **éteinte**).
-3. Environnement **`env:tracker`** → Upload + Serial Monitor
-   (`pio run -e tracker -t upload -t monitor`).
-
-Fonctionnement :
-
-| Situation | GPS | Envoi réseau |
-|---|---|---|
-| Garée | lu toutes les 15 s, en local | 1 fois par heure (position + batterie = « battement de cœur ») |
-| Sort d'un rayon de 80 m ou > 10 km/h | — | **immédiat** (alerte) |
-| En trajet | 1 point / 15 s | 1 envoi / minute (4 points) |
-| Immobile depuis 5 min | — | repasse en mode garée |
-| Pas de réseau | — | jusqu'à 240 points gardés en mémoire, renvoyés ensuite |
-
-Tous les réglages sont en haut de `firmware/src/tracker.cpp`.
-
-### Budget data 1NCE
-
-500 Mo pour **10 ans**, soit ~4 Mo/mois. Une requête coûte ~1 Ko (TCP + en-têtes + réponse
-`204` vide). Battement de cœur horaire ≈ 0,7 Mo/mois ; 20 h de roulage/mois ≈ 1,5 Mo.
-On tient donc largement, *à condition* de ne pas envoyer toutes les 30 s moto garée ni de
-passer en HTTPS. Le portail 1NCE affiche la conso réelle : à surveiller le premier mois.
-(1NCE vend des recharges si besoin.)
-
-## 5. Points encore ouverts
-
-- **Alimentation 12 V** : convertisseur abaisseur 12 V → 5 V (type Pololu D24V22F5 ou
-  prise USB moto de qualité), fusible 1–2 A sur le +, branché en **permanent** (pas après
-  contact) sur l'entrée USB-C/5 V. Garder la **18650** dans le support : elle est rechargée par
-  la carte et continue d'alimenter le tracker si un voleur coupe les fils.
-- **Consommation** : en l'état (ESP32 + modem + GNSS allumés en continu), compter
-  ~60–100 mA, soit 1,5–2,5 Ah/jour : trop pour une batterie moto de 8–12 Ah laissée des
-  semaines. Prochaine étape logique : couper le GNSS moto garée, veille du SIM7000 (PSM/eDRX),
-  light/deep sleep de l'ESP32, et réveil par un capteur de vibration (SW-420) ou un
-  accéléromètre (MPU6050) sur une GPIO. À mesurer avec un multimètre avant d'optimiser.
-- **GNSS et LTE** partagent la même partie radio sur le SIM7000 : pendant un envoi, le GNSS
-  peut perdre le fix quelques secondes, d'où des envois groupés et courts.
-- **Boîtier** étanche et discret, antennes GPS vers le ciel (sous la selle, pas sous du métal).
+- **Consommation** : en l'état (tout allumé en continu), compter ~60–100 mA, soit
+  1,5–2,5 Ah/jour. C'est trop pour une batterie moto laissée des semaines. Prochaine étape :
+  couper le GPS moto garée, mettre le modem en veille (PSM/eDRX), mettre l'ESP32 en sommeil,
+  et réveiller la carte par un capteur de vibration (SW-420) ou un accéléromètre (MPU6050).
+  À mesurer au multimètre avant d'optimiser.
+- **GNSS et LTE** partagent la radio du SIM7000 : pendant un envoi, le GPS peut perdre le
+  fix quelques secondes. C'est pour ça que les envois sont groupés et courts.
+- **Idée** : un porte-clés Bluetooth détecté par l'ESP32 pour désarmer automatiquement
+  quand tu es à côté de la moto.

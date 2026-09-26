@@ -1,6 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import { haversine } from './geo.js';
+
+export { haversine };
 
 const PUBLIC_DIR = fileURLToPath(new URL('../public', import.meta.url));
 const LEAFLET_DIR = fileURLToPath(new URL('../node_modules/leaflet/dist', import.meta.url));
@@ -38,13 +41,6 @@ function parsePoint(p, now) {
   };
 }
 
-export function haversine(a, b) {
-  const R = 6_371_000, rad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-
 export function splitTrips(points) {
   const trips = [];
   let cur = null;
@@ -72,7 +68,7 @@ function timeRange(req, defaultDays) {
   return { from, to };
 }
 
-export function createApp({ db, deviceKey, readKey }) {
+export function createApp({ db, deviceKey, readKey, alerts, push }) {
   if (!deviceKey || !readKey) throw new Error('DEVICE_KEY et READ_KEY sont obligatoires');
   if (deviceKey === readKey) throw new Error('DEVICE_KEY et READ_KEY doivent être différentes');
 
@@ -83,7 +79,7 @@ export function createApp({ db, deviceKey, readKey }) {
   // --- Tracker -> serveur ---------------------------------------------------
   // Corps : { bat, csq, pts: [{ t, lat, lng, spd, alt, crs, hdop, sat }] }
   // Réponse 204 sans contenu pour économiser la data de la carte SIM.
-  app.post('/api/positions', requireKey(deviceKey), express.json({ limit: '128kb' }), (req, res) => {
+  app.post('/api/positions', requireKey(deviceKey), express.json({ limit: '128kb' }), async (req, res) => {
     const body = req.body;
     if (!body || typeof body !== 'object') return res.status(400).json({ error: 'JSON attendu' });
     const raw = Array.isArray(body.pts) ? body.pts : [];
@@ -102,6 +98,11 @@ export function createApp({ db, deviceKey, readKey }) {
     });
     console.log(`[positions] reçu ${raw.length}, enregistré ${inserted}`);
     res.status(204).end();
+    try {
+      await alerts?.onReport(points.sort((a, b) => a.t - b.t));
+    } catch (err) {
+      console.error('[alertes]', err);
+    }
   });
 
   // --- Lecture (page web) ---------------------------------------------------
@@ -113,7 +114,49 @@ export function createApp({ db, deviceKey, readKey }) {
   });
 
   read.get('/latest', (req, res) => {
-    res.json({ position: db.latest(), status: db.status(), server_time: Math.floor(Date.now() / 1000) });
+    res.json({
+      position: db.latest(),
+      status: db.status(),
+      armed: db.get('armed', false),
+      server_time: Math.floor(Date.now() / 1000),
+    });
+  });
+
+  // --- Surveillance et notifications -----------------------------------------
+  read.get('/settings', (req, res) => {
+    res.json({
+      armed: db.get('armed', false),
+      auto_arm_min: db.get('auto_arm_min', 0),
+      push_public_key: push?.publicKey ?? null,
+      devices: db.listSubscriptions().length,
+    });
+  });
+
+  read.post('/settings', express.json(), (req, res) => {
+    const { armed, auto_arm_min } = req.body ?? {};
+    if (typeof armed === 'boolean' && alerts) alerts.arm(armed);
+    if ([0, 5, 15, 30, 60].includes(auto_arm_min)) db.set('auto_arm_min', auto_arm_min);
+    res.json({ armed: db.get('armed', false), auto_arm_min: db.get('auto_arm_min', 0) });
+  });
+
+  read.post('/push/subscribe', express.json(), (req, res) => {
+    const sub = req.body;
+    if (typeof sub?.endpoint !== 'string' || !sub.endpoint.startsWith('https://') || !sub.keys?.p256dh || !sub.keys?.auth) {
+      return res.status(400).json({ error: 'abonnement invalide' });
+    }
+    db.addSubscription({ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } });
+    res.status(204).end();
+  });
+
+  read.post('/push/unsubscribe', express.json(), (req, res) => {
+    if (typeof req.body?.endpoint === 'string') db.removeSubscription(req.body.endpoint);
+    res.status(204).end();
+  });
+
+  read.post('/push/test', async (req, res) => {
+    if (!push) return res.status(503).json({ error: 'notifications indisponibles' });
+    await push.send({ title: '🏍️ Test', body: 'Les notifications marchent !', tag: 'moto-test' });
+    res.status(204).end();
   });
 
   read.get('/positions', (req, res) => {

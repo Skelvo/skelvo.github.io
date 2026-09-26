@@ -61,3 +61,35 @@ dialog input { width: 100%; font: inherit; padding: 9px 10px; border-radius: 10p
   background: #0c0f12; color: var(--text); margin: 6px 0 12px; }
 
 .moto-icon { font-size: 26px; line-height: 1; text-align: center; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+
+/* --- App installée, surveillance, réglages --- */
+#panel { top: calc(12px + env(safe-area-inset-top, 0px)); }
+.leaflet-top { top: env(safe-area-inset-top, 0px); }
+@media (max-width: 600px) { #panel { top: auto; } }
+
+.head-right { display: flex; align-items: center; gap: 8px; }
+.icon-btn { padding: 4px 9px; font-size: 16px; line-height: 1.2; }
+
+.arm { width: 100%; text-align: left; margin: 6px 0 4px; padding: 10px 12px; display: grid; gap: 2px;
+  font-weight: 600; border-color: var(--line); }
+.arm small { font-weight: 400; font-size: 12px; color: var(--muted); }
+.arm.armed { background: rgba(62, 207, 110, .12); border-color: var(--ok); }
+.arm.armed small { color: var(--text); opacity: .75; }
+
+#view-settings h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  margin: 18px 0 4px; }
+#view-settings select { width: 100%; margin-top: 6px; }
+.hint { font-size: 13px; background: rgba(255,106,26,.1); border: 1px solid rgba(255,106,26,.4);
+  border-radius: 10px; padding: 9px 11px; margin: 8px 0 0; }
+code { font-size: 12px; background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 5px; }
+
+#toast { position: fixed; z-index: 2000; left: 50%; transform: translateX(-50%);
+  top: calc(12px + env(safe-area-inset-top, 0px)); width: min(420px, calc(100% - 32px));
+  background: #232a33; border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 14px; }
+#toast strong { display: block; }
+#toast.alert { border-color: var(--bad); background: #3a1719; }
+@media (prefers-reduced-motion: no-preference) {
+  #toast:not([hidden]) { animation: drop .25s ease-out; }
+  @keyframes drop { from { transform: translate(-50%, -12px); opacity: 0; } }
+}

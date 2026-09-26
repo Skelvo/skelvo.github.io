@@ -1,18 +1,19 @@
+import { createAlerts } from './alerts.js';
 import { createApp } from './app.js';
+import { loadConfig } from './config.js';
 import { openDb } from './db.js';
+import { createPush } from './push.js';
 
-const { DEVICE_KEY, READ_KEY, PORT = '3000', DB_PATH = './data/tracker.db' } = process.env;
+const cfg = loadConfig();
+if (cfg.created) console.log(`Clés créées dans ${cfg.secretsFile} — affiche-les avec : npm run keys`);
 
-for (const [name, value] of Object.entries({ DEVICE_KEY, READ_KEY })) {
-  if (!value || value.length < 16) {
-    console.error(`${name} manquante ou trop courte (16 caractères minimum). Voir .env.example`);
-    process.exit(1);
-  }
-}
+const db = openDb(cfg.dbPath);
+const push = createPush({ db, vapid: cfg.vapid });
+const alerts = createAlerts({ db, notify: (msg) => push.send(msg) });
+const app = createApp({ db, deviceKey: cfg.deviceKey, readKey: cfg.readKey, alerts, push });
 
-const db = openDb(DB_PATH);
-const app = createApp({ db, deviceKey: DEVICE_KEY, readKey: READ_KEY });
+setInterval(() => alerts.tick().catch((err) => console.error('[alertes]', err)), 60_000);
 
-app.listen(Number(PORT), () => {
-  console.log(`Tracker moto : http://localhost:${PORT}  (base : ${DB_PATH})`);
+app.listen(cfg.port, () => {
+  console.log(`Tracker moto : http://localhost:${cfg.port}  (base : ${cfg.dbPath})`);
 });

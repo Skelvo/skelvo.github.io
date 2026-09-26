@@ -75,3 +75,28 @@ test('découpe les trajets', async () => {
   assert.equal(trips[0].start, t1);
   assert.ok(Math.abs(trips[1].distance_m - 1112) < 5, `distance ${trips[1].distance_m}`);
 });
+
+test('armer / désarmer et régler l’armement auto', async () => {
+  const set = (body) =>
+    fetch(`${base}/api/settings`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': READ },
+      body: JSON.stringify(body),
+    });
+  assert.equal((await (await get('/api/settings')).json()).armed, false);
+  assert.equal((await set({ armed: true }, READ)).status, 200); // sans module d'alertes : ignoré
+  assert.equal((await (await set({ auto_arm_min: 15 })).json()).auto_arm_min, 15);
+  assert.equal((await (await set({ auto_arm_min: 7 })).json()).auto_arm_min, 15); // valeur refusée
+});
+
+test('abonnement aux notifications', async () => {
+  const sub = (body) =>
+    fetch(`${base}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': READ },
+      body: JSON.stringify(body),
+    });
+  assert.equal((await sub({ endpoint: 'http://pas-https' })).status, 400);
+  assert.equal((await sub({ endpoint: 'https://push.example/abc', keys: { p256dh: 'x', auth: 'y' } })).status, 204);
+  assert.equal((await (await get('/api/settings')).json()).devices, 1);
+});
