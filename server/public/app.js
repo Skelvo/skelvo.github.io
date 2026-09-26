@@ -42,6 +42,21 @@ let liveLayerShown = false;
 let lastPosition = null;
 let firstCenter = true;
 
+// Partie de la carte non masquée par le panneau (en bas sur mobile, à gauche sur ordinateur)
+function panelInsets() {
+  const m = map.getContainer().getBoundingClientRect();
+  const p = $('panel').getBoundingClientRect();
+  if (p.width > m.width * 0.8) return { topLeft: [0, 0], bottomRight: [0, Math.max(0, m.bottom - p.top)] };
+  return { topLeft: [Math.max(0, p.right - m.left), 0], bottomRight: [0, 0] };
+}
+
+// Centre la carte sur un point, au milieu de la zone visible
+function focusOn(latlng, zoom = map.getZoom()) {
+  const { topLeft, bottomRight } = panelInsets();
+  const offset = L.point((topLeft[0] - bottomRight[0]) / 2, (topLeft[1] - bottomRight[1]) / 2);
+  map.setView(map.unproject(map.project(latlng, zoom).subtract(offset), zoom), zoom);
+}
+
 // ---------------------------------------------------------------- Format
 const fmtTime = (t) => new Date(t * 1000).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
 const fmtHour = (t) => new Date(t * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -117,13 +132,13 @@ async function refresh() {
     liveLayerShown = true;
   }
   if (firstCenter) {
-    map.setView([p.lat, p.lng], 16);
+    focusOn([p.lat, p.lng], 16);
     firstCenter = false;
   }
 }
 
 $('btn-center').addEventListener('click', () => {
-  if (lastPosition) map.setView([lastPosition.lat, lastPosition.lng], 17);
+  if (lastPosition) focusOn([lastPosition.lat, lastPosition.lng], 17);
 });
 
 // ---------------------------------------------------------------- Trajets
@@ -166,7 +181,7 @@ $('btn-back').addEventListener('click', () => {
   showView('live');
   liveMarker.addTo(map);
   liveLayerShown = true;
-  if (lastPosition) map.setView([lastPosition.lat, lastPosition.lng], 16);
+  if (lastPosition) focusOn([lastPosition.lat, lastPosition.lng], 16);
 });
 
 function clearTrip() {
@@ -189,7 +204,11 @@ async function loadTrip(trip) {
   const end = L.circleMarker([pts.at(-1).lat, pts.at(-1).lng], { radius: 6, color: '#ff4d4d', fillOpacity: 1 });
   const cursor = L.marker([pts[0].lat, pts[0].lng], { icon: motoIcon });
   tripLayer = L.layerGroup([line, start, end, cursor]).addTo(map);
-  map.fitBounds(line.getBounds(), { padding: [30, 30] });
+  const { topLeft, bottomRight } = panelInsets();
+  map.fitBounds(line.getBounds(), {
+    paddingTopLeft: [topLeft[0] + 30, topLeft[1] + 30],
+    paddingBottomRight: [bottomRight[0] + 30, bottomRight[1] + 30],
+  });
 
   replay = { pts, cursor, offset: 0, duration: pts.at(-1).t - pts[0].t, timer: null, lastFrame: 0 };
   $('r-slider').max = replay.duration;
