@@ -2,6 +2,7 @@
 'use strict';
 
 const D = window.DATA;
+const VERSION = 4;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -98,27 +99,36 @@ const every = (fn, ms) => { const id = setInterval(fn, ms); timers.push(id); ret
 const clearTimers = () => { timers.forEach(id => { clearTimeout(id); clearInterval(id); }); timers = []; };
 
 /* ================= Jeux ================= */
+/* fit : adaptation à 2 / 3 / 4 / 5+ joueurs — b = idéal, o = ça marche, - = pas jouable */
 const G = {
-  aov:      { name: 'Action ou Vérité', e: '🎭', d: 'Le classique, en mieux', g: 'linear-gradient(150deg,#ff5c8a,#b0306e)', min: 2 },
-  jamais:   { name: "Je n'ai jamais", e: '🙊', d: 'Les secrets sortent', g: 'linear-gradient(150deg,#7b5cff,#4b2bb8)', min: 2 },
-  imposteur:{ name: "L'Imposteur", e: '🕵️', d: 'Qui n’a pas le même mot ?', g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)', min: 3 },
-  bombe:    { name: 'La Bombe', e: '💣', d: 'Réponds avant le boum', g: 'linear-gradient(150deg,#ff8a3d,#d13b1f)', min: 2 },
-  qui:      { name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', min: 3 },
-  preferes: { name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', min: 2 },
-  mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', min: 2 },
-  roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', min: 2 }
+  aov:      { name: 'Action ou Vérité', e: '🎭', d: 'Le classique, en mieux', g: 'linear-gradient(150deg,#ff5c8a,#b0306e)', fit: 'obbb' },
+  jamais:   { name: "Je n'ai jamais", e: '🙊', d: 'Les secrets sortent', g: 'linear-gradient(150deg,#7b5cff,#4b2bb8)', fit: 'obbb' },
+  juge:     { name: 'Le Juge', e: '🧑‍⚖️', d: 'Un duel, un arbitre', g: 'linear-gradient(150deg,#f2c14e,#c0661c)', fit: '-bbo', isNew: true },
+  connais:  { name: 'Tu me connais ?', e: '🔮', d: 'Devine ce qu’il va répondre', g: 'linear-gradient(150deg,#ff6fb5,#8a3ad6)', fit: 'bbbo', isNew: true },
+  synchro:  { name: 'Synchro', e: '🧠', d: 'Dites le même mot', g: 'linear-gradient(150deg,#28c7d9,#2b5fd6)', fit: 'bbbo', isNew: true },
+  imposteur:{ name: "L'Imposteur", e: '🕵️', d: 'Qui n’a pas le même mot ?', g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)', fit: '--bb' },
+  bombe:    { name: 'La Bombe', e: '💣', d: 'Réponds avant le boum', g: 'linear-gradient(150deg,#ff8a3d,#d13b1f)', fit: 'obbb' },
+  qui:      { name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', fit: '-obb' },
+  preferes: { name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
+  mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
+  roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' }
 };
+const clampN = n => Math.min(5, Math.max(2, n));
+const fitAt = (id, n) => G[id].fit[clampN(n) - 2];             // 'b' | 'o' | '-'
+const minPlayers = id => 2 + G[id].fit.search(/[bo]/);
+const nLabel = n => n >= 5 ? '5 et +' : String(n);
 
 let current = null;   // jeu en cours (objet avec render)
 
 function header(title, extra = '') {
   return `<div class="top"><button class="icon-btn" data-a="home" aria-label="Retour">←</button><h1>${esc(title)}</h1>${extra}</div>`;
 }
-function view(html, after) {
+function view(html, after, keepScroll) {
+  const y = window.scrollY;
   $app.innerHTML = html;
   $app.querySelectorAll('[data-a]').forEach(el => el.addEventListener('click', onAction));
   after && after();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, keepScroll ? y : 0);
 }
 function onAction(e) {
   const el = e.currentTarget, a = el.dataset.a;
@@ -130,7 +140,8 @@ function onAction(e) {
 /* ---------- Navigation (bouton retour Android géré) ---------- */
 function openGame(id) {
   const g = G[id];
-  if (S.players.length < g.min) { toast(`Ajoute au moins ${g.min} joueurs pour ce jeu 🙂`); document.querySelector('#pname')?.focus(); return; }
+  const m = minPlayers(id);
+  if (S.players.length < m) { toast(`${g.name} se joue à partir de ${m} joueurs 🙂`); document.querySelector('#pname')?.focus(); return; }
   history.pushState({ g: id }, '', '#' + id);
   start(id);
 }
@@ -138,20 +149,31 @@ function openPage(id) { history.pushState({ p: id }, '', '#' + id); start(id); }
 function start(id) {
   clearTimers();
   current = makers[id]();
-  keepAwake(!!G[id]);
+  keepAwake(!!G[id] || id === 'online');
   current.render();
 }
-function goHome() { if (history.state && (history.state.g || history.state.p)) history.back(); else showHome(); }
-function showHome() { clearTimers(); current = null; keepAwake(false); home.render(); }
+function goHome() {
+  if (current && current.confirmLeave && !confirm(current.confirmLeave)) return;
+  if (history.state && (history.state.g || history.state.p)) history.back(); else showHome();
+}
+function showHome() { clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
 window.addEventListener('popstate', () => showHome());
 
 /* ================= Accueil ================= */
 const home = {
   render() {
     const chips = S.players.map((p, i) => `<span class="chip">${esc(p)}<button data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
-    const games = Object.entries(G).map(([id, g], i, arr) =>
-      `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
-        <span class="e">${g.e}</span><b>${g.name}</b><span>${g.d}</span></button>`).join('');
+    const n = home.n || (S.players.length >= 2 ? clampN(S.players.length) : 3);
+    const card = (id, i, arr, off) => { const g = G[id];
+      return `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
+        ${g.isNew ? '<i class="new">Nouveau</i>' : ''}<span class="e">${g.e}</span><b>${g.name}</b><span>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</span></button>`; };
+    const ids = Object.keys(G), group = f => ids.filter(id => fitAt(id, n) === f);
+    const block = (title, list, off) => list.length ? `<h3 class="cat">${title}</h3><div class="games">${list.map((id, i, a) => card(id, i, a, off)).join('')}</div>` : '';
+    const games = `
+      <div class="nfilter"><span>Vous êtes</span>${[2, 3, 4, 5].map(k => `<button class="${k === n ? 'on' : ''}" data-a="n" data-v="${k}">${nLabel(k)}</button>`).join('')}</div>
+      ${block(`⭐ Parfait à ${nLabel(n)}`, group('b'))}
+      ${block('👍 Ça marche aussi', group('o'))}
+      ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
     view(`
       <div class="brand"><div class="logo">🥂</div><div><h1>Apéro</h1><p>Jeux de soirée · gratuit · sans pub</p></div></div>
 
@@ -169,26 +191,30 @@ const home = {
         <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>Questions plus osées · 18+</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
       </div>
 
-      <div class="games">${games}</div>
+      <button class="online-cta" data-a="page" data-id="online">
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Président, Imposteur</small></span><span class="go">›</span>
+      </button>
+      ${games}
 
       <div class="links">
         <button class="btn" data-a="page" data-id="cartes">✍️ Mes cartes</button>
         <button class="btn" data-a="page" data-id="regles">📖 Règles</button>
       </div>
-      <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »</p>
+      <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »<br>Version ${VERSION}</p>
     `, () => {
       document.getElementById('addf').addEventListener('submit', e => {
         e.preventDefault();
         const inp = document.getElementById('pname'), v = inp.value.trim().replace(/\s+/g, ' ');
         if (!v) return;
         if (S.players.some(p => p.toLowerCase() === v.toLowerCase())) { toast('Ce prénom est déjà là'); return; }
-        S.players.push(v); save(); home.render();
+        S.players.push(v); home.n = null; save(); home.render();
         document.getElementById('pname').focus();
       });
-    });
+    }, true);
   },
   on(a, el) {
-    if (a === 'del') { S.players.splice(+el.dataset.i, 1); save(); home.render(); }
+    if (a === 'del') { S.players.splice(+el.dataset.i, 1); home.n = null; save(); home.render(); }
+    if (a === 'n') { home.n = +el.dataset.v; home.render(); }
     if (a === 'drinks') { S.drinks = !S.drinks; save(); home.render(); }
     if (a === 'spicy') { S.spicy = !S.spicy; save(); home.render(); if (S.spicy) toast('Mode épicé activé 🌶️'); }
     if (a === 'game') openGame(el.dataset.id);
@@ -310,13 +336,178 @@ const makers = {
               <div class="or">OU</div>
               ${b(1, 'linear-gradient(150deg,#ff5c8a,#b0306e)')}
             </div>
-            <p class="hint">Tout le monde choisit en même temps. ${S.drinks ? 'La minorité boit 🍻' : 'La minorité fait un gage'}</p>
+            <p class="hint">${S.players.length === 2
+              ? `Chacun devine d'abord le choix de l'autre. ${S.drinks ? 'Raté ? Tu bois 🍻' : 'Raté ? Gage !'}`
+              : `Tout le monde choisit en même temps. ${S.drinks ? 'La minorité boit 🍻' : 'La minorité fait un gage'}`}</p>
             <button class="btn primary big block" data-a="next">Question suivante</button>
           </div>`);
       },
       on(a, el) {
         if (a === 'pick') { sel = +el.dataset.i; buzz(15); this.render(); }
         if (a === 'next') { pair = d.next(); sel = -1; this.render(); }
+      }
+    };
+  },
+
+  /* ---------- Le Juge ---------- */
+  juge() {
+    const g = G.juge, d = deck(pool('juge')), rot = rotation();
+    let target = 5, phase = 'setup', judge = null, txt = '', scores = {}, champ = null;
+    const board = () => scoreboard(scores, target);
+    return {
+      render() {
+        if (phase === 'setup') return view(`${header(g.name)}
+          <div class="stage">
+            <p class="hint" style="text-align:left">À chaque manche, un joueur est <b>le juge</b>. Les autres relèvent le même défi chacun leur tour, et le juge désigne le meilleur. Le juge change à chaque manche.</p>
+            <div class="label">Points pour gagner</div>
+            <div class="seg">${[3, 5, 7, 10].map(k => `<button class="${target === k ? 'on' : ''}" data-a="t" data-v="${k}">${k}</button>`).join('')}</div>
+            <div style="flex:1"></div>
+            <button class="btn primary big block" data-a="go">C'est parti</button>
+          </div>`);
+        if (phase === 'round') {
+          const comp = others(judge);
+          return view(`${header(g.name)}
+            <div class="stage">
+              <div class="turn">Juge<strong>🧑‍⚖️ ${esc(judge)}</strong></div>
+              <div class="card" style="--g:${g.g}">
+                <div class="tag">Le défi</div>
+                <div class="txt">${fill(txt, judge)}</div>
+                <div class="sub">${comp.map(esc).join(' puis ')} : à vous !</div>
+              </div>
+              <div class="label">${esc(judge)}, qui gagne ?</div>
+              <div class="winners">${comp.map(p => `<button class="btn ok" data-a="win" data-p="${esc(p)}">🏆 ${esc(p)}</button>`).join('')}</div>
+              <button class="btn" data-a="skip">Autre défi</button>
+              ${board()}
+            </div>`);
+        }
+        const loser = Object.keys(scores).sort((x, y) => scores[x] - scores[y])[0];
+        view(`${header(g.name)}
+          <div class="stage">
+            <div class="card" style="--g:${g.g}">
+              <div class="tag">Champion·ne</div>
+              <div class="big-num" style="font-size:6rem">👑</div>
+              <div class="secret">${esc(champ)}</div>
+              <div class="sub">Dernière place : <b>${esc(loser)}</b><br>${esc(pick(gages()))}</div>
+            </div>
+            <button class="btn primary big block" data-a="again">Revanche</button>
+            ${board()}
+          </div>`);
+      },
+      on(a, el) {
+        if (a === 't') { target = +el.dataset.v; this.render(); }
+        if (a === 'go' || a === 'again') { scores = {}; S.players.forEach(p => scores[p] = 0); this.round(); }
+        if (a === 'skip') { txt = d.next(); this.render(); }
+        if (a === 'win') {
+          const p = el.dataset.p; scores[p]++; beep(1320, .1, 'sine'); buzz(40);
+          if (scores[p] >= target) { champ = p; phase = 'end'; beep(990, .3, 'sine'); return this.render(); }
+          toast(`+1 pour ${p} !`); this.round();
+        }
+      },
+      round() { judge = rot.next(); txt = d.next(); phase = 'round'; this.render(); }
+    };
+  },
+
+  /* ---------- Tu me connais ? ---------- */
+  connais() {
+    const g = G.connais, d = deck(D.connais), rot = rotation();
+    let who = rot.next(), q = d.next(), phase = 'pass', ans = -1, right = new Set(), scores = {};
+    S.players.forEach(p => scores[p] = 0);
+    return {
+      render() {
+        const guessers = others(who);
+        const opts = (mode) => `<div class="opts">${q[1].map((o, i) => `<button class="opt answer ${mode === 'reveal' && i === ans ? 'on' : ''} ${mode === 'reveal' && i !== ans ? 'dim' : ''}" ${mode === 'pick' ? `data-a="ans" data-i="${i}"` : ''}><span class="letter">${'ABCD'[i]}</span><div><b>${esc(o)}</b></div></button>`).join('')}</div>`;
+        if (phase === 'pass') return view(`${header(g.name)}
+          <div class="stage">
+            <div class="card" style="--g:linear-gradient(160deg,#2c2249,#221a3b)">
+              <div class="tag">Passe le téléphone à</div>
+              <div class="secret">${esc(who)}</div>
+              <div class="sub">Les autres ne regardent pas 👀</div>
+            </div>
+            <button class="btn primary big block" data-a="me">C'est moi</button>
+            ${scoreboard(scores)}
+          </div>`);
+        if (phase === 'pick') return view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">${esc(who)}, réponds en secret</div>
+            <div class="card" style="--g:${g.g};min-height:150px;flex:none"><div class="txt">${esc(q[0])}</div></div>
+            ${opts('pick')}
+          </div>`);
+        if (phase === 'guess') return view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">Selon vous, qu'a répondu<strong>${esc(who)} ?</strong></div>
+            <div class="card" style="--g:${g.g};min-height:150px;flex:none"><div class="txt">${esc(q[0])}</div></div>
+            ${opts('show')}
+            <p class="hint">${guessers.map(esc).join(', ')} : annoncez votre réponse à voix haute (A, B, C ou D) !</p>
+            <button class="btn primary big block" data-a="reveal">Révéler la réponse</button>
+          </div>`);
+        view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">${esc(who)} a répondu</div>
+            <div class="card" style="--g:${g.g};min-height:150px;flex:none"><div class="tag">${esc(q[0])}</div><div class="secret" style="margin-top:14px">${esc(q[1][ans])}</div></div>
+            <div class="label">Qui avait trouvé ?</div>
+            <div class="winners">${guessers.map(p => `<button class="btn ${right.has(p) ? 'ok' : ''}" data-a="right" data-p="${esc(p)}">${right.has(p) ? '✓ ' : ''}${esc(p)}</button>`).join('')}</div>
+            <p class="hint">${S.drinks ? 'Ceux qui se sont trompés boivent une gorgée 🍻' : 'Un point par bonne réponse'}</p>
+            <button class="btn primary big block" data-a="next">Question suivante</button>
+            ${scoreboard(scores)}
+          </div>`);
+      },
+      on(a, el) {
+        if (a === 'me') { phase = 'pick'; this.render(); }
+        if (a === 'ans') { ans = +el.dataset.i; buzz(20); phase = 'guess'; this.render(); }
+        if (a === 'reveal') { phase = 'reveal'; right = new Set(); beep(990, .15, 'sine'); this.render(); }
+        if (a === 'right') { const p = el.dataset.p; right.has(p) ? right.delete(p) : right.add(p); this.render(); }
+        if (a === 'next') { right.forEach(p => scores[p]++); who = rot.next(); q = d.next(); phase = 'pass'; this.render(); }
+      }
+    };
+  },
+
+  /* ---------- Synchro ---------- */
+  synchro() {
+    const g = G.synchro, d = deck(D.synchro), ROUNDS = 10;
+    let round = 0, score = 0, theme = d.next(), phase = 'theme', log = [];
+    const duo = S.players.length === 2, max = ROUNDS * 3;
+    return {
+      render() {
+        if (phase === 'end') {
+          const r = score / max;
+          const verdict = r >= .7 ? 'Télépathes certifiés 🧠✨' : r >= .45 ? 'Belle connexion 🤝' : r >= .2 ? 'Ça vient, ça vient… 😅' : 'Vous vivez sur des planètes différentes 🪐';
+          return view(`${header(g.name)}
+            <div class="stage">
+              <div class="card" style="--g:${g.g}">
+                <div class="tag">Score de l'équipe</div>
+                <div class="big-num" style="font-size:6.5rem">${score}</div>
+                <div class="sub">sur ${max} · ${verdict}</div>
+                <div class="found" style="margin-top:16px">${log.map(x => `<span class="${x.p ? '' : 'x'}">${esc(x.t)}</span>`).join('')}</div>
+              </div>
+              <button class="btn primary big block" data-a="again">Rejouer</button>
+            </div>`);
+        }
+        const center = phase === 'count' ? `<div class="big-num" id="cnt">3</div>`
+          : phase === 'said' ? `<div class="big-num">🗣️</div><div class="sub" style="font-size:1.3rem;font-weight:700">Alors, pareil ?</div>`
+          : `<div class="txt">${esc(theme)}</div><div class="sub">Pensez à un mot… sans rien dire !</div>`;
+        view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">Manche ${round + 1} / ${ROUNDS} · ${score} pts</div>
+            <div class="card" style="--g:${g.g}">
+              <div class="tag">${phase === 'theme' ? 'Le thème' : esc(theme)}</div>
+              ${center}
+            </div>
+            ${phase === 'theme' ? `<button class="btn primary big block" data-a="go">3, 2, 1… Dites-le !</button>`
+              : phase === 'said' ? (duo
+                ? `<div class="row"><button class="btn big" data-a="res" data-v="0">❌ Raté</button><button class="btn ok big" data-a="res" data-v="3">🎉 Pareil ! +3</button></div>`
+                : `<div class="winners"><button class="btn ok big" data-a="res" data-v="3">🎉 Tous pareil ! +3</button><button class="btn big" data-a="res" data-v="1">👯 Au moins deux +1</button><button class="btn big" data-a="res" data-v="0">❌ Personne</button></div>`)
+              : `<button class="btn big block" disabled>…</button>`}
+            <p class="hint">${S.drinks ? 'Personne de synchro ? Tout le monde boit 🍻' : 'Jeu en équipe : visez le meilleur score !'}</p>
+          </div>`);
+      },
+      on(a, el) {
+        if (a === 'go') countdown(this, () => { phase = 'said'; this.render(); }, () => { phase = 'count'; this.render(); });
+        if (a === 'res') {
+          const v = +el.dataset.v; score += v; log.push({ t: theme, p: v > 0 });
+          v ? (beep(1320, .1, 'sine'), buzz(40)) : beep(220, .15);
+          round++; theme = d.next(); phase = round >= ROUNDS ? 'end' : 'theme'; this.render();
+        }
+        if (a === 'again') { round = 0; score = 0; log = []; phase = 'theme'; this.render(); }
       }
     };
   },
@@ -648,6 +839,11 @@ const makers = {
             <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
+            <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
+            <h3>🔮 Tu me connais ? <small>2-4 joueurs</small></h3><p>Le téléphone pose une question à un joueur, qui répond en secret. Les autres annoncent à voix haute ce qu'il a répondu selon eux. Un point par bonne réponse.</p>
+            <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
+            <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
+            <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
             <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
             <h3>💣 La Bombe</h3><p>Une catégorie s'affiche. On allume la mèche, on donne un mot et on passe le téléphone. La bombe explose au hasard : celui qui la tient a perdu.</p>
             <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
@@ -661,15 +857,94 @@ const makers = {
   }
 };
 
+/* Compte à rebours 3-2-1 dans l'élément #cnt */
+function countdown(game, done, startPhase) {
+  startPhase(); let c = 3; beep(660, .08, 'sine');
+  const id = every(() => {
+    c--; const el = document.getElementById('cnt');
+    if (c > 0 && el) { el.textContent = c; el.style.animation = 'none'; el.offsetWidth; el.style.animation = ''; beep(660, .08, 'sine'); }
+    else { clearInterval(id); beep(990, .25, 'sine'); buzz(120); done(); }
+  }, 800);
+}
+function scoreboard(scores, target) {
+  const rows = Object.entries(scores).sort((x, y) => y[1] - x[1]);
+  if (!rows.length || rows.every(r => !r[1])) return '';
+  return `<div class="label">Scores${target ? ` · premier à ${target}` : ''}</div><div class="scores">${rows.map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}</span><span>${s}</span></div>`).join('')}</div>`;
+}
+
 function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
 /* ================= Démarrage ================= */
-const startHash = location.hash.slice(1);
-history.replaceState(null, '', location.pathname);
-showHome();
-if (makers[startHash] && (!G[startHash] || S.players.length >= G[startHash].min)) (G[startHash] ? openGame : openPage)(startHash);
+/* Boîte à outils partagée avec online.js (mode connecté) */
+window.APERO = { D, S, store, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
+  makers, openPage, VERSION, joinCode: null };
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+/* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
+document.addEventListener('DOMContentLoaded', () => {
+  const startHash = location.hash.slice(1);
+  history.replaceState(null, '', location.pathname);
+  showHome();
+  const join = startHash.match(/^join=([A-Za-z0-9]{4})$/);
+  if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
+  else if (makers[startHash] && (!G[startHash] || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
+});
+
+/* ================= Mises à jour ================= */
+/* Pendant que l'appli est ouverte, on regarde toutes les minutes (et à chaque retour
+   sur l'appli) le numéro publié dans version.json. S'il est plus récent que celui
+   qui tourne, une fenêtre propose d'actualiser. */
+let swReg = null, updShownFor = 0, updDismissed = 0;
+async function checkVersion() {
+  if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    const { version } = await r.json();
+    if (version > VERSION) showUpdate(version);
+  } catch {}
 }
+function showUpdate(v) {
+  if (document.querySelector('.upd') || updShownFor >= v && Date.now() - updDismissed < 10 * 60 * 1000) return;
+  updShownFor = v || updShownFor;
+  swReg && swReg.update().catch(() => {});   // commence à télécharger tout de suite
+  const inGame = !!current;
+  const w = document.createElement('div');
+  w.className = 'upd';
+  w.innerHTML = `<div class="box" role="dialog" aria-modal="true">
+      <div class="ico">✨</div>
+      <h3>Nouvelle version disponible</h3>
+      <p>${v ? `Tu as la version ${VERSION}, la version ${v} est sortie.` : 'Une mise à jour est prête.'}${inGame ? '<br><b>La partie en cours sera interrompue.</b>' : ''}</p>
+      <button class="btn primary big block go">Actualiser</button>
+      <button class="later">Plus tard</button>
+    </div>`;
+  w.querySelector('.go').addEventListener('click', applyUpdate);
+  w.querySelector('.later').addEventListener('click', () => { updDismissed = Date.now(); w.remove(); });
+  document.body.appendChild(w);
+  buzz(30);
+}
+async function applyUpdate() {
+  const btn = document.querySelector('.upd .go'); if (btn) { btn.disabled = true; btn.textContent = 'Mise à jour…'; }
+  try {
+    if (swReg) {
+      await swReg.update();
+      const sw = swReg.installing || swReg.waiting;
+      if (sw) await new Promise(ok => {
+        const t = setTimeout(ok, 8000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => { clearTimeout(t); ok(); }, { once: true });
+      });
+    }
+  } catch {}
+  location.reload();
+}
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdate(0); });
+  window.addEventListener('load', async () => {
+    try { swReg = await navigator.serviceWorker.register('sw.js'); } catch {}
+  });
+}
+document.addEventListener('visibilitychange', checkVersion);
+window.addEventListener('online', checkVersion);
+window.addEventListener('focus', checkVersion);
+setInterval(checkVersion, 60 * 1000);
+setTimeout(checkVersion, 3000);
 })();
