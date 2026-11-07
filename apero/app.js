@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 28;
+const VERSION = 29;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -14,10 +14,12 @@ const S = {
   players: store.get('players', []),
   spicy: store.get('spicy', false),
   spicyLvl: store.get('spicyLvl', 1),
+  sound: store.get('sound', true),
+  vibrate: store.get('vibrate', true),
   drinks: store.get('drinks', true),
   custom: store.get('custom', { verite: [], action: [], jamais: [], qui: [], preferes: [] })
 };
-const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('drinks', S.drinks); store.set('custom', S.custom); };
+const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); };
 
 /* ================= Utilitaires ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -76,7 +78,7 @@ function fill(text, cur) {
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
 const gages = () => { const g = S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
 
-function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch {} }
+function buzz(p) { if (!S.vibrate) return; try { navigator.vibrate && navigator.vibrate(p); } catch {} }
 function toast(msg) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
@@ -85,6 +87,7 @@ function toast(msg) {
 /* Son (Web Audio, aucun fichier) */
 let actx = null;
 function beep(freq = 880, dur = 0.06, type = 'square', vol = 0.15) {
+  if (!S.sound) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
     if (actx.state === 'suspended') actx.resume();
@@ -96,6 +99,7 @@ function beep(freq = 880, dur = 0.06, type = 'square', vol = 0.15) {
   } catch {}
 }
 function boomSound() {
+  if (!S.sound) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
     const len = actx.sampleRate * 1.2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
@@ -219,6 +223,8 @@ const home = {
       </div>
 
       <div class="section">
+        <div class="toggle"><div class="t"><b>Son et vibrations</b><span>Bips, buzzer, vibreur du téléphone</span></div>
+          <div class="minis"><button class="mini ${S.sound ? 'on' : ''}" data-a="sound" aria-label="Son">${S.sound ? '🔊' : '🔇'}</button><button class="mini ${S.vibrate ? 'on' : ''}" data-a="vibrate" aria-label="Vibrations">📳</button></div></div>
         <div class="toggle"><div class="t"><b>Avec alcool 🍻</b><span>Gorgées dans les règles (sinon : gages)</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
         <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>${S.spicy ? 'Activé : uniquement des questions trash et sexy' : 'Questions trash et sexy · 18+'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
         ${S.spicy ? `<div class="seg lvlseg"><button class="${S.spicyLvl !== 2 ? 'on' : ''}" data-a="lvl" data-v="1">🌶️ Coquin</button><button class="${S.spicyLvl === 2 ? 'on' : ''}" data-a="lvl" data-v="2">🌶️🌶️ Sans filtre</button></div>` : ''}
@@ -253,6 +259,8 @@ const home = {
       if (v === 2 && S.spicyLvl !== 2 && !confirm('🌶️🌶️ Niveau 2 « Sans filtre » : questions sexuelles très directes (pratiques, fantasmes, body count…) et actions chaudes.\n\nUniquement entre adultes consentants. Tout le monde est d’accord ?\n(Le Joker reste toujours possible.)')) return;
       S.spicyLvl = v; save(); applyTheme(); home.render(); toast(v === 2 ? 'Niveau 2 : sans filtre 😈' : 'Niveau 1 : coquin 🌶️'); return;
     }
+    if (a === 'sound') { S.sound = !S.sound; save(); home.render(); if (S.sound) beep(880, .08, 'sine'); return; }
+    if (a === 'vibrate') { S.vibrate = !S.vibrate; save(); home.render(); buzz(60); return; }
     if (a === 'drinks') { S.drinks = !S.drinks; save(); home.render(); }
     if (a === 'spicy') {
       if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return;
@@ -1254,11 +1262,22 @@ const makers = {
             <div class="tabs">${Object.entries(TABS).map(([k, t]) => `<button class="${tab === k ? 'on' : ''}" data-a="tab" data-v="${k}">${t}${S.custom[k]?.length ? ' · ' + S.custom[k].length : ''}</button>`).join('')}</div>
             <textarea id="ta" placeholder="${esc(PH[tab])}">${esc((S.custom[tab] || []).join('\n'))}</textarea>
             <button class="btn primary big block" data-a="save">Enregistrer</button>
+            <div class="row"><button class="btn" data-a="cshare">📤 Partager mes cartes</button></div>
+            <p class="hint" style="font-size:.82rem">Le lien contient toutes tes cartes perso : tes potes l'ouvrent et les ajoutent aux leurs en un appui.</p>
           </div>`);
       },
       on(a, el) {
         if (a === 'tab') { this.store(); tab = el.dataset.v; this.render(); }
         if (a === 'save') { this.store(); toast('Cartes enregistrées ✓'); this.render(); }
+        if (a === 'cshare') {
+          this.store();
+          const n = Object.values(S.custom).reduce((t, l) => t + (l || []).length, 0);
+          if (!n) return toast('Ajoute d’abord quelques cartes 🙂');
+          const url = location.origin + location.pathname + '#cards=' + encodeCards(S.custom);
+          const text = `Mes ${n} cartes perso pour Apéro 🥂`;
+          if (navigator.share) navigator.share({ title: 'Apéro', text, url }).catch(() => {});
+          else navigator.clipboard?.writeText(url).then(() => toast('Lien copié ✓'), () => toast('Impossible de copier le lien'));
+        }
       },
       store() {
         const ta = document.getElementById('ta'); if (!ta) return;
@@ -1345,6 +1364,32 @@ function scoreboard(scores, target, unit = '') {
 function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
 /* ================= Démarrage ================= */
+/* Partage des cartes perso dans un lien (#cards=...) */
+function encodeCards(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function decodeCards(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64 + '==='.slice((b64.length + 3) % 4));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+}
+function importCards(str) {
+  let data; try { data = decodeCards(str); } catch { return toast('Lien de cartes invalide 😕'); }
+  const keys = ['verite', 'action', 'jamais', 'qui', 'preferes'];
+  let added = 0;
+  const total = keys.reduce((t, k) => t + (Array.isArray(data[k]) ? data[k].length : 0), 0);
+  if (!total) return toast('Ce lien ne contient aucune carte');
+  if (!confirm(`Ajouter ${total} carte${total > 1 ? 's' : ''} perso partagée${total > 1 ? 's' : ''} à tes cartes ?`)) return;
+  keys.forEach(k => {
+    if (!Array.isArray(data[k])) return;
+    S.custom[k] = S.custom[k] || [];
+    data[k].forEach(t => { t = String(t).trim().slice(0, 200); if (t && !S.custom[k].includes(t)) { S.custom[k].push(t); added++; } });
+  });
+  save(); toast(`${added} carte${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''} ✓`);
+}
+
 /* Thème du mode épicé */
 function applyTheme() {
   document.documentElement.classList.toggle('spicy', !!S.spicy);
@@ -1363,6 +1408,8 @@ document.addEventListener('DOMContentLoaded', () => {
   history.replaceState(null, '', location.pathname);
   showHome();
   const join = startHash.match(/^join=([A-Za-z0-9]{4})$/);
+  const cards = startHash.match(/^cards=([A-Za-z0-9_-]+)$/);
+  if (cards) setTimeout(() => importCards(cards[1]), 300);
   if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
   else if (makers[startHash] && (!G[startHash] || G[startHash].free || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
 });
