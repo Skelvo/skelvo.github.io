@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 4;
+const VERSION = 5;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -111,7 +111,8 @@ const G = {
   qui:      { name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', fit: '-obb' },
   preferes: { name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
   mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
-  roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' }
+  roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
+  doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
 const fitAt = (id, n) => G[id].fit[clampN(n) - 2];             // 'b' | 'o' | '-'
@@ -141,7 +142,7 @@ function onAction(e) {
 function openGame(id) {
   const g = G[id];
   const m = minPlayers(id);
-  if (S.players.length < m) { toast(`${g.name} se joue à partir de ${m} joueurs 🙂`); document.querySelector('#pname')?.focus(); return; }
+  if (!g.free && S.players.length < m) { toast(`${g.name} se joue à partir de ${m} joueurs 🙂`); document.querySelector('#pname')?.focus(); return; }
   history.pushState({ g: id }, '', '#' + id);
   start(id);
 }
@@ -760,6 +761,79 @@ const makers = {
     }
   },
 
+  /* ---------- Le Doigt élu ---------- */
+  doigt() {
+    const g = G.doigt;
+    const COLORS = ['#ff5c8a', '#ffb547', '#3ddc97', '#3aa0ff', '#d65cff', '#28c7d9', '#ff8a3d', '#f2c14e', '#7b5cff', '#ff6fb5'];
+    let mode = 'un', phase = 'wait', armT = null;
+    const pts = new Map();   // identifiant du doigt -> { el, color }
+    let zone, label;
+    const setLabel = (t) => { if (label) label.innerHTML = t; };
+    const idle = () => setLabel(mode === 'un' ? 'Posez tous un doigt sur l’écran…' : 'Posez tous un doigt : deux équipes vont se former…');
+
+    function arm() {
+      clearTimeout(armT);
+      if (phase === 'done') return;
+      if (pts.size >= 2) {
+        phase = 'arming'; zone.classList.add('arming'); setLabel('Ne bougez plus…');
+        armT = setTimeout(choose, 1600);
+        beep(520, .05, 'sine', .08);
+      } else { phase = 'wait'; zone.classList.remove('arming'); idle(); }
+    }
+    function choose() {
+      phase = 'done'; zone.classList.remove('arming'); zone.classList.add('done');
+      const ids = shuffle([...pts.keys()]);
+      if (mode === 'un') {
+        const w = ids[0];
+        pts.forEach((p, id) => p.el.classList.add(id === w ? 'win' : 'lose'));
+        setLabel(`👆 L'élu ! ${S.drinks ? 'Il boit… ou il choisit qui boit 🍻' : esc(pick(gages()))}`);
+      } else {
+        const half = Math.ceil(ids.length / 2);
+        ids.forEach((id, i) => { const p = pts.get(id); const c = i < half ? '#ff5c8a' : '#3aa0ff'; p.el.style.setProperty('--c', c); p.el.classList.add('team'); });
+        setLabel('<b style="color:#ff5c8a">● Équipe rose</b> contre <b style="color:#3aa0ff">● Équipe bleue</b>');
+      }
+      beep(990, .25, 'sine'); buzz([80, 60, 200]);
+    }
+    function place(t) {
+      const r = zone.getBoundingClientRect();
+      let p = pts.get(t.identifier);
+      if (!p) {
+        if (phase === 'done') return;
+        const used = new Set([...pts.values()].map(x => x.color));
+        const color = COLORS.find(c => !used.has(c)) || pick(COLORS);
+        const el = document.createElement('i'); el.className = 'finger'; el.style.setProperty('--c', color);
+        zone.appendChild(el); p = { el, color }; pts.set(t.identifier, p); buzz(10);
+      }
+      p.el.style.left = (t.clientX - r.left) + 'px'; p.el.style.top = (t.clientY - r.top) + 'px';
+      return p;
+    }
+    function onTouch(e) {
+      e.preventDefault();
+      if (e.type === 'touchstart') { let added = false; [...e.changedTouches].forEach(t => { if (!pts.has(t.identifier) && place(t)) added = true; }); if (added) arm(); }
+      if (e.type === 'touchmove') [...e.changedTouches].forEach(t => pts.has(t.identifier) && place(t));
+      if (e.type === 'touchend' || e.type === 'touchcancel') {
+        [...e.changedTouches].forEach(t => { const p = pts.get(t.identifier); if (p) { if (phase !== 'done') p.el.remove(); pts.delete(t.identifier); } });
+        if (phase === 'done') { if (!pts.size) { zone.querySelectorAll('.finger').forEach(x => x.remove()); zone.classList.remove('done'); phase = 'wait'; idle(); } }
+        else arm();
+      }
+    }
+    return {
+      render() {
+        view(`${header(g.name)}
+          <div class="seg" style="margin-bottom:12px">
+            <button class="${mode === 'un' ? 'on' : ''}" data-a="mode" data-v="un">👆 Un élu</button>
+            <button class="${mode === 'eq' ? 'on' : ''}" data-a="mode" data-v="eq">⚔️ Deux équipes</button>
+          </div>
+          <div class="fzone" id="fz"><p class="flabel" id="fl"></p></div>`, () => {
+          zone = document.getElementById('fz'); label = document.getElementById('fl'); idle();
+          ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(t => zone.addEventListener(t, onTouch, { passive: false }));
+        });
+      },
+      on(a, el) { if (a === 'mode') { mode = el.dataset.v; clearTimeout(armT); pts.clear(); phase = 'wait'; this.render(); } },
+      leave() { clearTimeout(armT); }
+    };
+  },
+
   /* ---------- La Roue ---------- */
   roue() {
     const g = G.roue; let name = '?', spinning = false, final = false, gage = '';
@@ -849,6 +923,7 @@ const makers = {
             <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
             <h3>⚖️ Tu préfères ?</h3><p>Deux choix, tout le monde vote à main levée en même temps. La minorité boit. Il faut justifier les choix bizarres.</p>
             <h3>⏱️ Fais deviner</h3><p>Un joueur fait deviner un max de mots en un temps limité, en parlant, en mimant ou avec un seul mot. Il marque un point par mot trouvé.</p>
+            <h3>👆 Le Doigt élu</h3><p>Tout le monde pose un doigt sur l'écran. Quand plus personne ne bouge, l'appli en choisit un au hasard… ou forme deux équipes. Pas besoin d'entrer les prénoms.</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
           </div>`);
@@ -886,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
   showHome();
   const join = startHash.match(/^join=([A-Za-z0-9]{4})$/);
   if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
-  else if (makers[startHash] && (!G[startHash] || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
+  else if (makers[startHash] && (!G[startHash] || G[startHash].free || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
 });
 
 /* ================= Mises à jour ================= */
