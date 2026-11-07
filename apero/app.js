@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 3;
+const VERSION = 4;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -149,11 +149,14 @@ function openPage(id) { history.pushState({ p: id }, '', '#' + id); start(id); }
 function start(id) {
   clearTimers();
   current = makers[id]();
-  keepAwake(!!G[id]);
+  keepAwake(!!G[id] || id === 'online');
   current.render();
 }
-function goHome() { if (history.state && (history.state.g || history.state.p)) history.back(); else showHome(); }
-function showHome() { clearTimers(); current = null; keepAwake(false); home.render(); }
+function goHome() {
+  if (current && current.confirmLeave && !confirm(current.confirmLeave)) return;
+  if (history.state && (history.state.g || history.state.p)) history.back(); else showHome();
+}
+function showHome() { clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
 window.addEventListener('popstate', () => showHome());
 
 /* ================= Accueil ================= */
@@ -188,6 +191,9 @@ const home = {
         <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>Questions plus osées · 18+</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
       </div>
 
+      <button class="online-cta" data-a="page" data-id="online">
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Président, Imposteur</small></span><span class="go">›</span>
+      </button>
       ${games}
 
       <div class="links">
@@ -836,6 +842,8 @@ const makers = {
             <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
             <h3>🔮 Tu me connais ? <small>2-4 joueurs</small></h3><p>Le téléphone pose une question à un joueur, qui répond en secret. Les autres annoncent à voix haute ce qu'il a répondu selon eux. Un point par bonne réponse.</p>
             <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
+            <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
+            <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
             <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
             <h3>💣 La Bombe</h3><p>Une catégorie s'affiche. On allume la mèche, on donne un mot et on passe le téléphone. La bombe explose au hasard : celui qui la tient a perdu.</p>
             <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
@@ -867,10 +875,19 @@ function scoreboard(scores, target) {
 function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
 /* ================= Démarrage ================= */
-const startHash = location.hash.slice(1);
-history.replaceState(null, '', location.pathname);
-showHome();
-if (makers[startHash] && (!G[startHash] || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
+/* Boîte à outils partagée avec online.js (mode connecté) */
+window.APERO = { D, S, store, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
+  makers, openPage, VERSION, joinCode: null };
+
+/* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
+document.addEventListener('DOMContentLoaded', () => {
+  const startHash = location.hash.slice(1);
+  history.replaceState(null, '', location.pathname);
+  showHome();
+  const join = startHash.match(/^join=([A-Za-z0-9]{4})$/);
+  if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
+  else if (makers[startHash] && (!G[startHash] || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
+});
 
 /* ================= Mises à jour ================= */
 /* Quand une nouvelle version est publiée, le service worker la télécharge en arrière-plan
