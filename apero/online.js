@@ -162,7 +162,7 @@ function Imposteur(names) {
     const accused = Object.keys(tally).filter(p => tally[p] === top);
     return {
       id: 'imposteur', phase, me, first, players: names,
-      word: imps.includes(me) ? impWord : civ,
+      word: imps.includes(me) ? impWord : names.includes(me) ? civ : null,
       voted: votes[me] || null, nVotes: Object.keys(votes).length,
       result: phase === 'result' ? { imps, civ, impWord, tally, caught: accused.length === 1 && imps.includes(accused[0]), accused } : null
     };
@@ -492,7 +492,7 @@ function Loups(names) {
     if (a.k === 'again' && phase === 'end' && isHost) { start(); return; }
   }
   function view(me) {
-    const r = roles[me], dead = !isAlive(me);
+    const r = roles[me], dead = names.includes(me) && !isAlive(me);
     const seeAll = dead || phase === 'end';
     return {
       id: 'loups', phase, me, night, role: r, roleInfo: ROLES[r], dead,
@@ -524,12 +524,13 @@ const GAMES = {
 
 /* Extensions : d'autres fichiers (online-*.js) ajoutent leurs jeux ici.
    Un jeu = { make, name, e, d, min, max, g, cat, render(g, ctx), on(a, el, ctx), onState(g, prevG, ctx), onEvent(e, ctx) } */
+const TV = '📺';
 const CATS = { ambiance: '🎉 Ambiance', cartes: '🃏 Cartes & dés', plateau: '♟️ Plateau (à 2)', reflexes: '⚡ Réflexes en direct' };
 A.online = { games: GAMES, register: (id, def) => { GAMES[id] = def; }, norm, cleanStrokes, ROLES };
 
 /* ================= Écran « En ligne » ================= */
 A.makers.online = function () {
-  let ui = { screen: 'menu', err: '', code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
+  let ui = { screen: 'menu', err: '', tv: false, code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
   A.joinCode = null;
   let peer = null, conn = null, isHost = false, state = null, sel = new Set(), lastHand = '';
   // Côté hôte
@@ -538,7 +539,7 @@ A.makers.online = function () {
   const me = () => ui.name;
   const self = {
     get confirmLeave() { return (ui.screen === 'room') ? (isHost ? 'Quitter ? La partie s’arrêtera pour tout le monde.' : 'Quitter la partie ?') : null; },
-    leave() { try { room && room.game && room.game.stop && room.game.stop(); } catch {} try { conn && conn.close(); } catch {} try { peer && peer.destroy(); } catch {} peer = conn = room = null; },
+    leave() { document.documentElement.classList.remove('tv'); try { room && room.game && room.game.stop && room.game.stop(); } catch {} try { conn && conn.close(); } catch {} try { peer && peer.destroy(); } catch {} peer = conn = room = null; },
     render, on
   };
 
@@ -547,7 +548,7 @@ A.makers.online = function () {
     ui.screen = 'connecting'; ui.msg = 'Création de la partie…'; render();
     try { await loadPeer(); } catch { return fail('Impossible de charger le mode en ligne. Vérifie ta connexion internet.'); }
     isHost = true;
-    room = { code: null, host: me(), players: [{ name: me(), conn: null, online: true }], game: null, gameId: null };
+    room = { code: null, host: me(), players: [{ name: me(), conn: null, online: true }], tvs: [], game: null, gameId: null };
     const tryOpen = (tries) => {
       const code = genCode();
       const p = new window.Peer(PREFIX + code, peerOptions());
@@ -568,11 +569,17 @@ A.makers.online = function () {
   }
   function dropConn(c) {
     if (!room) return;
+    if (room.tvs.includes(c)) { room.tvs = room.tvs.filter(x => x !== c); toast('📺 Écran TV déconnecté'); return broadcast(); }
     const pl = room.players.find(x => x.conn === c);
     if (pl) { pl.online = false; pl.conn = null; toast(`${pl.name} s'est déconnecté·e`); broadcast(); }
   }
   function onHostMsg(c, m) {
     if (!room || !m || typeof m !== 'object') return;
+    if (m.t === 'hello' && m.tv) {
+      if (!room.tvs.includes(c)) room.tvs.push(c);
+      toast('📺 Écran TV connecté'); beep(880, .08, 'sine');
+      broadcast(); return;
+    }
     if (m.t === 'hello') {
       const name = String(m.name || '').trim().slice(0, 18);
       if (!name) return c.send({ t: 'err', m: 'Prénom manquant' });
@@ -614,7 +621,7 @@ A.makers.online = function () {
   function stateFor(name) {
     return {
       code: room.code, host: room.host, me: name,
-      players: room.players.map(p => ({ name: p.name, online: p.online })),
+      players: room.players.map(p => ({ name: p.name, online: p.online })), tvs: room.tvs.length,
       gameId: room.gameId, g: room.game ? room.game.view(name) : null
     };
   }
@@ -629,10 +636,12 @@ A.makers.online = function () {
       if (p.name === room.host) onEvent(e);
       else if (p.conn && p.conn.open) { try { p.conn.send({ t: 'ev', e }); } catch {} }
     });
+    room.tvs.forEach(c => { if (c.open) { try { c.send({ t: 'ev', e }); } catch {} } });
   }
   function broadcast() {
     if (!room) return;
     room.players.forEach(p => { if (p.name !== room.host) sendTo(p.name, { t: 'state', s: stateFor(p.name) }); });
+    if (room.tvs.length) { const s = stateFor(TV); room.tvs.forEach(c => { if (c.open) { try { c.send({ t: 'state', s }); } catch {} } }); }
     setState(stateFor(room.host));
   }
 
@@ -649,9 +658,9 @@ A.makers.online = function () {
     p.on('error', e => { clearTimeout(timeout); if (!opened || e.type === 'peer-unavailable') fail(netError(e)); });
     p.on('open', () => {
       const c = p.connect(PREFIX + code, { reliable: true, serialization: 'json' }); conn = c;
-      c.on('open', () => { opened = true; clearTimeout(timeout); c.send({ t: 'hello', name: me() }); });
+      c.on('open', () => { opened = true; clearTimeout(timeout); c.send(ui.tv ? { t: 'hello', tv: true } : { t: 'hello', name: me() }); });
       c.on('data', m => {
-        if (m.t === 'state') { if (ui.screen !== 'room') { ui.screen = 'room'; } setState(m.s); }
+        if (m.t === 'state') { if (ui.screen !== 'room') { ui.screen = 'room'; document.documentElement.classList.toggle('tv', ui.tv); } setState(m.s); }
         if (m.t === 'err') { if (m.soft) { toast(m.m); buzz(60); } else fail(m.m); }
         if (m.t === 'ev') onEvent(m.e);
       });
@@ -696,6 +705,7 @@ A.makers.online = function () {
         <button class="btn primary big block" data-a="create">✨ Créer une partie</button>
         <div class="or-sep"><span>ou rejoindre</span></div>
         <div class="add-row"><input id="ocode" class="codein" maxlength="4" placeholder="CODE" value="${esc(ui.code)}" autocomplete="off" autocapitalize="characters" /><button class="btn" data-a="join">Rejoindre</button></div>
+        <button class="btn block tvbtn" data-a="tvjoin">📺 Afficher sur la TV ou un ordi <small>(écran spectateur, sans jouer)</small></button>
       </div>`, () => {
         const n = document.getElementById('oname'), c = document.getElementById('ocode');
         n.addEventListener('input', () => { ui.name = n.value; });
@@ -729,6 +739,13 @@ A.makers.online = function () {
 
   function renderLobby() {
     const online = state.players.filter(p => p.online).length;
+    if (state.me === TV) return A.view(`${top('📺 Écran TV')}
+      <div class="stage tvlobby">
+        <div class="codecard"><span>Rejoins sur skelvo.fr/apero › Jouer en ligne</span><b>${esc(state.code)}</b><div class="qr" id="qr"></div><small class="qrhint">ou scanne avec l'appareil photo</small></div>
+        <div class="label">Joueurs connectés · ${online}</div>
+        <div class="chips" style="margin-top:0">${state.players.map(p => `<span class="chip ${p.online ? '' : 'offline'}" style="padding-right:14px"><i class="dot"></i>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}</span>`).join('')}</div>
+        <div class="waiting"><div class="spinner small"></div>${esc(state.host)} choisit le jeu…</div>
+      </div>`, () => drawQR(location.origin + location.pathname + '#join=' + state.code));
     A.view(`${top('Salon')}
       <div class="stage">
         <div class="codecard">
@@ -738,6 +755,7 @@ A.makers.online = function () {
           <small class="qrhint">Scanne avec l'appareil photo pour rejoindre</small>
           <button class="btn" data-a="share">📤 Inviter</button>
         </div>
+        ${amHost() ? `<p class="hint tvhint">📺 ${state.tvs ? `<b>Écran TV connecté${state.tvs > 1 ? ` (${state.tvs})` : ''}</b> : la partie s'affiche en grand.` : `Envie d'afficher la partie en grand ? Ouvre <b>skelvo.fr/apero</b> sur la TV ou un ordi › Jouer en ligne › tape <b>${esc(state.code)}</b> › 📺 Afficher sur la TV.`}</p>` : ''}
         <div class="label">Joueurs connectés · ${online}</div>
         <div class="chips" style="margin-top:0">${state.players.map(p => `<span class="chip ${p.online ? '' : 'offline'}" style="padding-right:14px"><i class="dot"></i>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}${p.name === state.me ? ' (toi)' : ''}</span>`).join('')}</div>
         ${amHost() ? `
@@ -815,6 +833,15 @@ A.makers.online = function () {
 
   /* --- Imposteur --- */
   function renderImposteur(g) {
+    if (g.me === TV && g.phase !== 'result') return A.view(`${top("L'Imposteur")}
+      <div class="stage">
+        <div class="card" style="--g:linear-gradient(160deg,#1fb5a4,#0e6a71)">
+          <div class="tag">${g.phase === 'word' ? 'Chacun regarde son mot secret 🤫' : 'Vote secret 🗳️'}</div>
+          <div class="secret">${g.phase === 'word' ? `${esc(g.first)} commence` : 'Qui est l’imposteur ?'}</div>
+          <div class="sub">${g.phase === 'word' ? 'Un mot chacun, à tour de rôle. Faites un ou deux tours, puis votez !' : `${g.nVotes} / ${g.players.length} votes`}</div>
+        </div>
+        <div class="chips" style="justify-content:center">${g.players.map(p => `<span class="chip" style="padding-right:14px">${esc(p)}</span>`).join('')}</div>
+      </div>`);
     if (g.phase === 'word') return A.view(`${top("L'Imposteur")}
       <div class="stage">
         <div class="card hideable" style="--g:linear-gradient(160deg,#1fb5a4,#0e6a71)" data-a="peek">
@@ -882,8 +909,8 @@ A.makers.online = function () {
       <div class="stage">
         ${players}
         ${bidBox}
-        <div class="label">Tes dés (secrets 🤫) · ${g.total} dés en jeu</div>
-        <div class="dice">${g.mine.map(v => die(v)).join('')}</div>
+        <div class="label mineonly">Tes dés (secrets 🤫) · ${g.total} dés en jeu</div>
+        <div class="dice mineonly">${g.mine.map(v => die(v)).join('')}</div>
         <p class="log">${esc(g.log)}</p>
         ${myTurn ? `
           <div class="turnbar mine">👉 À toi : surenchéris ou accuse !</div>
@@ -1199,8 +1226,10 @@ A.makers.online = function () {
   /* --- Loups-garous --- */
   const roleName = r => r ? `${ROLES[r].e} ${ROLES[r].name}` : '';
   function renderLoups(g) {
+    const tv = g.me === TV;
+    if (tv) g = { ...g, dead: true, roleInfo: { e: '📺', name: 'Écran TV', desc: '' } };
     const R = g.roleInfo;
-    const roleChip = `<div class="rolechip ${g.role === 'loup' ? 'wolf' : ''}" data-a="peek">${ui.peek ? `${R.e} ${esc(R.name)}` : '👁️ Mon rôle'}</div>`;
+    const roleChip = tv ? '' : `<div class="rolechip ${g.role === 'loup' ? 'wolf' : ''}" data-a="peek">${ui.peek ? `${R.e} ${esc(R.name)}` : '👁️ Mon rôle'}</div>`;
     const plist = (mode) => `<div class="lplayers">${g.players.map(p => {
         const disabled = !p.alive || (mode === 'vote' && p.name === g.me) || (mode === 'night' && (
           (g.role === 'loup' && p.role === 'loup') || (g.role === 'voyante' && p.name === g.me) || (g.role === 'docteur' && p.name === g.lastDoc)));
@@ -1209,10 +1238,16 @@ A.makers.online = function () {
         return `<button class="lp ${p.alive ? '' : 'dead'} ${chosen ? 'chosen' : ''}" ${mode && !disabled ? `data-a="${mode === 'vote' ? 'lvote' : 'lnight'}" data-p="${esc(p.name)}"` : 'disabled'}>
           <b>${p.alive ? '' : '💀 '}${esc(p.name)}${p.name === g.me ? ' (toi)' : ''}</b>${p.role ? `<span>${roleName(p.role)}</span>` : ''}${wolfVoters.length ? `<em>🐺 ${wolfVoters.map(esc).join(', ')}</em>` : ''}</button>`;
       }).join('')}</div>`;
-    const deadNote = g.dead && g.phase !== 'end' ? `<p class="exch">👻 Tu es mort·e : tu vois tous les rôles, mais chut, plus un mot !</p>` : '';
+    const deadNote = !tv && g.dead && g.phase !== 'end' ? `<p class="exch">👻 Tu es mort·e : tu vois tous les rôles, mais chut, plus un mot !</p>` : '';
     const hostBtn = (label, a) => amHost() ? `<button class="btn primary big block" data-a="${a}">${label}</button>` : `<div class="waiting"><div class="spinner small"></div>${esc(state.host)} continue…</div>`;
     const T = (title, body, extra = '') => A.view(`${A.header(title, `<span class="room-code">${esc(state.code)}</span>`)}<div class="stage">${extra}${body}</div>`);
 
+    if (tv && g.phase === 'roles') return T('Loups-garous 🐺', `
+      <div class="card" style="--g:linear-gradient(160deg,#2c5364,#203a43)">
+        <div class="tag">La partie commence</div>
+        <div class="secret" style="font-size:2.4rem">Chacun découvre son rôle secret 🤫</div>
+        <div class="sub">${g.readyCount} / ${g.players.length} prêts</div>
+      </div>${plist(null)}`);
     if (g.phase === 'roles') return T('Loups-garous', `
       <div class="card ${ui.peek ? '' : 'hideable'}" style="--g:${g.role === 'loup' ? 'linear-gradient(160deg,#7a1630,#2b0a12)' : 'linear-gradient(160deg,#2c5364,#203a43)'}" data-a="peek">
         <div class="tag">Ton rôle secret</div>
@@ -1225,7 +1260,7 @@ A.makers.online = function () {
 
     if (g.phase === 'night') {
       let task;
-      if (g.dead) task = `<p class="hint">Le village dort… 🌙</p>`;
+      if (g.dead) task = `<p class="hint">Le village dort… 🌙${tv ? ` <b>${g.pending}</b> en attente` : ''}</p>`;
       else if (g.acted) task = `<div class="waiting">✓ C'est noté. Garde les yeux fermés… (${g.pending} en attente)</div>`;
       else if (g.role === 'loup') task = `<p class="hint"><b>🐺 Loups :</b> choisissez votre victime. Mettez-vous d'accord en silence (vos votes s'affichent entre loups).</p>`;
       else if (g.role === 'voyante') task = `<p class="hint"><b>🔮 Voyante :</b> choisis un joueur pour découvrir son rôle.</p>`;
@@ -1280,7 +1315,9 @@ A.makers.online = function () {
   }
   function on(a, el) {
     if (state && state.g && GAMES[state.g.id] && GAMES[state.g.id].on && GAMES[state.g.id].on(a, el, ctx()) !== false) return;
+    if (a === 'tvjoin') { ui.tv = true; ui.err = ''; ui.code = (document.getElementById('ocode')?.value || ui.code); return joinRoom(); }
     if (a === 'create' || a === 'join') {
+      ui.tv = false;
       ui.name = (document.getElementById('oname')?.value || ui.name).trim().replace(/\s+/g, ' ');
       if (!ui.name) { ui.err = 'Entre ton prénom d’abord'; return render(); }
       A.store.set('onlineName', ui.name); ui.err = '';

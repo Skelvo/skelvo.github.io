@@ -285,10 +285,10 @@ function renderBJ(g, ctx) {
     return ctx.view(`${ctx.top(T)}
       <div class="stage">
         ${dealer}
-        ${g.myBet ? `<div class="turnbar mine">Ta mise : 🪙 ${g.myBet} · en attente des autres</div>`
+        <div class="mineonly">${g.myBet ? `<div class="turnbar mine">Ta mise : 🪙 ${g.myBet} · en attente des autres</div>`
           : g.myStack >= 10 ? `<div class="label">Ta mise (tu as 🪙 ${g.myStack})</div>
             <div class="seg">${chips.map(c => `<button data-a="bjbet" data-v="${c}">${c}</button>`).join('')}<button data-a="bjbet" data-v="${g.myStack}">Tout</button></div>`
-          : '<p class="hint">Plus de jetons… demande à l’hôte de te recaver 😅</p>'}
+          : '<p class="hint">Plus de jetons… demande à l’hôte de te recaver 😅</p>'}</div>
         ${others}
         ${ctx.amHost() ? `<div class="row"><button class="btn" data-a="bjrebuy">Recaver</button><button class="btn" data-a="bjdeal" ${g.nBets ? '' : 'disabled'}>Distribuer</button></div>` : ''}
       </div>`);
