@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 21;
+const VERSION = 22;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -37,7 +37,8 @@ function deck(items) {
 }
 function pool(key) {
   const src = D[key];
-  const base = src.soft.concat(S.spicy ? src.hot : []);
+  // mode épicé : les cartes épicées REMPLACENT les cartes normales
+  const base = S.spicy && src.hot && src.hot.length ? src.hot : src.soft;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
   return base.concat(mine);
@@ -181,7 +182,7 @@ const home = {
       ${block('👍 Ça marche aussi', group('o'))}
       ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
     view(`
-      <div class="brand"><div class="logo">🥂</div><div><h1>Apéro</h1><p>Jeux de soirée · gratuit · sans pub</p></div></div>
+      <div class="brand"><div class="logo">${S.spicy ? '🌶️' : '🥂'}</div><div><h1>Apéro${S.spicy ? ' <span class="hotbadge">18+</span>' : ''}</h1><p>${S.spicy ? 'Édition épicée 🔥 · questions trash' : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
 
       <div class="section">
         <h2><span>Joueurs</span><span>${S.players.length || ''}</span></h2>
@@ -194,7 +195,7 @@ const home = {
 
       <div class="section">
         <div class="toggle"><div class="t"><b>Avec alcool 🍻</b><span>Gorgées dans les règles (sinon : gages)</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
-        <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>Questions plus osées · 18+</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
+        <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>${S.spicy ? 'Activé : uniquement des questions trash et sexy' : 'Questions trash et sexy · 18+'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
@@ -222,7 +223,10 @@ const home = {
     if (a === 'del') { S.players.splice(+el.dataset.i, 1); home.n = null; save(); home.render(); }
     if (a === 'n') { home.n = +el.dataset.v; home.render(); }
     if (a === 'drinks') { S.drinks = !S.drinks; save(); home.render(); }
-    if (a === 'spicy') { S.spicy = !S.spicy; save(); home.render(); if (S.spicy) toast('Mode épicé activé 🌶️'); }
+    if (a === 'spicy') {
+      if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return;
+      S.spicy = !S.spicy; save(); applyTheme(); home.render(); toast(S.spicy ? 'Mode épicé activé 🌶️🔥' : 'Retour au mode normal 🥂');
+    }
     if (a === 'game') openGame(el.dataset.id);
     if (a === 'page') openPage(el.dataset.id);
   }
@@ -250,6 +254,7 @@ const makers = {
             <button class="choice" style="background:linear-gradient(150deg,#7b5cff,#4b2bb8)" data-a="v">Vérité<small>Réponds honnêtement</small></button>
             <button class="choice" style="background:linear-gradient(150deg,#ff5c8a,#b0306e)" data-a="a">Action<small>Pas de chichis</small></button>
             <button class="btn" data-a="rand">🎲 Au hasard</button>
+            ${S.spicy ? '<p class="hint" style="font-size:.85rem">🌶️ Mode épicé : chacun peut refuser une carte, c’est le Joker.</p>' : ''}
           </div>`);
         view(`${header(g.name)}
           <div class="stage">
@@ -1309,6 +1314,13 @@ function scoreboard(scores, target, unit = '') {
 function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
 /* ================= Démarrage ================= */
+/* Thème du mode épicé */
+function applyTheme() {
+  document.documentElement.classList.toggle('spicy', !!S.spicy);
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? '#1a0606' : '#120d1f';
+}
+applyTheme();
+
 /* Boîte à outils partagée avec online.js (mode connecté) */
 window.APERO = { D, S, store, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
   makers, openPage, VERSION, joinCode: null };

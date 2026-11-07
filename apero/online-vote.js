@@ -44,7 +44,7 @@ function keepTyping(key, g) {
    👉 QUI POURRAIT… — vote anonyme
    ====================================================================== */
 function QuiOnline(names) {
-  const src = A.D.qui, deck = A.deck(src.soft.concat(A.S.spicy ? src.hot : []));
+  const src = A.D.qui, deck = A.deck(A.S.spicy ? src.hot : src.soft);
   let round = 0, q, votes, phase;
   function next() { round++; q = deck.next(); votes = {}; phase = 'vote'; }
   function act(who, a, isHost) {
