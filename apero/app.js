@@ -2,6 +2,7 @@
 'use strict';
 
 const D = window.DATA;
+const VERSION = 2;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -175,7 +176,7 @@ const home = {
         <button class="btn" data-a="page" data-id="cartes">✍️ Mes cartes</button>
         <button class="btn" data-a="page" data-id="regles">📖 Règles</button>
       </div>
-      <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »</p>
+      <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »<br>Version ${VERSION}</p>
     `, () => {
       document.getElementById('addf').addEventListener('submit', e => {
         e.preventDefault();
@@ -669,7 +670,32 @@ history.replaceState(null, '', location.pathname);
 showHome();
 if (makers[startHash] && (!G[startHash] || S.players.length >= G[startHash].min)) (G[startHash] ? openGame : openPage)(startHash);
 
+/* ================= Mises à jour ================= */
+/* Quand une nouvelle version est publiée, le service worker la télécharge en arrière-plan
+   puis prend la main : on propose alors d'actualiser. */
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  const hadController = !!navigator.serviceWorker.controller;
+  let shown = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || shown) return;
+    shown = true; showUpdateBanner();
+  });
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      const check = () => reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+      setInterval(check, 15 * 60 * 1000);
+    } catch {}
+  });
+}
+function showUpdateBanner() {
+  if (document.querySelector('.update')) return;
+  const b = document.createElement('div');
+  b.className = 'update';
+  b.innerHTML = `<span>✨ Nouvelle version</span><button class="go">Actualiser</button><button class="x" aria-label="Plus tard">✕</button>`;
+  b.querySelector('.go').addEventListener('click', () => location.reload());
+  b.querySelector('.x').addEventListener('click', () => b.remove());
+  document.body.appendChild(b);
 }
 })();
