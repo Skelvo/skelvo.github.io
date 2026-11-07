@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 25;
+const VERSION = 26;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -26,13 +26,35 @@ const pick = a => a[rnd(a.length)];
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 /* Paquet sans répétition : on ne revoit une carte qu'une fois tout le paquet passé */
+/* Paquet de cartes avec mémoire : les cartes déjà vues (même lors des parties
+   précédentes) passent après celles qu'on n'a pas encore eues. Une carte ne
+   revient qu'une fois tout le paquet épuisé. */
+const hashOf = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const rand = n => { try { const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] % n; } catch { return rnd(n); } };
+const shuffleR = arr => { const x = arr.slice(); for (let i = x.length - 1; i > 0; i--) { const j = rand(i + 1); [x[i], x[j]] = [x[j], x[i]]; } return x; };
 function deck(items) {
+  const key = 'seen:' + hashOf(items.length + JSON.stringify(items.slice(0, 3)));
+  const id = c => hashOf(JSON.stringify(c));
+  const ids = new Set(items.map(id));
+  let seen = store.get(key, []).filter(x => ids.has(x));
   let pile = [], last = null;
+  function refill() {
+    const s = new Set(seen);
+    let fresh = items.filter(c => !s.has(id(c)));
+    if (!fresh.length) { seen = seen.slice(-Math.max(1, Math.floor(items.length / 3))); const s2 = new Set(seen); fresh = items.filter(c => !s2.has(id(c))); }
+    const old = items.filter(c => seen.includes(id(c)));
+    pile = shuffleR(old).concat(shuffleR(fresh));                    // on pioche par la fin : les nouvelles d'abord
+    if (pile.length > 1 && pile[pile.length - 1] === last) pile.unshift(pile.pop());
+  }
   return {
     size: items.length,
     next() {
-      if (!pile.length) { pile = shuffle(items); if (pile.length > 1 && pile[pile.length - 1] === last) pile.unshift(pile.pop()); }
-      return (last = pile.pop());
+      if (!pile.length) refill();
+      const c = pile.pop(); last = c;
+      const k = id(c); seen = seen.filter(x => x !== k); seen.push(k);
+      if (seen.length >= items.length) seen = seen.slice(-Math.max(1, Math.floor(items.length / 3)));   // cycle complet : les dernières vues restent en fin de paquet
+      store.set(key, seen);
+      return c;
     }
   };
 }
