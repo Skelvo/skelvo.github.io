@@ -341,13 +341,21 @@ textarea:focus{border-color:var(--accent);}
 .dhalf.go .dmsg,.dhalf.trap .dmsg{color:#10240f;font-size:clamp(2.6rem,14vw,4rem);}
 .dmid{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px;background:var(--bg);min-height:62px;}
 
+/* Main sûre */
+.level{position:relative;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,#24324a,#141a2b);border:3px solid var(--line);
+  display:grid;place-items:center;box-shadow:inset 0 0 40px rgba(0,0,0,.6);}
+.level i{position:absolute;width:250px;height:250px;border-radius:50%;border:4px solid var(--ok);box-shadow:0 0 20px rgba(61,220,151,.4);transition:transform .1s linear;}
+.level b{position:absolute;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#ffb547 60%,#e0702a);box-shadow:0 4px 12px rgba(0,0,0,.5);}
+/* Secoue-le */
+.shake-num{font-size:7rem;font-variant-numeric:tabular-nums;animation:none;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=6"></script>
-<script src="app.js?v=6"></script>
-<script src="online.js?v=6"></script>
+<script src="data.js?v=7"></script>
+<script src="app.js?v=7"></script>
+<script src="online.js?v=7"></script>
 </body>
 </html>
