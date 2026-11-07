@@ -13,7 +13,9 @@ Toutes les cartes sont dans `data.js` :
 Après une modification, augmente le numéro de version partout :
 - `CACHE` dans `sw.js` (ex. `apero-v3`) et les `?v=` de la liste `FILES` ;
 - les `?v=` des scripts dans `index.html` ;
-- `VERSION` en haut de `app.js` (affichée en bas de l'accueil).
+- `VERSION` en haut de `app.js` (affichée en bas de l'accueil) ;
+- `version.json`.
 
-Les téléphones téléchargent la nouvelle version en arrière-plan et affichent
-un bandeau « Nouvelle version dispo · Actualiser ».
+Les téléphones vérifient `version.json` toutes les minutes tant que l'appli est
+ouverte : dès qu'il annonce une version plus récente, une fenêtre
+« Nouvelle version disponible · Actualiser » s'affiche.

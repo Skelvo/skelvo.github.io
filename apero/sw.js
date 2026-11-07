@@ -1,5 +1,5 @@
 /* Hors-ligne : on garde l'appli en cache, et on la met à jour en arrière-plan. */
-/* À chaque mise à jour de l'appli : augmenter ce numéro (et les ?v= dans index.html). */
+/* À chaque mise à jour : augmenter ce numéro, les ?v= ici et dans index.html, VERSION dans app.js et version.json. */
 const CACHE = 'apero-v4';
 const FILES = ['./', 'index.html', 'app.js?v=4', 'data.js?v=4', 'online.js?v=4', 'vendor/peerjs-1.5.4.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
@@ -11,6 +11,7 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  if (new URL(e.request.url).pathname.endsWith('/version.json')) return;   // toujours la version en ligne
   e.respondWith(
     caches.open(CACHE).then(async c => {
       const hit = await c.match(e.request, { ignoreSearch: e.request.mode === 'navigate' });

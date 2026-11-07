@@ -890,31 +890,61 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ================= Mises à jour ================= */
-/* Quand une nouvelle version est publiée, le service worker la télécharge en arrière-plan
-   puis prend la main : on propose alors d'actualiser. */
+/* Pendant que l'appli est ouverte, on regarde toutes les minutes (et à chaque retour
+   sur l'appli) le numéro publié dans version.json. S'il est plus récent que celui
+   qui tourne, une fenêtre propose d'actualiser. */
+let swReg = null, updShownFor = 0, updDismissed = 0;
+async function checkVersion() {
+  if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    const { version } = await r.json();
+    if (version > VERSION) showUpdate(version);
+  } catch {}
+}
+function showUpdate(v) {
+  if (document.querySelector('.upd') || updShownFor >= v && Date.now() - updDismissed < 10 * 60 * 1000) return;
+  updShownFor = v || updShownFor;
+  swReg && swReg.update().catch(() => {});   // commence à télécharger tout de suite
+  const inGame = !!current;
+  const w = document.createElement('div');
+  w.className = 'upd';
+  w.innerHTML = `<div class="box" role="dialog" aria-modal="true">
+      <div class="ico">✨</div>
+      <h3>Nouvelle version disponible</h3>
+      <p>${v ? `Tu as la version ${VERSION}, la version ${v} est sortie.` : 'Une mise à jour est prête.'}${inGame ? '<br><b>La partie en cours sera interrompue.</b>' : ''}</p>
+      <button class="btn primary big block go">Actualiser</button>
+      <button class="later">Plus tard</button>
+    </div>`;
+  w.querySelector('.go').addEventListener('click', applyUpdate);
+  w.querySelector('.later').addEventListener('click', () => { updDismissed = Date.now(); w.remove(); });
+  document.body.appendChild(w);
+  buzz(30);
+}
+async function applyUpdate() {
+  const btn = document.querySelector('.upd .go'); if (btn) { btn.disabled = true; btn.textContent = 'Mise à jour…'; }
+  try {
+    if (swReg) {
+      await swReg.update();
+      const sw = swReg.installing || swReg.waiting;
+      if (sw) await new Promise(ok => {
+        const t = setTimeout(ok, 8000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => { clearTimeout(t); ok(); }, { once: true });
+      });
+    }
+  } catch {}
+  location.reload();
+}
 if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;
-  let shown = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || shown) return;
-    shown = true; showUpdateBanner();
-  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdate(0); });
   window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('sw.js');
-      const check = () => reg.update().catch(() => {});
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
-      setInterval(check, 15 * 60 * 1000);
-    } catch {}
+    try { swReg = await navigator.serviceWorker.register('sw.js'); } catch {}
   });
 }
-function showUpdateBanner() {
-  if (document.querySelector('.update')) return;
-  const b = document.createElement('div');
-  b.className = 'update';
-  b.innerHTML = `<span>✨ Nouvelle version</span><button class="go">Actualiser</button><button class="x" aria-label="Plus tard">✕</button>`;
-  b.querySelector('.go').addEventListener('click', () => location.reload());
-  b.querySelector('.x').addEventListener('click', () => b.remove());
-  document.body.appendChild(b);
-}
+document.addEventListener('visibilitychange', checkVersion);
+window.addEventListener('online', checkVersion);
+window.addEventListener('focus', checkVersion);
+setInterval(checkVersion, 60 * 1000);
+setTimeout(checkVersion, 3000);
 })();
