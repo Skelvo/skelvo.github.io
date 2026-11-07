@@ -500,15 +500,39 @@ textarea:focus{border-color:var(--accent);}
 .sgroup em{font-style:normal;font-weight:800;color:var(--ok);}
 .sgroup.hit{background:rgba(61,220,151,.14);border:1px solid rgba(61,220,151,.4);}
 
+/* Poker & Blackjack */
+.pc.back{background:repeating-linear-gradient(45deg,#7a1630 0 6px,#a02040 6px 12px);border:3px solid #fff;}
+.pc.slot{background:rgba(255,255,255,.08);border:2px dashed rgba(255,255,255,.25);box-shadow:none;}
+.pc.tiny{width:26px;height:36px;padding:2px 3px;border-radius:5px;}
+.pc.tiny b{font-size:.72rem;} .pc.tiny i{font-size:.75rem;}
+.pktable .pile{gap:5px;}
+.pktable .pc{width:50px;height:72px;}
+.pkseats{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;}
+.pkseat{padding:8px 10px;border-radius:14px;background:var(--panel);border:2px solid transparent;display:flex;flex-direction:column;gap:2px;}
+.pkseat b{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pkseat > span{font-size:.8rem;color:var(--muted);font-weight:700;}
+.pkseat em{font-style:normal;font-size:.75rem;color:var(--accent-2);font-weight:700;}
+.pkseat.now{border-color:var(--accent);}
+.pkseat.gone{opacity:.45;}
+.pkseat.win{border-color:var(--ok);background:rgba(61,220,151,.12);}
+.pkseat .mini{display:flex;gap:3px;margin-top:3px;}
+.dbtn{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#fff;color:#111;font-size:.65rem;font-weight:800;vertical-align:1px;}
+.pkhand{display:flex;justify-content:center;gap:10px;}
+.pkraise{display:flex;align-items:center;gap:12px;}
+.pkraise input{flex:1;accent-color:var(--accent);}
+.pkraise b{min-width:60px;text-align:right;font-variant-numeric:tabular-nums;}
+.bjval{text-align:center;font-size:1.6rem;font-weight:800;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=17"></script>
-<script src="app.js?v=17"></script>
-<script src="online.js?v=17"></script>
-<script src="online-social.js?v=17"></script>
-<script src="online-vote.js?v=17"></script>
+<script src="data.js?v=18"></script>
+<script src="app.js?v=18"></script>
+<script src="online.js?v=18"></script>
+<script src="online-social.js?v=18"></script>
+<script src="online-vote.js?v=18"></script>
+<script src="online-cards.js?v=18"></script>
 </body>
 </html>
