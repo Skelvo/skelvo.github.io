@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 24;
+const VERSION = 25;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -13,10 +13,11 @@ const store = {
 const S = {
   players: store.get('players', []),
   spicy: store.get('spicy', false),
+  spicyLvl: store.get('spicyLvl', 1),
   drinks: store.get('drinks', true),
   custom: store.get('custom', { verite: [], action: [], jamais: [], qui: [], preferes: [] })
 };
-const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('drinks', S.drinks); store.set('custom', S.custom); };
+const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('drinks', S.drinks); store.set('custom', S.custom); };
 
 /* ================= Utilitaires ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -38,7 +39,7 @@ function deck(items) {
 function pool(key) {
   const src = D[key];
   // mode épicé : les cartes épicées REMPLACENT les cartes normales
-  const base = S.spicy && src.hot && src.hot.length ? src.hot : src.soft;
+  const base = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
   return base.concat(mine);
@@ -51,7 +52,7 @@ function fill(text, cur) {
   });
 }
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
-const gages = () => { const g = S.spicy && D.gagesHot ? D.gagesHot : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
+const gages = () => { const g = S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
 
 function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch {} }
 function toast(msg) {
@@ -184,7 +185,7 @@ const home = {
       ${block('👍 Ça marche aussi', group('o'))}
       ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
     view(`
-      <div class="brand"><div class="logo">${S.spicy ? '🌶️' : '🥂'}</div><div><h1>Apéro${S.spicy ? ' <span class="hotbadge">18+</span>' : ''}</h1><p>${S.spicy ? 'Édition épicée 🔥 · questions trash' : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
+      <div class="brand"><div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : '🥂'}</div><div><h1>Apéro${S.spicy ? ` <span class="hotbadge">${S.spicyLvl === 2 ? '18+ · sans filtre' : '18+'}</span>` : ''}</h1><p>${S.spicy ? (S.spicyLvl === 2 ? 'Niveau 2 🌶️🌶️ · aucune limite (sauf le consentement)' : 'Édition épicée 🔥 · questions trash') : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
 
       <div class="section">
         <h2><span>Joueurs</span><span>${S.players.length || ''}</span></h2>
@@ -198,6 +199,7 @@ const home = {
       <div class="section">
         <div class="toggle"><div class="t"><b>Avec alcool 🍻</b><span>Gorgées dans les règles (sinon : gages)</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
         <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>${S.spicy ? 'Activé : uniquement des questions trash et sexy' : 'Questions trash et sexy · 18+'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
+        ${S.spicy ? `<div class="seg lvlseg"><button class="${S.spicyLvl !== 2 ? 'on' : ''}" data-a="lvl" data-v="1">🌶️ Coquin</button><button class="${S.spicyLvl === 2 ? 'on' : ''}" data-a="lvl" data-v="2">🌶️🌶️ Sans filtre</button></div>` : ''}
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
@@ -224,6 +226,11 @@ const home = {
   on(a, el) {
     if (a === 'del') { S.players.splice(+el.dataset.i, 1); home.n = null; save(); home.render(); }
     if (a === 'n') { home.n = +el.dataset.v; home.render(); }
+    if (a === 'lvl') {
+      const v = +el.dataset.v;
+      if (v === 2 && S.spicyLvl !== 2 && !confirm('🌶️🌶️ Niveau 2 « Sans filtre » : questions sexuelles très directes (pratiques, fantasmes, body count…) et actions chaudes.\n\nUniquement entre adultes consentants. Tout le monde est d’accord ?\n(Le Joker reste toujours possible.)')) return;
+      S.spicyLvl = v; save(); applyTheme(); home.render(); toast(v === 2 ? 'Niveau 2 : sans filtre 😈' : 'Niveau 1 : coquin 🌶️'); return;
+    }
     if (a === 'drinks') { S.drinks = !S.drinks; save(); home.render(); }
     if (a === 'spicy') {
       if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return;
@@ -1319,7 +1326,8 @@ function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '
 /* Thème du mode épicé */
 function applyTheme() {
   document.documentElement.classList.toggle('spicy', !!S.spicy);
-  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? '#1a0606' : '#120d1f';
+  document.documentElement.classList.toggle('lvl2', !!S.spicy && S.spicyLvl === 2);
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? (S.spicyLvl === 2 ? '#0c0208' : '#1a0606') : '#120d1f';
 }
 applyTheme();
 

@@ -405,3 +405,195 @@ D.gagesHot = [
   "Le groupe choisit quelqu'un que tu dois embrasser sur la joue.", "Avoue la chose la plus coquine que tu aies faite cette année."
 ];
 })();
+
+/* ======================================================================
+   NIVEAU 2 🌶️🌶️ « Sans filtre » — adultes consentants uniquement.
+   Questions franches ; toute action impliquant quelqu'un se fait avec
+   son accord, sinon gorgées ou Joker.
+   ====================================================================== */
+(() => {
+const D = window.DATA;
+const add2 = (key, list) => { D[key].hot2 = (D[key].hot2 || []).concat(list); };
+
+add2('verite', [
+  "Fellation / cunnilingus : tu préfères donner ou recevoir ?",
+  "Tu as déjà essayé la sodomie ? Verdict ?",
+  "Ta pratique préférée, sans tourner autour du pot.",
+  "Le truc le plus hard que tu aies essayé au lit ?",
+  "À quelle fréquence tu te fais plaisir tout·e seul·e ?",
+  "Le dernier porno que tu as regardé : quelle catégorie ?",
+  "Ton plus gros fantasme BDSM ?",
+  "Tu as déjà couché avec quelqu'un du même sexe ? Tu recommencerais ?",
+  "Tu as déjà fait un plan à plus de trois ?",
+  "Ton record de partenaires dans une même soirée ?",
+  "La zone de ton corps qui te rend complètement fou / folle ?",
+  "Ton jouet coquin préféré ?",
+  "Tu t'es déjà filmé·e pendant l'amour ?",
+  "Dominant·e ou soumis·e ? Et jusqu'où ?",
+  "Le meilleur coup de ta vie : note sur 10, et qu'est-ce qui l'a rendu si bon ?",
+  "Combien de fois par semaine, idéalement ?",
+  "Tu as déjà fait un échange de partenaires ?",
+  "Ce que tu n'as jamais osé essayer mais qui te tente vraiment ?",
+  "Avec qui ici tu coucherais, si personne ne le savait jamais ?",
+  "Qui ici a l'air d'être le meilleur coup ? Et le pire ?",
+  "Ton pire fiasco au lit, avec tous les détails gênants.",
+  "Tu as déjà envoyé une vidéo coquine ?",
+  "Ce soir, au sex-shop, tu repars avec quoi ?",
+  "Ton record de fois en 24 heures ?",
+  "Préliminaires interminables ou directement l'essentiel ?",
+  "Le fantasme que tu veux réaliser avant tes 40 ans ?",
+  "Tu as déjà fait l'amour dans les toilettes d'une boîte ?",
+  "La taille, ça compte ? Ton avis honnête.",
+  "Ce que ton / ta dernier·e partenaire faisait mal au lit ?",
+  "Ton fantasme le plus tabou (entre adultes consentants, tout est permis ici) ?",
+  "Ta durée record, préliminaires compris ?",
+  "Tu as déjà eu un orgasme en public, même discrètement ?",
+  "Le pire mot que quelqu'un t'ait dit pendant l'amour ?",
+  "Ce que tu préfères qu'on te murmure au lit ?",
+  "Tu as déjà fait l'amour avec quelqu'un en couple (avec quelqu'un d'autre) ?",
+  "Ta plus longue période sans sexe ? Et comment tu as tenu ?"
+]);
+
+add2('action', [
+  "Retire tout jusqu'aux sous-vêtements pour un tour, ou 5 gorgées.",
+  "Strip-tease en musique jusqu'aux sous-vêtements (ou 5 gorgées).",
+  "Embrasse {p} avec la langue pendant 5 secondes (s'il / si elle accepte), sinon 4 gorgées.",
+  "Lèche du sel ou du sucre dans le cou de {p} (avec son accord).",
+  "Body shot sur le ventre de {p} (avec son accord).",
+  "Laisse {p} t'enlever un vêtement avec les dents (avec ton accord).",
+  "Mime ta pratique préférée sur un coussin, à fond, pendant 10 secondes.",
+  "Simule 15 secondes de ta meilleure performance… avec le canapé.",
+  "Lap dance d'une minute à {p}, sensualité maximale (vêtements gardés).",
+  "Montre ta dernière photo coquine… ou bois 5 gorgées.",
+  "Donne une fessée sonore à {p} (avec son accord).",
+  "Fais un suçon dans le cou de {p} (avec son accord), sinon 4 gorgées.",
+  "Embrasse chaque joueur là où il / elle l'accepte.",
+  "Passe le prochain tour en sous-vêtements (ou 5 gorgées).",
+  "Murmure à {p} ce que tu lui ferais s'il / si elle était à toi ce soir.",
+  "Envoie à ton crush : « J'ai une envie folle de toi ce soir. »",
+  "Enlève le haut de {p} (avec son accord) et porte-le jusqu'au prochain tour.",
+  "Passe une minute dans le noir avec {p}. Les autres comptent.",
+  "Mime ta position préférée avec {p}, habillés (avec son accord).",
+  "Suce le doigt de {p} très lentement, en le / la regardant dans les yeux (avec son accord).",
+  "Glisse ta main dans la poche arrière de {p} jusqu'à ton prochain tour (avec son accord).",
+  "Fais l'inventaire de ta table de nuit à voix haute.",
+  "Enregistre un vocal très coquin de 10 secondes et envoie-le à {p}.",
+  "Fais ton meilleur dirty talk à l'oreille de {p} pendant 20 secondes.",
+  "Laisse {p} choisir un vêtement que tu enlèves.",
+  "Embrasse {p} n'importe où sauf sur la bouche (avec son accord)."
+]);
+
+add2('jamais', [
+  "Je n'ai jamais essayé la sodomie.",
+  "Je n'ai jamais fait de plan à quatre ou plus.",
+  "Je n'ai jamais couché avec quelqu'un du même sexe.",
+  "Je n'ai jamais utilisé de jouet coquin à deux.",
+  "Je n'ai jamais regardé de porno à plusieurs.",
+  "Je n'ai jamais fait d'échange de partenaires.",
+  "Je n'ai jamais acheté quelque chose dans un sex-shop.",
+  "Je n'ai jamais été filmé·e pendant l'amour.",
+  "Je n'ai jamais fait de BDSM.",
+  "Je n'ai jamais fait l'amour plus de deux heures d'affilée.",
+  "Je n'ai jamais fait de visio coquine.",
+  "Je n'ai jamais couché avec quelqu'un qui était en couple.",
+  "Je n'ai jamais eu deux relations en même temps.",
+  "Je n'ai jamais utilisé de menottes, de bandeau ou de cravache.",
+  "Je n'ai jamais pris de photos de moi nu·e.",
+  "Je n'ai jamais couché avec quelqu'un du travail, au travail.",
+  "Je n'ai jamais eu un massage qui a fini au lit.",
+  "Je n'ai jamais fait l'amour dans un jacuzzi.",
+  "Je n'ai jamais fait de strip-tease intégral.",
+  "Je n'ai jamais couché avec deux personnes de la même bande de potes.",
+  "Je n'ai jamais pensé à quelqu'un dans cette pièce en me faisant plaisir.",
+  "Je n'ai jamais simulé pour qu'on me laisse dormir.",
+  "Je n'ai jamais eu de plan avec l'ex de quelqu'un ici.",
+  "Je n'ai jamais acheté de lingerie pour une occasion spéciale.",
+  "Je n'ai jamais fait de jeu de rôle avec costume.",
+  "Je n'ai jamais eu d'orgasme simultané.",
+  "Je n'ai jamais fait l'amour avec quelqu'un dont j'ignorais le prénom.",
+  "Je n'ai jamais fait l'amour dans un lieu où on aurait pu me voir."
+]);
+
+add2('qui', [
+  "avoir le plus gros body count ?",
+  "avoir déjà fait un plan à plus de trois ?",
+  "avoir la table de nuit la mieux remplie ?",
+  "être le / la plus dominant·e au lit ?",
+  "être le / la plus soumis·e au lit ?",
+  "regarder le plus de porno ?",
+  "accepter un échange de partenaires ?",
+  "aller en club libertin le mois prochain ?",
+  "avoir déjà couché avec quelqu'un du même sexe ?",
+  "dire oui à un plan à trois ce soir ?",
+  "avoir déjà filmé ses ébats ?",
+  "durer le moins longtemps ?",
+  "durer le plus longtemps ?",
+  "avoir le fantasme le plus tabou ?",
+  "être le meilleur coup de la bande ?",
+  "avoir un compte coquin payant ?",
+  "dépenser le plus au sex-shop ?",
+  "avoir une collection de lingerie secrète ?",
+  "le faire cinq fois dans la même nuit ?",
+  "avoir déjà couché avec quelqu'un dans cette pièce ?",
+  "faire le meilleur dirty talk ?",
+  "craquer le premier pour un plan à trois ?"
+]);
+
+add2('preferes', [
+  ["Ne plus jamais avoir d'orgasme", "Ne plus jamais pouvoir embrasser"],
+  ["Un plan à trois avec deux hommes", "Avec deux femmes"],
+  ["Dominer toute une nuit", "Être dominé·e toute une nuit"],
+  ["Que ta sextape fuite", "Que tout ton historique porno fuite"],
+  ["Faire l'amour devant tes potes", "Regarder tes potes faire l'amour"],
+  ["Un échange de partenaires", "Un plan à trois avec un·e inconnu·e"],
+  ["Coucher avec {p}", "Coucher avec la personne à ta droite"],
+  ["Un·e partenaire nul·le au lit mais génial·e", "Incroyable au lit mais insupportable"],
+  ["5 minutes tous les jours", "3 heures une fois par mois"],
+  ["Une soirée en club libertin", "Une soirée BDSM"],
+  ["Un orgasme à chaque éternuement", "Éternuer à chaque orgasme"],
+  ["Coucher avec ton / ta pire ennemi·e", "Avec l'ex de ton / ta meilleur·e ami·e"],
+  ["Uniquement des préliminaires à vie", "Plus jamais de préliminaires"],
+  ["Lingerie ou costume à chaque fois", "Toujours rien du tout"],
+  ["Que tes potes découvrent ton plus gros fantasme", "Que tes parents découvrent ton body count"]
+]);
+
+add2('juge', [
+  "Fais ton meilleur dirty talk au juge (créatif, pas juste vulgaire).",
+  "Mime un plan à trois… tout·e seul·e.",
+  "Vends un jouet coquin au juge comme un pro du télé-achat.",
+  "Raconte ta meilleure nuit façon commentateur de foot.",
+  "Invente une position et fais-la deviner au juge en mime.",
+  "Strip-tease de 20 secondes (jusqu'où tu veux, sous-vêtements maximum).",
+  "Trouve la meilleure réplique juste après l'orgasme.",
+  "Fais la pub d'un club libertin pour retraités.",
+  "Explique à un·e extraterrestre comment on fait l'amour, sans un seul gros mot.",
+  "Fais un dirty talk avec une voix de dessin animé."
+]);
+
+D.motfinHot2 = [
+  "Le pire moment pour avoir un orgasme : …", "Le nom de la position que tu viens d'inventer : …",
+  "Le pire objet à trouver dans un sex-shop : …", "La pire chose à dire juste après l'amour : …",
+  "Le slogan d'une appli de plans à trois : …", "Le pire endroit pour tourner une sextape : …",
+  "La pire chose à crier en plein orgasme : …", "Le pire nom de catégorie porno : …",
+  "Le titre du roman érotique de ta grand-mère : …", "Le safe word le plus anti-érotique : …",
+  "Ce qu'on trouve dans le vestiaire d'un club libertin : …", "Le pire déguisement pour un jeu de rôle : …",
+  "Ce que pense vraiment ton jouet coquin de toi : …", "Le pire dirty talk de l'histoire : …"
+];
+D.quiecritHot2 = [
+  "Ta pratique préférée ?", "Ton body count ?", "Ton fantasme le plus tabou ?", "Le meilleur coup de ta vie, en une phrase ?",
+  "Ta pire expérience au lit ?", "Le truc le plus hard que tu aies essayé ?", "Combien de fois par semaine, idéalement ?",
+  "Ta catégorie de porno préférée ?", "Le lieu le plus risqué où tu l'as fait ?", "Ce que tu n'oserais jamais demander au lit ?",
+  "Le jouet coquin que tu aimerais essayer ?", "Ta durée record ?"
+];
+D.gagesHot2 = [
+  "Retire un vêtement (chaussettes interdites).", "Passe un tour en sous-vêtements, ou 5 gorgées.",
+  "Embrasse la personne de ton choix sur la bouche (avec son accord), sinon 4 gorgées.",
+  "Fais un body shot sur la personne de ton choix (avec son accord).", "Avoue ta pratique préférée.",
+  "Raconte ton meilleur coup en 3 phrases.", "Lap dance d'une minute à la personne à ta gauche.",
+  "Donne ton téléphone déverrouillé au groupe pendant une minute.", "Avoue ton body count.",
+  "Gémis pendant 10 secondes sans rire.", "Avoue avec qui ici tu coucherais.",
+  "Laisse la personne à ta droite t'enlever un vêtement (avec ton accord).",
+  "Mime ta position préférée avec la personne de ton choix, habillés (avec son accord).",
+  "Révèle ton fantasme le plus tabou.", "Fais ton meilleur dirty talk à la personne de ton choix."
+];
+})();
