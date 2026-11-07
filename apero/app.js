@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 6;
+const VERSION = 7;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -113,7 +113,9 @@ const G = {
   mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
   roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
   doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
-  duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true }
+  duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true },
+  main:     { name: 'Main sûre', e: '🫳', d: 'Ne fais pas trembler le téléphone', g: 'linear-gradient(150deg,#5ee7c5,#1d7f9a)', fit: 'bbbb', free: true, isNew: true },
+  secoue:   { name: 'Secoue-le', e: '🫨', d: 'Le plus fort en 5 secondes', g: 'linear-gradient(150deg,#ff6b6b,#a1239c)', fit: 'bbbb', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
 const fitAt = (id, n) => G[id].fit[clampN(n) - 2];             // 'b' | 'o' | '-'
@@ -902,6 +904,136 @@ const makers = {
     };
   },
 
+  /* ---------- Main sûre (gyroscope) ---------- */
+  main() {
+    const g = G.main, names = S.players.length ? S.players.slice() : ['Toi'];
+    let idx = 0, phase = 'intro', best = {}, ref = null, t0 = 0, raf = 0, last = null, err = '';
+    const START_TOL = 14, END_TOL = 1.2, SHRINK = 25;   // degrés, secondes
+    const tolAt = s => Math.max(END_TOL, START_TOL - (START_TOL - END_TOL) * s / SHRINK);
+    const onOri = e => { if (e.beta == null) return; last = { b: e.beta, g: e.gamma }; };
+    function stop() { cancelAnimationFrame(raf); window.removeEventListener('deviceorientation', onOri); }
+    function loop() {
+      if (phase !== 'play') return;
+      const s = (performance.now() - t0) / 1000;
+      if (last && !ref) ref = { ...last };
+      const db = last && ref ? last.b - ref.b : 0, dg = last && ref ? last.g - ref.g : 0;
+      const dev = Math.hypot(db, dg), tol = tolAt(s);
+      const dot = document.getElementById('lvdot'), ring = document.getElementById('lvring'), clk = document.getElementById('lvclk');
+      const R = 110, k = R / START_TOL;
+      if (dot) dot.style.transform = `translate(${Math.max(-R, Math.min(R, dg * k))}px, ${Math.max(-R, Math.min(R, db * k))}px)`;
+      if (ring) ring.style.transform = `scale(${tol / START_TOL})`;
+      if (clk) clk.textContent = s.toFixed(1) + ' s';
+      if (dev > tol && s > .4) {
+        stop(); phase = 'fail'; const sc = Math.round(s * 10) / 10;
+        best[names[idx]] = Math.max(best[names[idx]] || 0, sc);
+        beep(200, .3, 'sawtooth'); buzz([200, 80, 200]); this_.render(sc); return;
+      }
+      if (Math.floor(s) !== Math.floor(s - 1 / 60) && s > 1) beep(600 + s * 20, .03, 'sine', .06);
+      raf = requestAnimationFrame(loop);
+    }
+    const this_ = {
+      render(sc) {
+        const who = names[idx];
+        const board = scoreboard(best, 0, ' s');
+        if (phase === 'intro' || phase === 'fail') return view(`${header(g.name)}
+          <div class="stage">
+            ${phase === 'fail' ? `<div class="card" style="--g:linear-gradient(160deg,#ff5c8a,#8f2059);flex:none;min-height:0;padding:26px">
+                <div class="tag" style="position:static">Ça a bougé !</div><div class="big-num" style="font-size:5rem">${sc} s</div><div class="sub">${esc(who)}</div></div>` : ''}
+            <div class="turn">${phase === 'fail' && names.length > 1 ? 'Au suivant :' : 'À toi'}<strong>${esc(names[phase === 'fail' ? (idx + 1) % names.length : idx])}</strong></div>
+            <p class="hint">Tiens le téléphone <b>à plat, dans ta main</b> (pas posé sur la table !). Garde la bille dans le cercle : il rétrécit de plus en plus. Celui qui tient le plus longtemps gagne.</p>
+            ${err ? `<p class="errbox">${esc(err)}</p>` : ''}
+            <button class="btn primary big block" data-a="go">${phase === 'fail' ? 'Joueur suivant' : 'Je suis prêt·e'}</button>
+            ${board}
+          </div>`);
+        view(`${header(g.name)}
+          <div class="stage" style="align-items:center;justify-content:center">
+            <div class="turn">${esc(who)}<strong id="lvclk">0.0 s</strong></div>
+            <div class="level"><i id="lvring"></i><b id="lvdot"></b></div>
+            <p class="hint">Bouge pas… 🤫</p>
+          </div>`);
+      },
+      async on(a) {
+        if (a !== 'go') return;
+        if (phase === 'fail') idx = (idx + 1) % names.length;
+        err = '';
+        if (!(await askSensors('orientation'))) { err = 'Impossible d’accéder aux capteurs de mouvement. Sur iPhone, il faut accepter l’autorisation ; sinon ce téléphone n’en a pas.'; phase = 'intro'; return this_.render(); }
+        last = null; ref = null; window.addEventListener('deviceorientation', onOri);
+        phase = 'play'; this_.render();
+        await new Promise(r => setTimeout(r, 900));
+        if (!last) { stop(); phase = 'intro'; err = 'Aucun capteur ne répond sur ce téléphone 😕'; return this_.render(); }
+        t0 = performance.now(); ref = null; beep(880, .1, 'sine'); loop();
+      },
+      leave: stop
+    };
+    return this_;
+  },
+
+  /* ---------- Secoue-le (accéléromètre) ---------- */
+  secoue() {
+    const g = G.secoue, names = S.players.length ? S.players.slice() : ['Toi'], DUR = 5;
+    let idx = 0, phase = 'intro', scores = {}, power = 0, t0 = 0, raf = 0, got = false, err = '', lastScore = 0;
+    const onMot = e => {
+      const a = e.acceleration && e.acceleration.x != null ? e.acceleration : null;
+      const ag = e.accelerationIncludingGravity && e.accelerationIncludingGravity.x != null;
+      if (!a && !ag) return;          // mesure vide : pas de vrai capteur
+      got = true; if (phase !== 'play') return;
+      let m;
+      if (a) m = Math.hypot(a.x, a.y, a.z);
+      else { const q = e.accelerationIncludingGravity || {}; m = Math.abs(Math.hypot(q.x || 0, q.y || 0, q.z || 0) - 9.81); }
+      if (m > 1.5) power += m * (e.interval > 1 ? e.interval / 1000 : (e.interval || .016));
+    };
+    function stop() { cancelAnimationFrame(raf); window.removeEventListener('devicemotion', onMot); }
+    function loop() {
+      const s = (performance.now() - t0) / 1000, left = Math.max(0, DUR - s);
+      const val = Math.round(power * 10);
+      const n = document.getElementById('shk'), bar = document.getElementById('shbar'), c = document.getElementById('shclk');
+      if (n) n.textContent = val; if (c) c.textContent = left.toFixed(1);
+      if (bar) bar.style.transform = `scaleX(${Math.min(1, val / 600)})`;
+      if (left <= 0) {
+        stop(); phase = 'done'; lastScore = val; scores[names[idx]] = Math.max(scores[names[idx]] || 0, val);
+        beep(990, .3, 'sine'); buzz(200); return this_.render();
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    const verdict = v => v > 900 ? 'Tremblement de terre 🌋' : v > 550 ? 'Shaker professionnel 🍸' : v > 300 ? 'Pas mal du tout 💪' : v > 120 ? 'Un peu mou… 🥱' : 'Tu dors ? 😴';
+    const this_ = {
+      render() {
+        const board = scoreboard(scores);
+        if (phase === 'play') return view(`${header(g.name)}
+          <div class="stage" style="text-align:center;justify-content:center">
+            <div class="turn">${esc(names[idx])} · <span id="shclk">${DUR}.0</span> s</div>
+            <div class="big-num shake-num" id="shk">0</div>
+            <div class="timer" style="height:18px"><i id="shbar" style="transform:scaleX(0)"></i></div>
+            <p class="hint" style="font-size:1.2rem;font-weight:800;color:var(--text)">SECOUE ! 🫨</p>
+          </div>`);
+        view(`${header(g.name)}
+          <div class="stage">
+            ${phase === 'done' ? `<div class="card" style="--g:${g.g};flex:none;min-height:0;padding:26px">
+                <div class="tag" style="position:static">${esc(names[idx])}</div><div class="big-num" style="font-size:5.5rem">${lastScore}</div><div class="sub">${verdict(lastScore)}</div></div>` : ''}
+            <div class="turn">${phase === 'done' && names.length > 1 ? 'Au suivant :' : 'À toi'}<strong>${esc(names[phase === 'done' ? (idx + 1) % names.length : idx])}</strong></div>
+            <p class="hint">Tiens <b>fermement</b> le téléphone (dragonne ou deux mains 😅) et secoue-le le plus fort possible pendant ${DUR} secondes.</p>
+            ${err ? `<p class="errbox">${esc(err)}</p>` : ''}
+            <button class="btn primary big block" data-a="go">${phase === 'done' ? 'Joueur suivant' : 'C’est parti !'}</button>
+            ${board}
+          </div>`);
+      },
+      async on(a) {
+        if (a !== 'go') return;
+        if (phase === 'done') idx = (idx + 1) % names.length;
+        err = '';
+        if (!(await askSensors('motion'))) { err = 'Impossible d’accéder aux capteurs de mouvement. Sur iPhone, il faut accepter l’autorisation.'; phase = 'intro'; return this_.render(); }
+        got = false; power = 0; window.addEventListener('devicemotion', onMot);
+        phase = 'count'; view(`${header(g.name)}<div class="stage" style="justify-content:center;text-align:center"><div class="big-num" id="cnt">3</div><p class="hint">${esc(names[idx])}, prépare-toi…</p></div>`);
+        countdown(this_, () => {
+          if (!got) { stop(); phase = 'intro'; err = 'Aucun capteur ne répond sur ce téléphone 😕'; return this_.render(); }
+          phase = 'play'; power = 0; t0 = performance.now(); this_.render(); loop();
+        }, () => {});
+      },
+      leave: stop
+    };
+    return this_;
+  },
+
   /* ---------- La Roue ---------- */
   roue() {
     const g = G.roue; let name = '?', spinning = false, final = false, gage = '';
@@ -993,6 +1125,8 @@ const makers = {
             <h3>⏱️ Fais deviner</h3><p>Un joueur fait deviner un max de mots en un temps limité, en parlant, en mimant ou avec un seul mot. Il marque un point par mot trouvé.</p>
             <h3>👆 Le Doigt élu</h3><p>Tout le monde pose un doigt sur l'écran. Quand plus personne ne bouge, l'appli en choisit un au hasard… ou forme deux équipes. Pas besoin d'entrer les prénoms.</p>
             <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
+            <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
+            <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
           </div>`);
@@ -1000,6 +1134,16 @@ const makers = {
     };
   }
 };
+
+/* Autorisation des capteurs de mouvement (obligatoire sur iPhone, après un appui) */
+async function askSensors(kind) {
+  const Ev = kind === 'motion' ? window.DeviceMotionEvent : window.DeviceOrientationEvent;
+  if (!Ev) return true;   // on tente quand même : l'absence de mesures sera détectée ensuite
+  if (typeof Ev.requestPermission === 'function') {
+    try { return (await Ev.requestPermission()) !== 'denied'; } catch { return false; }
+  }
+  return true;
+}
 
 /* Compte à rebours 3-2-1 dans l'élément #cnt */
 function countdown(game, done, startPhase) {
@@ -1010,10 +1154,10 @@ function countdown(game, done, startPhase) {
     else { clearInterval(id); beep(990, .25, 'sine'); buzz(120); done(); }
   }, 800);
 }
-function scoreboard(scores, target) {
+function scoreboard(scores, target, unit = '') {
   const rows = Object.entries(scores).sort((x, y) => y[1] - x[1]);
   if (!rows.length || rows.every(r => !r[1])) return '';
-  return `<div class="label">Scores${target ? ` · premier à ${target}` : ''}</div><div class="scores">${rows.map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}</span><span>${s}</span></div>`).join('')}</div>`;
+  return `<div class="label">Scores${target ? ` · premier à ${target}` : ''}</div><div class="scores">${rows.map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}</span><span>${s}${unit}</span></div>`).join('')}</div>`;
 }
 
 function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
