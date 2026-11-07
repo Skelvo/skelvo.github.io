@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 11;
+const VERSION = 12;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -115,6 +115,7 @@ const G = {
   doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
   duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true },
   main:     { name: 'Main sûre', e: '🫳', d: 'Ne fais pas trembler le téléphone', g: 'linear-gradient(150deg,#5ee7c5,#1d7f9a)', fit: 'bbbb', free: true, isNew: true },
+  enigmes:  { name: 'Énigmes', e: '🧩', d: 'Devinettes et casse-têtes en équipe', g: 'linear-gradient(150deg,#4facfe,#6a3093)', fit: 'bbbb', free: true, isNew: true },
   yams:     { name: 'Le Yams', e: '🎲', d: '5 dés, 3 lancers, une grille', g: 'linear-gradient(150deg,#e94560,#533483)', fit: 'bbbo', isNew: true },
   secoue:   { name: 'Secoue-le', e: '🫨', d: 'Le plus fort en 5 secondes', g: 'linear-gradient(150deg,#ff6b6b,#a1239c)', fit: 'bbbb', free: true, isNew: true }
 };
@@ -1035,6 +1036,52 @@ const makers = {
     return this_;
   },
 
+  /* ---------- Énigmes ---------- */
+  enigmes() {
+    const g = G.enigmes, d = deck(D.enigmes), DUR = 60;
+    let e = d.next(), phase = 'think', hint = false, left = DUR, n = 1, team = 0, scores = {};
+    const start = () => {
+      clearTimers(); left = DUR;
+      every(() => {
+        left--; const c = document.getElementById('enclk'), bar = document.getElementById('enbar');
+        if (c) c.textContent = left; if (bar) bar.style.transform = `scaleX(${left / DUR})`;
+        if (left <= 10 && left > 0) beep(700, .04);
+        if (left <= 0) { clearTimers(); phase = 'reveal'; beep(300, .4, 'sawtooth'); buzz(200); this_.render(); }
+      }, 1000);
+    };
+    const this_ = {
+      render() {
+        const think = phase === 'think';
+        view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">Énigme ${n} · équipe ${team} pt${team > 1 ? 's' : ''}</div>
+            ${think ? `<div class="timer"><i id="enbar" style="transform:scaleX(${left / DUR})"></i></div><div class="clock" id="enclk" style="font-size:2.4rem">${left}</div>` : ''}
+            <div class="card" style="--g:${g.g}">
+              <div class="tag">${think ? 'Réfléchissez ensemble' : 'Réponse'}</div>
+              <div class="txt" style="font-size:clamp(1.25rem,5.4vw,1.7rem)">${esc(e[0])}</div>
+              ${hint && think ? `<div class="sub">💡 ${esc(e[2])}</div>` : ''}
+              ${!think ? `<div class="secret" style="margin-top:16px;font-size:clamp(1.5rem,7vw,2.2rem)">${esc(e[1])}</div>` : ''}
+            </div>
+            ${think ? `<div class="row"><button class="btn" data-a="hint" ${hint ? 'disabled' : ''}>💡 Indice</button><button class="btn primary" data-a="show">Voir la réponse</button></div>`
+              : `${S.players.length ? `<div class="label">Qui a trouvé ?</div><div class="chips" style="margin-top:0">${S.players.map(p => `<button class="chip pickp" data-a="who" data-p="${esc(p)}" style="padding-right:14px">${esc(p)}</button>`).join('')}<button class="chip pickp" data-a="who" data-p="" style="padding-right:14px">Personne 😅</button></div>`
+                  : `<div class="row"><button class="btn" data-a="who" data-p="">Raté 😅</button><button class="btn ok" data-a="who" data-p="*">On a trouvé ✓</button></div>`}`}
+            ${scoreboard(scores)}
+          </div>`);
+      },
+      on(a, el) {
+        if (a === 'hint') { hint = true; this_.render(); }
+        if (a === 'show') { clearTimers(); phase = 'reveal'; this_.render(); }
+        if (a === 'who') {
+          const p = el.dataset.p;
+          if (p) { team++; beep(1320, .1, 'sine'); buzz(40); if (p !== '*') scores[p] = (scores[p] || 0) + 1; }
+          e = d.next(); n++; hint = false; phase = 'think'; this_.render(); start();
+        }
+      }
+    };
+    setTimeout(start, 0);
+    return this_;
+  },
+
   /* ---------- Le Yams ---------- */
   yams() {
     const g = G.yams, names = S.players.slice();
@@ -1210,6 +1257,7 @@ const makers = {
             <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
             <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
             <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
+            <h3>🧩 Énigmes</h3><p>Une devinette, une charade ou un casse-tête : vous avez 60 secondes pour trouver ensemble. Un indice est disponible si vous bloquez. Celui qui trouve marque un point (et l'équipe aussi).</p>
             <h3>🎲 Le Yams</h3><p>Chacun son tour : 3 lancers maximum, on garde les dés qu'on veut entre deux lancers, puis on inscrit le résultat dans une case (une seule fois par case). Brelan et Carré = total des dés, Full = 25, Petite suite = 30, Grande suite = 40, Yams = 50. Bonus de 35 si le haut de la grille atteint 63.</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
