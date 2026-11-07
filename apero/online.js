@@ -420,11 +420,103 @@ function Tel(names, notify) {
   return { act, view, stop: () => clearTimeout(timer), min: 3, max: 10 };
 }
 
+/* ---------- Loups-garous (version traditionnelle) ---------- */
+const ROLES = {
+  loup: { name: 'Loup-garou', e: '🐺', team: 'loups', desc: 'Chaque nuit, avec les autres loups, choisis une victime. Le jour, fais semblant d’être innocent.' },
+  voyante: { name: 'Voyante', e: '🔮', team: 'village', desc: 'Chaque nuit, découvre le rôle secret d’un joueur.' },
+  docteur: { name: 'Docteur', e: '🩺', team: 'village', desc: 'Chaque nuit, protège un joueur (pas le même deux nuits de suite).' },
+  villageois: { name: 'Villageois', e: '🧑‍🌾', team: 'village', desc: 'Trouve les loups et fais-les éliminer au vote du jour.' }
+};
+function Loups(names) {
+  let roles, alive, phase, night, wolfVotes, seerPick, docPick, lastDoc, fake, ready, votes, dawn, result, winner, seerLog;
+  function start() {
+    const n = names.length, nW = Math.max(1, Math.floor(n / 4));
+    const deckR = ['voyante', 'docteur', ...Array(nW).fill('loup')];
+    while (deckR.length < n) deckR.push('villageois');
+    const sh = shuffle(deckR); roles = {}; names.forEach((p, i) => roles[p] = sh[i]);
+    alive = new Set(names); phase = 'roles'; night = 0; ready = new Set(); lastDoc = null; seerLog = {}; winner = null; dawn = null; result = null;
+  }
+  const isAlive = p => alive.has(p);
+  const aliveOf = r => names.filter(p => isAlive(p) && roles[p] === r);
+  function beginNight() { night++; phase = 'night'; wolfVotes = {}; seerPick = null; docPick = null; fake = new Set(); }
+  function nightDone() { return names.filter(isAlive).every(p => hasActed(p)); }
+  function hasActed(p) {
+    const r = roles[p];
+    if (r === 'loup') return p in wolfVotes;
+    if (r === 'voyante') return !!seerPick;
+    if (r === 'docteur') return !!docPick;
+    return fake.has(p);
+  }
+  function endNight() {
+    const tally = {}; Object.values(wolfVotes).forEach(t => tally[t] = (tally[t] || 0) + 1);
+    const top = Math.max(0, ...Object.values(tally)); const cands = Object.keys(tally).filter(t => tally[t] === top);
+    const target = cands.length ? pick(cands) : null;
+    const saved = target && target === docPick;
+    if (target && !saved) alive.delete(target);
+    if (seerPick) seerLog[night] = { who: seerPick, role: roles[seerPick] };
+    lastDoc = docPick;
+    dawn = { victim: target && !saved ? target : null, role: target && !saved ? roles[target] : null, saved: !!saved, night };
+    phase = 'dawn'; checkWin();
+  }
+  function endVote() {
+    const tally = {}; Object.values(votes).forEach(t => { if (t !== '—') tally[t] = (tally[t] || 0) + 1; });
+    const top = Math.max(0, ...Object.values(tally)); const cands = Object.keys(tally).filter(t => tally[t] === top);
+    const out = cands.length === 1 ? cands[0] : null;
+    if (out) alive.delete(out);
+    result = { out, role: out ? roles[out] : null, tally, votes: { ...votes }, tie: cands.length > 1 };
+    phase = 'result'; checkWin();
+  }
+  function checkWin() {
+    const w = aliveOf('loup').length, others = names.filter(p => isAlive(p) && roles[p] !== 'loup').length;
+    if (!w) { winner = 'village'; phase = 'end'; } else if (w >= others) { winner = 'loups'; phase = 'end'; }
+  }
+  function act(who, a, isHost) {
+    if (a.k === 'seen' && phase === 'roles') { ready.add(who); if (names.every(p => ready.has(p))) beginNight(); return; }
+    if (phase === 'night' && isAlive(who) && a.k === 'night') {
+      const t = String(a.p || ''), r = roles[who];
+      if (!names.includes(t) || !isAlive(t)) return 'Choix impossible';
+      if (r === 'loup') { if (roles[t] === 'loup') return 'Pas un autre loup 😅'; wolfVotes[who] = t; }
+      else if (r === 'voyante') { if (seerPick) return; if (t === who) return 'Choisis quelqu’un d’autre'; seerPick = t; }
+      else if (r === 'docteur') { if (docPick) return; if (t === lastDoc) return 'Pas le même que la nuit dernière'; docPick = t; }
+      else fake.add(who);
+      if (nightDone()) endNight();
+      return;
+    }
+    if (a.k === 'day' && phase === 'dawn' && isHost) { phase = 'vote'; votes = {}; return; }
+    if (a.k === 'vote' && phase === 'vote' && isAlive(who)) {
+      const t = String(a.p || '');
+      if (t !== '—' && (!isAlive(t) || t === who)) return 'Vote impossible';
+      votes[who] = t; if (names.filter(isAlive).every(p => p in votes)) endVote(); return;
+    }
+    if (a.k === 'night' && phase === 'result' && isHost) { beginNight(); return; }
+    if (a.k === 'again' && phase === 'end' && isHost) { start(); return; }
+  }
+  function view(me) {
+    const r = roles[me], dead = !isAlive(me);
+    const seeAll = dead || phase === 'end';
+    return {
+      id: 'loups', phase, me, night, role: r, roleInfo: ROLES[r], dead,
+      players: names.map(p => ({ name: p, alive: isAlive(p), role: seeAll || (r === 'loup' && roles[p] === 'loup') || (!isAlive(p)) ? roles[p] : null })),
+      ready: ready.has(me), readyCount: ready.size,
+      acted: phase === 'night' ? hasActed(me) : false,
+      pending: phase === 'night' ? names.filter(p => isAlive(p) && !hasActed(p)).length : 0,
+      wolfVotes: r === 'loup' && phase === 'night' ? wolfVotes : null,
+      lastDoc: r === 'docteur' ? lastDoc : null,
+      seer: r === 'voyante' ? seerLog : null,
+      dawn, result, winner,
+      myVote: phase === 'vote' ? votes[me] || null : null, nVotes: phase === 'vote' ? Object.keys(votes).length : 0, nAlive: names.filter(isAlive).length
+    };
+  }
+  start();
+  return { act, view, min: 5, max: 16 };
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
   imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
   quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
   bac:       { make: Bac, name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
+  loups:     { make: Loups, name: 'Loups-garous', e: '🐺', d: 'Rôles secrets, nuits et votes : l’appli est le maître du jeu. Dès 5 joueurs.', min: 5, max: 16, g: 'linear-gradient(150deg,#434343,#7a1630)' },
   tel:       { make: Tel, name: 'Le Téléphone dessiné', e: '📞', d: 'Phrase → dessin → devinette… et on rigole en voyant le résultat !', min: 3, max: 10, g: 'linear-gradient(150deg,#00c6ff,#7b2ff7)' },
   dessin:    { make: Dessin, name: 'Le Dessin', e: '🎨', d: 'Un joueur dessine, les autres devinent en direct sur leur téléphone.', min: 2, max: 10, g: 'linear-gradient(150deg,#ff9a8b,#a74ea8)' },
   menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
@@ -621,6 +713,7 @@ A.makers.online = function () {
     if (state.g.id === 'bac') return renderBac(state.g);
     if (state.g.id === 'dessin') return renderDessin(state.g);
     if (state.g.id === 'tel') return renderTel(state.g);
+    if (state.g.id === 'loups') return renderLoups(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -1076,6 +1169,84 @@ A.makers.online = function () {
     tTick = setInterval(() => { const el = document.getElementById('tleft'); if (!el) return clearInterval(tTick); const l = Math.max(0, end - Date.now()); el.textContent = Math.ceil(l / 1000); el.classList.toggle('hot', l < 10000); }, 250);
   }
 
+  /* --- Loups-garous --- */
+  const roleName = r => r ? `${ROLES[r].e} ${ROLES[r].name}` : '';
+  function renderLoups(g) {
+    const R = g.roleInfo;
+    const roleChip = `<div class="rolechip ${g.role === 'loup' ? 'wolf' : ''}" data-a="peek">${ui.peek ? `${R.e} ${esc(R.name)}` : '👁️ Mon rôle'}</div>`;
+    const plist = (mode) => `<div class="lplayers">${g.players.map(p => {
+        const disabled = !p.alive || (mode === 'vote' && p.name === g.me) || (mode === 'night' && (
+          (g.role === 'loup' && p.role === 'loup') || (g.role === 'voyante' && p.name === g.me) || (g.role === 'docteur' && p.name === g.lastDoc)));
+        const wolfVoters = g.wolfVotes ? Object.entries(g.wolfVotes).filter(([, t]) => t === p.name).map(([w]) => w) : [];
+        const chosen = (mode === 'vote' && g.myVote === p.name) || (g.wolfVotes && g.wolfVotes[g.me] === p.name);
+        return `<button class="lp ${p.alive ? '' : 'dead'} ${chosen ? 'chosen' : ''}" ${mode && !disabled ? `data-a="${mode === 'vote' ? 'lvote' : 'lnight'}" data-p="${esc(p.name)}"` : 'disabled'}>
+          <b>${p.alive ? '' : '💀 '}${esc(p.name)}${p.name === g.me ? ' (toi)' : ''}</b>${p.role ? `<span>${roleName(p.role)}</span>` : ''}${wolfVoters.length ? `<em>🐺 ${wolfVoters.map(esc).join(', ')}</em>` : ''}</button>`;
+      }).join('')}</div>`;
+    const deadNote = g.dead && g.phase !== 'end' ? `<p class="exch">👻 Tu es mort·e : tu vois tous les rôles, mais chut, plus un mot !</p>` : '';
+    const hostBtn = (label, a) => amHost() ? `<button class="btn primary big block" data-a="${a}">${label}</button>` : `<div class="waiting"><div class="spinner small"></div>${esc(state.host)} continue…</div>`;
+    const T = (title, body, extra = '') => A.view(`${A.header(title, `<span class="room-code">${esc(state.code)}</span>`)}<div class="stage">${extra}${body}</div>`);
+
+    if (g.phase === 'roles') return T('Loups-garous', `
+      <div class="card ${ui.peek ? '' : 'hideable'}" style="--g:${g.role === 'loup' ? 'linear-gradient(160deg,#7a1630,#2b0a12)' : 'linear-gradient(160deg,#2c5364,#203a43)'}" data-a="peek">
+        <div class="tag">Ton rôle secret</div>
+        <div class="secret ${ui.peek ? '' : 'blur'}" style="font-size:2.4rem">${R.e} ${esc(R.name)}</div>
+        <div class="sub ${ui.peek ? '' : 'blur'}">${esc(R.desc)}</div>
+        ${g.role === 'loup' && ui.peek ? `<div class="sub">Tes complices : ${g.players.filter(p => p.role === 'loup' && p.name !== g.me).map(p => esc(p.name)).join(', ') || 'aucun, tu es seul·e'}</div>` : ''}
+        <div class="sub">${ui.peek ? 'Touche pour cacher' : 'Touche pour voir (cache ton écran 👀)'}</div>
+      </div>
+      ${g.ready ? `<div class="waiting">Prêt·e ✓ · ${g.readyCount} / ${g.players.length}</div>` : `<button class="btn primary big block" data-a="lseen">J'ai vu mon rôle</button>`}`);
+
+    if (g.phase === 'night') {
+      let task;
+      if (g.dead) task = `<p class="hint">Le village dort… 🌙</p>`;
+      else if (g.acted) task = `<div class="waiting">✓ C'est noté. Garde les yeux fermés… (${g.pending} en attente)</div>`;
+      else if (g.role === 'loup') task = `<p class="hint"><b>🐺 Loups :</b> choisissez votre victime. Mettez-vous d'accord en silence (vos votes s'affichent entre loups).</p>`;
+      else if (g.role === 'voyante') task = `<p class="hint"><b>🔮 Voyante :</b> choisis un joueur pour découvrir son rôle.</p>`;
+      else if (g.role === 'docteur') task = `<p class="hint"><b>🩺 Docteur :</b> choisis qui protéger cette nuit${g.lastDoc ? ` (pas ${esc(g.lastDoc)})` : ''}.</p>`;
+      else task = `<p class="hint">Touche le nom de quelqu'un que tu soupçonnes. <small>(Tout le monde touche son écran la nuit, pour ne pas se trahir.)</small></p>`;
+      return T(`Nuit ${g.night} 🌙`, `${roleChip}${deadNote}${task}${plist(!g.dead && !g.acted || (g.role === 'loup' && !g.dead) ? 'night' : null)}`, `<div class="nightsky"></div>`);
+    }
+    if (g.phase === 'dawn') {
+      const d = g.dawn, seer = g.seer && g.seer[d.night];
+      return T(`Jour ${d.night} ☀️`, `
+        <div class="card" style="--g:linear-gradient(160deg,#f7b733,#e0702a);flex:none;min-height:0;padding:24px">
+          <div class="tag" style="position:static">Le village se réveille</div>
+          ${d.victim ? `<div class="secret" style="margin-top:10px">💀 ${esc(d.victim)}</div><div class="sub">a été dévoré·e cette nuit. C'était : <b>${roleName(d.role)}</b></div>`
+            : `<div class="secret" style="margin-top:10px">Personne n'est mort 🙌</div><div class="sub">${d.saved ? 'Le docteur a sauvé la victime !' : 'Les loups n’ont rien fait…'}</div>`}
+        </div>
+        ${seer ? `<p class="exch">🔮 Ta vision : <b>${esc(seer.who)}</b> est ${roleName(seer.role)}</p>` : ''}
+        ${deadNote}
+        <p class="hint">Discutez : qui est loup ? Puis votez.</p>
+        ${plist(null)}
+        ${hostBtn('Passer au vote 🗳️', 'lday')}`, roleChip);
+    }
+    if (g.phase === 'vote') return T('Vote du village 🗳️', `
+      ${roleChip}${deadNote}
+      <p class="hint">${g.dead ? 'Les vivants votent…' : 'Qui veut-on éliminer ? Tu peux changer d’avis tant que tout le monde n’a pas voté.'}</p>
+      ${plist(g.dead ? null : 'vote')}
+      ${g.dead ? '' : `<button class="btn ${g.myVote === '—' ? 'ok' : ''}" data-a="lvote" data-p="—">Personne (vote blanc)</button>`}
+      <div class="waiting">${g.nVotes} / ${g.nAlive} votes</div>`);
+    if (g.phase === 'result') {
+      const r = g.result;
+      return T('Verdict ⚖️', `
+        <div class="card" style="--g:linear-gradient(160deg,#434343,#7a1630);flex:none;min-height:0;padding:24px">
+          ${r.out ? `<div class="tag" style="position:static">Le village élimine</div><div class="secret" style="margin-top:10px">${esc(r.out)}</div><div class="sub">C'était : <b>${roleName(r.role)}</b></div>`
+            : `<div class="secret">${r.tie ? 'Égalité' : 'Personne'}</div><div class="sub">Personne n'est éliminé aujourd'hui.</div>`}
+        </div>
+        <div class="found">${Object.entries(r.votes).map(([v, t]) => `<span>${esc(v)} → ${esc(t)}</span>`).join('')}</div>
+        ${roleChip}
+        ${hostBtn('La nuit tombe… 🌙', 'lnightgo')}`);
+    }
+    const villageWon = g.winner === 'village';
+    T('Loups-garous', `
+      <div class="card" style="--g:${villageWon ? 'linear-gradient(160deg,#3ddc97,#16865c)' : 'linear-gradient(160deg,#7a1630,#2b0a12)'};flex:none;min-height:0;padding:26px">
+        <div class="big-num" style="font-size:4rem">${villageWon ? '🧑‍🌾' : '🐺'}</div>
+        <div class="secret">${villageWon ? 'Le village gagne !' : 'Les loups gagnent !'}</div>
+      </div>
+      ${plist(null)}
+      ${amHost() ? `<div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn primary" data-a="lagain">Rejouer</button></div>` : ''}`);
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -1104,6 +1275,13 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Loups-garous
+    if (a === 'lseen') { ui.peek = false; return send({ k: 'seen' }); }
+    if (a === 'lnight') { buzz(15); return send({ k: 'night', p: el.dataset.p }); }
+    if (a === 'lday') return send({ k: 'day' });
+    if (a === 'lvote') { buzz(15); return send({ k: 'vote', p: el.dataset.p }); }
+    if (a === 'lnightgo') { ui.peek = false; return send({ k: 'night' }); }
+    if (a === 'lagain') { ui.peek = false; return send({ k: 'again' }); }
     // Téléphone dessiné
     if (a === 'tidea') { tText = pick(A.D.telephone); const i = document.getElementById('tin'); if (i) i.value = tText; tDirty = true; return; }
     if (a === 'tundo') { tStrokes.pop(); tDirty = true; const c = document.getElementById('tcv'); if (c) paint(c, tStrokes); return; }
