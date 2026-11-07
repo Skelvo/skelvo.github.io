@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 12;
+const VERSION = 13;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -198,7 +198,7 @@ const home = {
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Président, Imposteur, Menteur, Quiz, Petit Bac</small></span><span class="go">›</span>
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Dessin, Quiz, Président, Menteur, Petit Bac…</small></span><span class="go">›</span>
       </button>
       ${games}
 
@@ -1245,6 +1245,7 @@ const makers = {
             <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
             <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
             <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
+            <h3>🎨 Le Dessin <small>en ligne · 2-10 joueurs</small></h3><p>Chacun son tour, un joueur reçoit un mot secret et le dessine sur son téléphone : le dessin apparaît en direct chez les autres, qui tapent leurs propositions. 80 secondes par dessin, la première lettre s'affiche à mi-temps. Trouver vite rapporte 3, 2 puis 1 point ; le dessinateur gagne 1 point par joueur qui trouve.</p>
             <h3>📝 Le Petit Bac <small>en ligne · 2-10 joueurs</small></h3><p>Une lettre et 6 catégories tirées au hasard. Chacun remplit sur son téléphone ; le premier qui a fini appuie sur STOP et les autres ont 10 secondes. Réponse valable : 10 points, 5 si quelqu'un a la même. L'hôte peut refuser une réponse douteuse.</p>
             <h3>🔔 Quiz buzzer <small>en ligne · 2-12 joueurs</small></h3><p>12 questions de culture générale s'affichent sur tous les téléphones. Le premier qui appuie sur BUZZ a 8 secondes pour répondre. Faux ? Il est bloqué et les autres peuvent buzzer. Un point par bonne réponse.</p>
             <h3>🎲 Le Menteur <small>en ligne · 2-8 joueurs</small></h3><p>Chacun a 5 dés cachés sur son téléphone. À tour de rôle, on annonce combien de dés d'une face il y a au total sur la table (« au moins 4 × 5 ») en surenchérissant à chaque fois, ou on crie « Menteur ! ». On révèle : si l'annonce était vraie, l'accusateur perd un dé, sinon c'est le menteur. Le dernier à avoir des dés gagne.</p>
