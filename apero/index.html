@@ -442,13 +442,23 @@ textarea:focus{border-color:var(--accent);}
 .gf.ok{background:rgba(61,220,151,.16);color:var(--ok);font-weight:700;}
 .gf.muted{color:var(--muted);background:none;text-align:center;}
 
+/* Téléphone dessiné */
+.tcanvas{width:100%;aspect-ratio:1/1;max-height:52vh;border-radius:18px;background:#fff;touch-action:none;display:block;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+.tcanvas.mine{outline:3px solid var(--accent);}
+.tcanvas.small{max-height:none;width:78%;margin:0 auto;}
+.dhead b.hot{color:var(--danger);}
+.album{display:flex;flex-direction:column;gap:14px;}
+.aitem{display:flex;flex-direction:column;gap:6px;animation:pop .35s;}
+.aitem small{color:var(--muted);font-weight:700;}
+.abubble{align-self:flex-start;max-width:90%;padding:12px 16px;border-radius:18px 18px 18px 4px;background:var(--panel-2);font-size:1.15rem;font-weight:700;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=13"></script>
-<script src="app.js?v=13"></script>
-<script src="online.js?v=13"></script>
+<script src="data.js?v=14"></script>
+<script src="app.js?v=14"></script>
+<script src="online.js?v=14"></script>
 </body>
 </html>
