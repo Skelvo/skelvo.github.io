@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 15;
+const VERSION = 16;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -198,7 +198,7 @@ const home = {
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Loups-garous, Dessin, Quiz, Président…</small></span><span class="go">›</span>
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Bluff, Loups-garous, Dessin, Quiz…</small></span><span class="go">›</span>
       </button>
       ${games}
 
@@ -1245,6 +1245,9 @@ const makers = {
             <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
             <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
             <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
+            <h3>🎭 Le Bluff <small>en ligne · 3-10</small></h3><p>Un mot très rare s'affiche. Chacun invente une fausse définition, puis toutes les définitions (la vraie au milieu) sont mélangées : votez pour celle que vous croyez vraie. +2 si tu trouves la vraie, +1 pour chaque joueur piégé par la tienne.</p>
+            <h3>💬 Le Mot de la fin <small>en ligne · 3-12</small></h3><p>Une phrase à compléter : chacun écrit sa réponse la plus drôle, elles s'affichent sans les noms et on vote pour la meilleure (pas la sienne !). Un point par vote, bonus si tout le monde l'a choisie.</p>
+            <h3>🕵️‍♀️ Qui a écrit ça ? <small>en ligne · 3-12</small></h3><p>Une question perso : chacun répond en secret. Les réponses s'affichent une par une, sans nom, et tout le monde vote pour l'auteur. Un point si tu le reconnais ; l'auteur marque un point pour chaque joueur qu'il a trompé.</p>
             <h3>🐺 Loups-garous <small>en ligne · 5-16 joueurs</small></h3><p>Chacun reçoit un rôle secret : loup-garou, voyante, docteur ou villageois. La nuit, tout le monde touche son écran (les loups choisissent une victime, la voyante espionne, le docteur protège, les villageois font semblant). Le jour, on découvre la victime, on débat et on vote pour éliminer un suspect. Le village gagne s'il élimine tous les loups ; les loups gagnent s'ils sont aussi nombreux que les autres.</p>
             <h3>📞 Le Téléphone dessiné <small>en ligne · 3-10 joueurs</small></h3><p>Chacun écrit une phrase. Elle passe au voisin, qui la dessine ; le suivant devine le dessin par écrit ; le suivant redessine sa devinette… À la fin, on fait défiler chaque chaîne pour voir comment la phrase s'est transformée.</p>
             <h3>🎨 Le Dessin <small>en ligne · 2-10 joueurs</small></h3><p>Chacun son tour, un joueur reçoit un mot secret et le dessine sur son téléphone : le dessin apparaît en direct chez les autres, qui tapent leurs propositions. 80 secondes par dessin, la première lettre s'affiche à mi-temps. Trouver vite rapporte 3, 2 puis 1 point ; le dessinateur gagne 1 point par joueur qui trouve.</p>
