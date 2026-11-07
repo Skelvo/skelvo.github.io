@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 29;
+const VERSION = 30;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -1327,6 +1327,9 @@ const makers = {
             <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
             <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
             <h3>🧩 Énigmes</h3><p>Une devinette, une charade ou un casse-tête : vous avez 60 secondes pour trouver ensemble. Un indice est disponible si vous bloquez. Celui qui trouve marque un point (et l'équipe aussi).</p>
+            <h3>👑 Le Jeu du Roi</h3><p>Chacun son tour tire une carte : As = cascade, 2 = pour toi, 3 = pour moi, 4 = le sol, 5 = la main, 6 = je n'ai jamais, 7 = le ciel, 8 = partenaire de boisson, 9 = rimes, 10 = catégories, Valet = nouvelle règle, Dame = maître des questions, Roi = on remplit la coupe… et le 4e Roi la boit.</p>
+            <h3>🔺 La Pyramide</h3><p>Chacun mémorise 4 cartes pendant 10 secondes. On retourne ensuite la pyramide de 15 cartes : si tu as (ou prétends avoir) la même valeur, tu donnes des gorgées (1 en bas, 5 en haut). La cible peut crier « Menteur ! » : si tu bluffais, tu bois le double, sinon c'est elle.</p>
+            <h3>🚌 Le Bus</h3><p>Chacun répond à 4 questions sur des cartes tirées (rouge ou noir, plus haut ou plus bas, entre ou à l'extérieur, quelle couleur) ; chaque erreur coûte 1, 2, 3 puis 4 gorgées. Celui qui a fait le plus d'erreurs prend le bus : 5 cartes à passer en devinant plus haut ou plus bas, et on repart de zéro à chaque erreur.</p>
             <h3>🎲 Le Yams</h3><p>Chacun son tour : 3 lancers maximum, on garde les dés qu'on veut entre deux lancers, puis on inscrit le résultat dans une case (une seule fois par case). Brelan et Carré = total des dés, Full = 25, Petite suite = 30, Grande suite = 40, Yams = 50. Bonus de 35 si le haut de la grille atteint 63.</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
@@ -1400,7 +1403,7 @@ applyTheme();
 
 /* Boîte à outils partagée avec online.js (mode connecté) */
 window.APERO = { D, S, store, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
-  makers, openPage, VERSION, joinCode: null };
+  makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard };
 
 /* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
 document.addEventListener('DOMContentLoaded', () => {

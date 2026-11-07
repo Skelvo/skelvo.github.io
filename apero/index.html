@@ -640,20 +640,44 @@ html.spicy.lvl2 .spicynote{background:rgba(255,31,109,.14);border-color:rgba(255
 .mini{width:44px;height:36px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);font-size:1.1rem;opacity:.45;}
 .mini.on{opacity:1;border-color:var(--accent);}
 
+/* Jeux à boire */
+.bigdeck{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px;border-radius:24px;background:var(--bg-2);border:2px dashed var(--line);}
+.bigdeck span:not(.pc){font-weight:800;font-size:1.2rem;}
+.bigdeck small{color:var(--muted);font-weight:700;}
+.pc.huge{width:96px;height:136px;padding:10px 12px;border-radius:14px;}
+.pc.huge b{font-size:2.2rem;} .pc.huge i{font-size:2.4rem;}
+.roicard{flex:none;min-height:0;padding:22px 18px;gap:10px;}
+.roiface{margin-bottom:6px;animation:pop .35s;}
+.rules-live{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:16px;background:var(--bg-2);border:1px solid var(--line);font-size:.9rem;}
+.pyrhand{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0;}
+.pyr{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pyr>div{display:flex;gap:6px;}
+.pyr .pc{width:46px;height:66px;}
+.pc.cur{box-shadow:0 0 0 3px var(--accent-2),0 6px 16px rgba(0,0,0,.4);transform:scale(1.08);}
+.pc.done{opacity:.55;}
+.pyrall{display:flex;flex-direction:column;gap:6px;}
+.pyrall>div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--bg-2);}
+.pyrall span{min-width:64px;font-weight:700;font-size:.9rem;}
+.pyrall>div>div{display:flex;gap:4px;}
+.busgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.busrow{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;}
+.busrow .pc{width:48px;height:68px;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=29"></script>
-<script src="data-epice.js?v=29"></script>
-<script src="data-enigmes.js?v=29"></script>
-<script src="app.js?v=29"></script>
-<script src="online.js?v=29"></script>
-<script src="online-social.js?v=29"></script>
-<script src="online-vote.js?v=29"></script>
-<script src="online-cards.js?v=29"></script>
-<script src="online-board.js?v=29"></script>
-<script src="online-live.js?v=29"></script>
+<script src="data.js?v=30"></script>
+<script src="data-epice.js?v=30"></script>
+<script src="data-enigmes.js?v=30"></script>
+<script src="app.js?v=30"></script>
+<script src="games-boire.js?v=30"></script>
+<script src="online.js?v=30"></script>
+<script src="online-social.js?v=30"></script>
+<script src="online-vote.js?v=30"></script>
+<script src="online-cards.js?v=30"></script>
+<script src="online-board.js?v=30"></script>
+<script src="online-live.js?v=30"></script>
 </body>
 </html>
