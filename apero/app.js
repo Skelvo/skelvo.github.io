@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 30;
+const VERSION = 31;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -17,9 +17,10 @@ const S = {
   sound: store.get('sound', true),
   vibrate: store.get('vibrate', true),
   drinks: store.get('drinks', true),
+  avatars: store.get('avatars', {}),
   custom: store.get('custom', { verite: [], action: [], jamais: [], qui: [], preferes: [] })
 };
-const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); };
+const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); store.set('avatars', S.avatars); };
 
 /* ================= Utilitaires ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -184,19 +185,20 @@ function start(id) {
   clearTimers();
   current = makers[id]();
   keepAwake(!!G[id] || id === 'online');
+  document.body.classList.toggle('ingame', !!G[id] && S.players.length > 0);
   current.render();
 }
 function goHome() {
   if (current && current.confirmLeave && !confirm(current.confirmLeave)) return;
   if (history.state && (history.state.g || history.state.p)) history.back(); else showHome();
 }
-function showHome() { clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
-window.addEventListener('popstate', () => showHome());
+function showHome() { document.body.classList.remove('ingame'); clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
+window.addEventListener('popstate', e => { const st = e.state; if (st && st.p && makers[st.p]) start(st.p); else showHome(); });
 
 /* ================= Accueil ================= */
 const home = {
   render() {
-    const chips = S.players.map((p, i) => `<span class="chip">${esc(p)}<button data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
+    const chips = S.players.map((p, i) => `<span class="chip"><button class="ava" data-a="ava" data-i="${i}" aria-label="Changer l’emoji de ${esc(p)}">${avatar(p)}</button>${esc(p)}<button data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
     const n = home.n || (S.players.length >= 2 ? clampN(S.players.length) : 3);
     const card = (id, i, arr, off) => { const g = G[id];
       return `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
@@ -233,10 +235,14 @@ const home = {
       <button class="online-cta" data-a="page" data-id="online">
         <span class="e">📡</span><span><b>Jouer en ligne</b><small>${S.spicy ? 'Version épicée · Qui pourrait…, Mot de la fin, Qui a écrit ça ?' : 'Chacun sur son téléphone · Poker, Échecs, Bluff, Loups-garous…'}</small></span><span class="go">›</span>
       </button>
+      ${S.players.length >= 2 ? `<button class="online-cta soiree-cta" data-a="page" data-id="soiree">
+        <span class="e">🎲</span><span><b>Soirée auto</b><small>L'appli enchaîne les jeux au hasard · classement de la soirée</small></span><span class="go">›</span>
+      </button>` : ''}
       ${games}
 
       <div class="links">
-        <button class="btn" data-a="page" data-id="cartes">✍️ Mes cartes</button>
+        <button class="btn" data-a="page" data-id="stats">📊 Soirée</button>
+        <button class="btn" data-a="page" data-id="cartes">✍️ Cartes</button>
         <button class="btn" data-a="page" data-id="regles">📖 Règles</button>
       </div>
       <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »<br>Version ${VERSION}</p>
@@ -252,6 +258,10 @@ const home = {
     }, true);
   },
   on(a, el) {
+    if (a === 'ava') {
+      const p = S.players[+el.dataset.i], i = AVATARS.indexOf(avatar(p));
+      S.avatars[p] = AVATARS[(i + 1) % AVATARS.length]; save(); home.render(); buzz(10); return;
+    }
     if (a === 'del') { S.players.splice(+el.dataset.i, 1); home.n = null; save(); home.render(); }
     if (a === 'n') { home.n = +el.dataset.v; home.render(); }
     if (a === 'lvl') {
@@ -311,7 +321,7 @@ const makers = {
       on(a) {
         if (a === 'rand') a = Math.random() < .5 ? 'v' : 'a';
         if (a === 'v' || a === 'a') { card = { t: a, html: fill((a === 'v' ? dv : da).next(), who) }; buzz(15); this.render(); }
-        if (a === 'joker') { if (!S.drinks) toast('Gage : ' + pick(gages())); this.next(); }
+        if (a === 'joker') { if (!S.drinks) toast('Gage : ' + pick(gages())); window.APERO.night && APERO.night.joker(who, S.drinks ? 2 : 0); this.next(); }
         if (a === 'done') this.next();
       },
       next() { card = null; who = rot.next(); this.render(); }
@@ -1393,6 +1403,14 @@ function importCards(str) {
   save(); toast(`${added} carte${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''} ✓`);
 }
 
+/* Emoji de chaque joueur */
+const AVATARS = ['😎', '🤠', '🥳', '😈', '👻', '🦊', '🐸', '🐼', '🦄', '🐙', '👽', '🤖', '🍕', '🌮', '🍺', '🔥', '💀', '👑', '🌶️', '🍑'];
+function avatar(p) {
+  if (S.avatars[p]) return S.avatars[p];
+  let h = 0; for (const ch of p) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return AVATARS[Math.abs(h) % 12];
+}
+
 /* Thème du mode épicé */
 function applyTheme() {
   document.documentElement.classList.toggle('spicy', !!S.spicy);
@@ -1402,7 +1420,7 @@ function applyTheme() {
 applyTheme();
 
 /* Boîte à outils partagée avec online.js (mode connecté) */
-window.APERO = { D, S, store, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
+window.APERO = { D, S, store, save, avatar, openGame, minPlayers, fitAt, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
   makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard };
 
 /* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
