@@ -2,7 +2,8 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 31;
+const THEMES = window.THEMES || {};
+const VERSION = 32;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -18,9 +19,10 @@ const S = {
   vibrate: store.get('vibrate', true),
   drinks: store.get('drinks', true),
   avatars: store.get('avatars', {}),
+  theme: store.get('theme', null),
   custom: store.get('custom', { verite: [], action: [], jamais: [], qui: [], preferes: [] })
 };
-const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); store.set('avatars', S.avatars); };
+const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); store.set('avatars', S.avatars); store.set('theme', S.theme); };
 
 /* ================= Utilitaires ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -61,10 +63,15 @@ function deck(items) {
     }
   };
 }
+/* Pack à thème actif (le pack Famille n'existe pas en version épicée) */
+const themeOK = id => !!THEMES[id] && (!S.spicy || Object.values(THEMES[id].cards).some(c => c && c.hot));
+const theme = () => themeOK(S.theme) ? THEMES[S.theme] : null;
+const themed = id => { const t = theme(); return !!t && (id === 'aov' ? !!(t.cards.verite && t.cards.action) : !!t.cards[id]); };
 function pool(key) {
-  const src = D[key];
-  // mode épicé : les cartes épicées REMPLACENT les cartes normales
-  const base = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
+  const src = D[key], tc = theme() && theme().cards[key];
+  // pack à thème : ses cartes REMPLACENT les cartes normales ; mode épicé : idem avec les cartes épicées
+  const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft)
+    : S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
   return base.concat(mine);
@@ -77,7 +84,7 @@ function fill(text, cur) {
   });
 }
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
-const gages = () => { const g = S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
+const gages = () => { const t = theme(), tg = t && (S.spicy && t.cards.gagesHot || t.cards.gages); const g = tg ? tg : S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
 
 function buzz(p) { if (!S.vibrate) return; try { navigator.vibrate && navigator.vibrate(p); } catch {} }
 function toast(msg) {
@@ -149,8 +156,9 @@ const G = {
   secoue:   { name: 'Secoue-le', e: '🫨', d: 'Le plus fort en 5 secondes', g: 'linear-gradient(150deg,#ff6b6b,#a1239c)', fit: 'bbbb', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
-const fitAt = (id, n) => G[id].fit[clampN(n) - 2];             // 'b' | 'o' | '-'
-const minPlayers = id => 2 + G[id].fit.search(/[bo]/);
+const fitOf = id => { const t = theme(); return (t && t.fit && t.fit[id]) || G[id].fit; };
+const fitAt = (id, n) => fitOf(id)[clampN(n) - 2];             // 'b' | 'o' | '-'
+const minPlayers = id => 2 + fitOf(id).search(/[bo]/);
 const nLabel = n => n >= 5 ? '5 et +' : String(n);
 
 let current = null;   // jeu en cours (objet avec render)
@@ -204,16 +212,19 @@ const home = {
       return `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
         ${g.isNew ? '<i class="new">Nouveau</i>' : ''}<span class="e">${g.e}</span><b>${g.name}</b><span>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</span></button>`; };
     // mode épicé : seulement les jeux qui ont des cartes épicées
-    const ids = Object.keys(G).filter(id => !S.spicy || G[id].spicy), group = f => ids.filter(id => fitAt(id, n) === f);
+    const th = theme(), tids = th ? Object.keys(G).filter(id => themed(id) && fitAt(id, n) !== '-') : [];
+    const ids = Object.keys(G).filter(id => (!S.spicy || G[id].spicy) && !tids.includes(id)), group = f => ids.filter(id => fitAt(id, n) === f);
     const block = (title, list, off) => list.length ? `<h3 class="cat">${title}</h3><div class="games">${list.map((id, i, a) => card(id, i, a, off)).join('')}</div>` : '';
     const games = `
       ${S.spicy ? '<p class="spicynote">🌶️ Mode épicé : seuls les jeux avec des cartes trash sont affichés. Désactive-le pour retrouver tous les jeux.</p>' : ''}
       <div class="nfilter"><span>Vous êtes</span>${[2, 3, 4, 5].map(k => `<button class="${k === n ? 'on' : ''}" data-a="n" data-v="${k}">${nLabel(k)}</button>`).join('')}</div>
+      ${th ? `<p class="spicynote themenote">${esc(th.note || `${th.e} Pack ${th.name} : les jeux ci-dessous utilisent ses cartes.`)}</p>
+        ${block(`${th.e} Pack ${esc(th.name)}`, tids)}` : ''}
       ${block(`⭐ Parfait à ${nLabel(n)}`, group('b'))}
       ${block('👍 Ça marche aussi', group('o'))}
       ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
     view(`
-      <div class="brand"><div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : '🥂'}</div><div><h1>Apéro${S.spicy ? ` <span class="hotbadge">${S.spicyLvl === 2 ? '18+ · sans filtre' : '18+'}</span>` : ''}</h1><p>${S.spicy ? (S.spicyLvl === 2 ? 'Niveau 2 🌶️🌶️ · aucune limite (sauf le consentement)' : 'Édition épicée 🔥 · questions trash') : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
+      <div class="brand"><div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : theme() ? theme().e : '🥂'}</div><div><h1>Apéro${S.spicy ? ` <span class="hotbadge">${S.spicyLvl === 2 ? '18+ · sans filtre' : '18+'}</span>` : ''}</h1><p>${S.spicy ? (S.spicyLvl === 2 ? 'Niveau 2 🌶️🌶️ · aucune limite (sauf le consentement)' : 'Édition épicée 🔥 · questions trash') : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
 
       <div class="section">
         <h2><span>Joueurs</span><span>${S.players.length || ''}</span></h2>
@@ -230,6 +241,9 @@ const home = {
         <div class="toggle"><div class="t"><b>Avec alcool 🍻</b><span>Gorgées dans les règles (sinon : gages)</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
         <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>${S.spicy ? 'Activé : uniquement des questions trash et sexy' : 'Questions trash et sexy · 18+'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
         ${S.spicy ? `<div class="seg lvlseg"><button class="${S.spicyLvl !== 2 ? 'on' : ''}" data-a="lvl" data-v="1">🌶️ Coquin</button><button class="${S.spicyLvl === 2 ? 'on' : ''}" data-a="lvl" data-v="2">🌶️🌶️ Sans filtre</button></div>` : ''}
+        <div class="toggle"><div class="t"><b>Pack à thème</b><span>${theme() ? `${theme().e} ${esc(theme().d)}` : 'Des cartes spéciales pour l’occasion'}</span></div></div>
+        <div class="themes">${[['', '🥂', 'Classique'], ...Object.entries(THEMES).filter(([k]) => themeOK(k)).map(([k, t]) => [k, t.e, t.name])].map(([k, e, nm]) =>
+          `<button class="${(theme() ? S.theme : '') === k ? 'on' : ''}" data-a="theme" data-v="${k}">${e} ${esc(nm)}</button>`).join('')}</div>
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
@@ -275,6 +289,13 @@ const home = {
     if (a === 'spicy') {
       if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return;
       S.spicy = !S.spicy; save(); applyTheme(); home.render(); toast(S.spicy ? 'Mode épicé activé 🌶️🔥' : 'Retour au mode normal 🥂');
+    }
+    if (a === 'theme') {
+      const k = el.dataset.v || null, t = THEMES[k];
+      S.theme = k; home.n = null;
+      if (t && t.noDrinks && S.drinks) { S.drinks = false; toast(`${t.e} Pack ${t.name} : alcool désactivé`); }
+      else toast(t ? `${t.e} Pack ${t.name} activé` : 'Cartes classiques 🥂');
+      save(); applyTheme(); home.render(); buzz(15); return;
     }
     if (a === 'game') openGame(el.dataset.id);
     if (a === 'page') openPage(el.dataset.id);
@@ -359,10 +380,10 @@ const makers = {
         view(`${header(g.name)}
           <div class="stage">
             <div class="card" style="--g:${g.g}">
-              <div class="tag">Qui est le plus susceptible de…</div>
+              <div class="tag">${S.players.length === 2 ? 'Qui de nous deux va le plus…' : 'Qui est le plus susceptible de…'}</div>
               ${center}
             </div>
-            <p class="hint">${S.drinks ? 'Celui qui reçoit le plus de doigts boit autant de gorgées 🍻' : 'Le / la plus désigné·e fait un gage'}</p>
+            <p class="hint">${S.players.length === 2 ? `Pointez en même temps : vous-même ou l'autre. ${S.drinks ? 'Le / la désigné·e boit, désaccord = les deux boivent 🍻' : 'Le / la désigné·e fait un gage, désaccord = les deux'}` : S.drinks ? 'Celui qui reçoit le plus de doigts boit autant de gorgées 🍻' : 'Le / la plus désigné·e fait un gage'}</p>
             ${phase === 'read' ? `<button class="btn primary big block" data-a="go">3, 2, 1… Pointez !</button>`
               : phase === 'point' ? `<div class="row"><button class="btn" data-a="gage">🎲 Un gage</button><button class="btn primary" data-a="next">Suivante</button></div>`
               : `<button class="btn big block" disabled>…</button>`}
@@ -1303,6 +1324,8 @@ const makers = {
         view(`${header('Règles')}
           <div class="rules">
             <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
+            <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en bas à droite compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
+            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
             <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
@@ -1421,7 +1444,7 @@ applyTheme();
 
 /* Boîte à outils partagée avec online.js (mode connecté) */
 window.APERO = { D, S, store, save, avatar, openGame, minPlayers, fitAt, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
-  makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard };
+  makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard, theme, themed };
 
 /* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
 document.addEventListener('DOMContentLoaded', () => {
