@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 18;
+const VERSION = 19;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -1256,6 +1256,8 @@ const makers = {
             <h3>📝 Le Petit Bac <small>en ligne · 2-10 joueurs</small></h3><p>Une lettre et 6 catégories tirées au hasard. Chacun remplit sur son téléphone ; le premier qui a fini appuie sur STOP et les autres ont 10 secondes. Réponse valable : 10 points, 5 si quelqu'un a la même. L'hôte peut refuser une réponse douteuse.</p>
             <h3>🔔 Quiz buzzer <small>en ligne · 2-12 joueurs</small></h3><p>12 questions de culture générale s'affichent sur tous les téléphones. Le premier qui appuie sur BUZZ a 8 secondes pour répondre. Faux ? Il est bloqué et les autres peuvent buzzer. Un point par bonne réponse.</p>
             <h3>♠️ Poker <small>en ligne · 2-8 · jetons fictifs</small></h3><p>Texas Hold'em : 2 cartes cachées chacun, 5 cartes communes (flop, turn, river). Blindes 10/20, 1000 jetons au départ. Parole, suivre, relancer ou se coucher ; à l'abattage la meilleure main de 5 cartes gagne (pots annexes gérés pour les tapis). L'hôte peut recaver les joueurs éliminés.</p>
+            <h3>🎴 8 américain <small>en ligne · 2-8</small></h3><p>Pose une carte de la même couleur ou de la même valeur que celle du dessus. Le 8 se pose sur tout et change la couleur ; le 2 fait piocher 2 au suivant (cumulable avec un autre 2) ; le Valet fait passer le tour ; l'As change le sens. Pas de carte jouable ? Pioche. Le premier qui vide sa main gagne.</p>
+            <h3>🂮 Belote <small>en ligne · 4 joueurs</small></h3><p>Deux équipes (partenaires face à face), 32 cartes. Enchères en deux tours sur la carte retournée. Il faut fournir la couleur demandée ; sinon couper (sauf si ton partenaire est maître) et monter à l'atout si possible. Atout : Valet 20, 9 14, As 11, 10 10, Roi 4, Dame 3. Belote-rebelote +20, dix de der +10, capot 252. Si l'équipe qui a pris fait moins que l'autre, elle est « dedans » : 162 pour la défense. Partie en 501 (sans annonces).</p>
             <h3>🂡 Blackjack <small>en ligne · 1-7 · jetons fictifs</small></h3><p>Tout le monde joue en même temps contre la banque. Approche-toi de 21 sans dépasser : Carte, Rester ou Doubler. Un Blackjack (As + figure) paie 3 pour 2 ; la banque tire jusqu'à 17.</p>
             <h3>🎲 Le Menteur <small>en ligne · 2-8 joueurs</small></h3><p>Chacun a 5 dés cachés sur son téléphone. À tour de rôle, on annonce combien de dés d'une face il y a au total sur la table (« au moins 4 × 5 ») en surenchérissant à chaque fois, ou on crie « Menteur ! ». On révèle : si l'annonce était vraie, l'accusateur perd un dé, sinon c'est le menteur. Le dernier à avoir des dés gagne.</p>
             <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
