@@ -512,15 +512,20 @@ function Loups(names) {
 }
 
 const GAMES = {
-  president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
-  imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
-  quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
-  bac:       { make: Bac, name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
-  loups:     { make: Loups, name: 'Loups-garous', e: '🐺', d: 'Rôles secrets, nuits et votes : l’appli est le maître du jeu. Dès 5 joueurs.', min: 5, max: 16, g: 'linear-gradient(150deg,#434343,#7a1630)' },
-  tel:       { make: Tel, name: 'Le Téléphone dessiné', e: '📞', d: 'Phrase → dessin → devinette… et on rigole en voyant le résultat !', min: 3, max: 10, g: 'linear-gradient(150deg,#00c6ff,#7b2ff7)' },
-  dessin:    { make: Dessin, name: 'Le Dessin', e: '🎨', d: 'Un joueur dessine, les autres devinent en direct sur leur téléphone.', min: 2, max: 10, g: 'linear-gradient(150deg,#ff9a8b,#a74ea8)' },
-  menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
+  president: { make: President, cat: 'cartes', name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
+  imposteur: { make: Imposteur, cat: 'ambiance', name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
+  quiz:      { make: Quiz, cat: 'ambiance', name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
+  bac:       { make: Bac, cat: 'ambiance', name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
+  loups:     { make: Loups, cat: 'ambiance', name: 'Loups-garous', e: '🐺', d: 'Rôles secrets, nuits et votes : l’appli est le maître du jeu. Dès 5 joueurs.', min: 5, max: 16, g: 'linear-gradient(150deg,#434343,#7a1630)' },
+  tel:       { make: Tel, cat: 'ambiance', name: 'Le Téléphone dessiné', e: '📞', d: 'Phrase → dessin → devinette… et on rigole en voyant le résultat !', min: 3, max: 10, g: 'linear-gradient(150deg,#00c6ff,#7b2ff7)' },
+  dessin:    { make: Dessin, cat: 'ambiance', name: 'Le Dessin', e: '🎨', d: 'Un joueur dessine, les autres devinent en direct sur leur téléphone.', min: 2, max: 10, g: 'linear-gradient(150deg,#ff9a8b,#a74ea8)' },
+  menteur:   { make: Menteur, cat: 'cartes', name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
+
+/* Extensions : d'autres fichiers (online-*.js) ajoutent leurs jeux ici.
+   Un jeu = { make, name, e, d, min, max, g, cat, render(g, ctx), on(a, el, ctx), onState(g, prevG, ctx), onEvent(e, ctx) } */
+const CATS = { ambiance: '🎉 Ambiance', cartes: '🃏 Cartes & dés', plateau: '♟️ Plateau (à 2)', reflexes: '⚡ Réflexes en direct' };
+A.online = { games: GAMES, register: (id, def) => { GAMES[id] = def; }, norm, cleanStrokes, ROLES };
 
 /* ================= Écran « En ligne » ================= */
 A.makers.online = function () {
@@ -671,6 +676,7 @@ A.makers.online = function () {
     const prev = state; state = s;
     const hand = s.g && s.g.hand ? s.g.hand.join(',') : '';
     if (hand !== lastHand) { sel = new Set([...sel].filter(c => s.g.hand.includes(c))); lastHand = hand; }
+    if (s.g && GAMES[s.g.id] && GAMES[s.g.id].onState) { try { GAMES[s.g.id].onState(s.g, prev && prev.g && prev.g.id === s.g.id ? prev.g : null, ctx()); } catch (e) { console.error(e); } }
     if (s.g && s.g.id === 'dessin' && prev && prev.g && prev.g.id === 'dessin' && s.g.found.length > prev.g.found.length) { beep(1320, .12, 'sine'); buzz(40); }
     if (s.g && s.g.id === 'bac' && s.g.stopBy && (!prev || !prev.g || !prev.g.stopBy)) { beep(440, .3, 'square', .2); buzz([200, 80, 200]); }
     if (s.g && s.g.id === 'quiz' && s.g.buzzer && (!prev || !prev.g || prev.g.buzzer !== s.g.buzzer)) { beep(880, .15, 'square', .2); buzz(120); }
@@ -706,6 +712,8 @@ A.makers.online = function () {
       </div>`);
     if (!state) return;
     if (!state.g) return renderLobby();
+    const P = GAMES[state.g.id];
+    if (P && P.render) return P.render(state.g, ctx());
     if (state.g.id === 'president') return renderPresident(state.g);
     if (state.g.id === 'imposteur') return renderImposteur(state.g);
     if (state.g.id === 'menteur') return renderMenteur(state.g);
@@ -732,10 +740,15 @@ A.makers.online = function () {
         <div class="chips" style="margin-top:0">${state.players.map(p => `<span class="chip ${p.online ? '' : 'offline'}" style="padding-right:14px"><i class="dot"></i>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}${p.name === state.me ? ' (toi)' : ''}</span>`).join('')}</div>
         ${amHost() ? `
           <div class="label">Choisis un jeu</div>
-          ${Object.entries(GAMES).map(([id, g]) => {
-            const ok = online >= g.min && online <= g.max;
-            return `<button class="game wide ${ok ? '' : 'off'}" style="--g:${g.g};min-height:110px" data-a="start" data-g="${id}">
-              <span class="e">${g.e}</span><b>${g.name}</b><span>${ok ? g.d : `De ${g.min} à ${g.max} joueurs`}</span></button>`;
+          ${Object.entries(CATS).map(([cat, title]) => {
+            const list = Object.entries(GAMES).filter(([, g]) => (g.cat || 'ambiance') === cat)
+              .sort((a, b) => ((online >= b[1].min && online <= b[1].max) - (online >= a[1].min && online <= a[1].max)));
+            if (!list.length) return '';
+            return `<h3 class="cat">${title}</h3><div class="ogames">${list.map(([id, g]) => {
+              const ok = online >= g.min && online <= g.max;
+              return `<button class="game ${ok ? '' : 'off'}" style="--g:${g.g}" data-a="start" data-g="${id}">
+                <span class="e">${g.e}</span><b>${g.name}</b><span>${ok ? g.d : g.min === g.max ? `À ${g.min} joueurs` : `De ${g.min} à ${g.max} joueurs`}</span></button>`;
+            }).join('')}</div>`;
           }).join('')}`
           : `<div class="waiting"><div class="spinner small"></div>En attente que ${esc(state.host)} lance un jeu…</div>`}
       </div>`);
@@ -980,6 +993,7 @@ A.makers.online = function () {
   }
   function redraw(strokes) { sizeCanvas(); (strokes || []).forEach(drawLine); }
   function onEvent(e) {
+    if (state && state.g && GAMES[state.g.id] && GAMES[state.g.id].onEvent) return GAMES[state.g.id].onEvent(e, ctx());
     if (!state || !state.g || state.g.id !== 'dessin' || !ctx2) return;
     if (e.k === 'stroke') drawLine(e);
     if (e.k === 'clear') redraw([]);
@@ -1248,7 +1262,11 @@ A.makers.online = function () {
   }
 
   /* ---------- Actions ---------- */
+  function ctx() {
+    return { g: state && state.g, state, ui, send, amHost, top, esc, toast, buzz, beep, pick, shuffle, view: A.view, render, me: state && state.me, host: state && state.host };
+  }
   function on(a, el) {
+    if (state && state.g && GAMES[state.g.id] && GAMES[state.g.id].on && GAMES[state.g.id].on(a, el, ctx()) !== false) return;
     if (a === 'create' || a === 'join') {
       ui.name = (document.getElementById('oname')?.value || ui.name).trim().replace(/\s+/g, ' ');
       if (!ui.name) { ui.err = 'Entre ton prénom d’abord'; return render(); }
