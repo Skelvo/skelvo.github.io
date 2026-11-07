@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 5;
+const VERSION = 6;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -112,7 +112,8 @@ const G = {
   preferes: { name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
   mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
   roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
-  doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true }
+  doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
+  duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
 const fitAt = (id, n) => G[id].fit[clampN(n) - 2];             // 'b' | 'o' | '-'
@@ -834,6 +835,73 @@ const makers = {
     };
   },
 
+  /* ---------- Duel de réflexes ---------- */
+  duel() {
+    const g = G.duel, TARGET = 5;
+    let phase = 'ready', score = [0, 0], goAt = 0, msg = ['', ''], t1 = null, round = 0;
+    const NAMES = ['Rose', 'Bleu'];
+    const COLORS = ['#ff5c8a', '#3aa0ff'];
+    const halves = () => [document.getElementById('h0'), document.getElementById('h1')];
+    function paint(cls, texts) {
+      halves().forEach((h, i) => {
+        if (!h) return;
+        h.className = 'dhalf ' + cls + (i === 0 ? ' top' : '');
+        h.querySelector('.dmsg').innerHTML = texts[i];
+        h.querySelector('.dscore').textContent = `${score[i]} – ${score[1 - i]}`;
+      });
+    }
+    function launch() {
+      clearTimeout(t1); round++;
+      phase = 'wait'; paint('wait', ['Attends le vert…', 'Attends le vert…']);
+      // parfois un faux signal pour piéger les impatients
+      const trap = round > 1 && Math.random() < .35;
+      const delay = 1500 + Math.random() * 3500;
+      if (trap) t1 = setTimeout(() => { phase = 'trap'; paint('trap', ['Piège ! Pas encore…', 'Piège ! Pas encore…']); beep(300, .08); t1 = setTimeout(() => { phase = 'wait'; paint('wait', ['Attends le vert…', 'Attends le vert…']); t1 = setTimeout(go, 800 + Math.random() * 2200); }, 700); }, delay * .6);
+      else t1 = setTimeout(go, delay);
+    }
+    function go() { phase = 'go'; goAt = performance.now(); paint('go', ['TAPE !', 'TAPE !']); beep(1200, .12, 'square', .2); }
+    function tap(i) {
+      if (phase === 'ready' || phase === 'end') return;
+      if (phase === 'result') return;
+      clearTimeout(t1);
+      let winner, texts;
+      if (phase === 'go') {
+        const ms = Math.round(performance.now() - goAt);
+        winner = i; texts = i === 0 ? [`🏆 Gagné ! ${ms} ms`, 'Trop lent… 🐢'] : ['Trop lent… 🐢', `🏆 Gagné ! ${ms} ms`];
+        beep(1320, .1, 'sine'); buzz(60);
+      } else {
+        winner = 1 - i; const early = phase === 'trap' ? 'Tombé dans le piège 😅' : 'Faux départ ! ❌';
+        texts = i === 0 ? [early, '🏆 Point offert !'] : ['🏆 Point offert !', early];
+        beep(200, .25, 'sawtooth'); buzz([100, 50, 100]);
+      }
+      score[winner]++;
+      if (score[winner] >= TARGET) {
+        phase = 'end';
+        const fin = ['', '']; fin[winner] = `👑 ${NAMES[winner]} gagne le duel !`; fin[1 - winner] = S.drinks ? 'Perdu… 3 gorgées 🍻' : 'Perdu… ' + pick(gages());
+        paint('end', fin.map((t, k) => `${t}<button class="btn primary" data-a="again" style="margin-top:14px">Revanche</button>`));
+        halves().forEach(h => h.querySelectorAll('[data-a="again"]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); score = [0, 0]; round = 0; launch(); })));
+        return;
+      }
+      phase = 'result'; paint('result', texts);
+      t1 = setTimeout(launch, 1800);
+    }
+    return {
+      render() {
+        const half = (i) => `<div class="dhalf ready${i === 0 ? ' top' : ''}" id="h${i}" style="--c:${COLORS[i]}">
+            <div class="dscore">0 – 0</div><div class="dmsg">Joueur ${NAMES[i]}<br><small>Tape ta moitié quand elle devient verte. Premier à ${TARGET} !</small></div></div>`;
+        view(`<div class="duel">
+            ${half(0)}
+            <div class="dmid"><button class="icon-btn" data-a="home" aria-label="Retour">←</button><button class="btn primary" data-a="start" id="dstart">Lancer le duel</button></div>
+            ${half(1)}
+          </div>`, () => {
+          halves().forEach((h, i) => h.addEventListener('pointerdown', e => { e.preventDefault(); tap(i); }));
+        });
+      },
+      on(a) { if (a === 'start') { document.getElementById('dstart')?.remove(); launch(); } },
+      leave() { clearTimeout(t1); }
+    };
+  },
+
   /* ---------- La Roue ---------- */
   roue() {
     const g = G.roue; let name = '?', spinning = false, final = false, gage = '';
@@ -924,6 +992,7 @@ const makers = {
             <h3>⚖️ Tu préfères ?</h3><p>Deux choix, tout le monde vote à main levée en même temps. La minorité boit. Il faut justifier les choix bizarres.</p>
             <h3>⏱️ Fais deviner</h3><p>Un joueur fait deviner un max de mots en un temps limité, en parlant, en mimant ou avec un seul mot. Il marque un point par mot trouvé.</p>
             <h3>👆 Le Doigt élu</h3><p>Tout le monde pose un doigt sur l'écran. Quand plus personne ne bouge, l'appli en choisit un au hasard… ou forme deux équipes. Pas besoin d'entrer les prénoms.</p>
+            <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
           </div>`);
