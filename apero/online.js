@@ -740,8 +740,9 @@ A.makers.online = function () {
         <div class="chips" style="margin-top:0">${state.players.map(p => `<span class="chip ${p.online ? '' : 'offline'}" style="padding-right:14px"><i class="dot"></i>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}${p.name === state.me ? ' (toi)' : ''}</span>`).join('')}</div>
         ${amHost() ? `
           <div class="label">Choisis un jeu</div>
+          ${A.S.spicy ? '<p class="spicynote">🌶️ Mode épicé activé : seuls les jeux épicés sont proposés.</p>' : ''}
           ${Object.entries(CATS).map(([cat, title]) => {
-            const list = Object.entries(GAMES).filter(([, g]) => (g.cat || 'ambiance') === cat)
+            const list = Object.entries(GAMES).filter(([, g]) => (g.cat || 'ambiance') === cat && (!A.S.spicy || g.spicy))
               .sort((a, b) => ((online >= b[1].min && online <= b[1].max) - (online >= a[1].min && online <= a[1].max)));
             if (!list.length) return '';
             return `<h3 class="cat">${title}</h3><div class="ogames">${list.map(([id, g]) => {

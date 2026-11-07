@@ -321,6 +321,6 @@ function on(a, el, ctx) {
 }
 
 O.register('bluff', { make: Bluff, cat: 'ambiance', name: 'Le Bluff', e: '🎭', d: 'Un mot rare : invente une fausse définition et piège les autres !', min: 3, max: 10, g: 'linear-gradient(150deg,#7f00ff,#e100ff)', render: renderBluff, on });
-O.register('motfin', { make: MotFin, cat: 'ambiance', name: 'Le Mot de la fin', e: '💬', d: 'Complète la phrase le plus drôlement possible, votes anonymes.', min: 3, max: 12, g: 'linear-gradient(150deg,#ff512f,#dd2476)', render: renderMotFin, on });
-O.register('quiecrit', { make: QuiEcrit, cat: 'ambiance', name: 'Qui a écrit ça ?', e: '🕵️‍♀️', d: 'Réponses perso anonymes : devine qui a écrit quoi.', min: 3, max: 12, g: 'linear-gradient(150deg,#11998e,#38ef7d)', render: renderQuiEcrit, on });
+O.register('motfin', { spicy: true, make: MotFin, cat: 'ambiance', name: 'Le Mot de la fin', e: '💬', d: 'Complète la phrase le plus drôlement possible, votes anonymes.', min: 3, max: 12, g: 'linear-gradient(150deg,#ff512f,#dd2476)', render: renderMotFin, on });
+O.register('quiecrit', { spicy: true, make: QuiEcrit, cat: 'ambiance', name: 'Qui a écrit ça ?', e: '🕵️‍♀️', d: 'Réponses perso anonymes : devine qui a écrit quoi.', min: 3, max: 12, g: 'linear-gradient(150deg,#11998e,#38ef7d)', render: renderQuiEcrit, on });
 })();
