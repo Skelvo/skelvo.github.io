@@ -391,13 +391,26 @@ textarea:focus{border-color:var(--accent);}
 .allDice .pname{min-width:64px;font-weight:700;font-size:.9rem;}
 .allDice>div>div{display:flex;gap:5px;flex-wrap:wrap;}
 
+/* Quiz buzzer */
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.qopt{display:flex;align-items:center;gap:8px;text-align:left;padding:12px;border-radius:14px;background:var(--panel);border:2px solid transparent;font-weight:700;font-size:.95rem;min-height:56px;}
+.qopt span{width:24px;height:24px;border-radius:7px;background:var(--panel-2);display:grid;place-items:center;font-size:.75rem;flex:none;}
+.qopt[data-a]{border-color:var(--accent);background:var(--panel-2);}
+.qopt:disabled{opacity:1;}
+.qopt.right{background:var(--ok);color:#06281a;}
+.qopt.dim{opacity:.4;}
+.qopt.wrongpick{border-color:var(--danger);text-decoration:line-through;}
+.buzz{width:180px;height:180px;border-radius:50%;margin:6px auto;display:grid;place-items:center;font-size:2.4rem;font-weight:800;color:#fff;letter-spacing:.05em;
+  background:radial-gradient(circle at 35% 30%,#ff8080,#e01e1e 60%,#9e0c0c);box-shadow:0 12px 0 #7a0909,0 20px 40px rgba(224,30,30,.5);transition:transform .06s,box-shadow .06s;}
+.buzz:active{transform:translateY(10px);box-shadow:0 2px 0 #7a0909,0 6px 16px rgba(224,30,30,.5);}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=9"></script>
-<script src="app.js?v=9"></script>
-<script src="online.js?v=9"></script>
+<script src="data.js?v=10"></script>
+<script src="app.js?v=10"></script>
+<script src="online.js?v=10"></script>
 </body>
 </html>
