@@ -218,9 +218,57 @@ function Menteur(names) {
   return { act, view, min: 2, max: 8 };
 }
 
+/* ---------- Quiz buzzer ---------- */
+function Quiz(names, notify) {
+  const TOTAL = 12, ANSWER_MS = 8000;
+  const qs = shuffle(A.D.quiz).slice(0, TOTAL);
+  let n = 0, phase = 'q', buzzer = null, locked = new Set(), lastWrong = null, foundBy = null, deadline = 0, timer = null, winner = null;
+  const scores = {}; names.forEach(p => scores[p] = 0);
+  function clear() { clearTimeout(timer); timer = null; }
+  function wrong(who, i) {
+    locked.add(who); lastWrong = { who, i }; buzzer = null;
+    if (names.every(p => locked.has(p))) phase = 'reveal'; else phase = 'q';
+  }
+  function act(who, a, isHost) {
+    const q = qs[n];
+    if (a.k === 'buzz' && phase === 'q' && !locked.has(who)) {
+      phase = 'answer'; buzzer = who; lastWrong = null; deadline = Date.now() + ANSWER_MS;
+      clear(); timer = setTimeout(() => { if (phase === 'answer' && buzzer === who) { wrong(who, -1); notify(); } }, ANSWER_MS);
+      return;
+    }
+    if (a.k === 'answer' && phase === 'answer' && who === buzzer) {
+      clear();
+      if ((a.i | 0) === q[2]) { scores[who]++; phase = 'reveal'; lastWrong = null; foundBy = who; }
+      else wrong(who, a.i | 0);
+      return;
+    }
+    if (a.k === 'reveal' && isHost && phase === 'q') { phase = 'reveal'; buzzer = null; return; }
+    if (a.k === 'next' && isHost && phase === 'reveal') {
+      n++; locked = new Set(); buzzer = null; lastWrong = null; foundBy = null;
+      if (n >= qs.length) { phase = 'end'; const best = Math.max(...Object.values(scores)); winner = names.filter(p => scores[p] === best); }
+      else phase = 'q';
+      return;
+    }
+    if (a.k === 'again' && isHost && phase === 'end') {
+      const fresh = Quiz(names, notify); Object.assign(api, fresh); return;
+    }
+  }
+  function view(me) {
+    const q = qs[Math.min(n, qs.length - 1)];
+    return {
+      id: 'quiz', phase, me, n: n + 1, total: qs.length, q: q[0], opts: q[1],
+      correct: phase === 'reveal' ? q[2] : null, foundBy, buzzer, locked: [...locked], lastWrong,
+      left: phase === 'answer' ? Math.max(0, deadline - Date.now()) : 0, scores, winner
+    };
+  }
+  const api = { act, view, stop: clear, min: 2, max: 12 };
+  return api;
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
   imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
+  quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
   menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
 
@@ -235,7 +283,7 @@ A.makers.online = function () {
   const me = () => ui.name;
   const self = {
     get confirmLeave() { return (ui.screen === 'room') ? (isHost ? 'Quitter ? La partie s’arrêtera pour tout le monde.' : 'Quitter la partie ?') : null; },
-    leave() { try { conn && conn.close(); } catch {} try { peer && peer.destroy(); } catch {} peer = conn = room = null; },
+    leave() { try { room && room.game && room.game.stop && room.game.stop(); } catch {} try { conn && conn.close(); } catch {} try { peer && peer.destroy(); } catch {} peer = conn = room = null; },
     render, on
   };
 
@@ -297,9 +345,9 @@ A.makers.online = function () {
       const names = room.players.filter(p => p.online).map(p => p.name);
       if (names.length < G.min) return toast(`Il faut au moins ${G.min} joueurs connectés`);
       if (names.length > G.max) return toast(`${G.max} joueurs maximum pour ce jeu`);
-      room.game = G.make(names); room.gameId = a.g; broadcast(); return;
+      room.game = G.make(names, () => broadcast()); room.gameId = a.g; broadcast(); return;
     }
-    if (a.k === 'lobby' && host) { room.game = null; room.gameId = null; broadcast(); return; }
+    if (a.k === 'lobby' && host) { room.game && room.game.stop && room.game.stop(); room.game = null; room.gameId = null; broadcast(); return; }
     if (room.game) {
       const err = room.game.act(who, a, host);
       if (err) { sendTo(who, { t: 'err', m: err, soft: true }); return; }
@@ -363,6 +411,7 @@ A.makers.online = function () {
     const prev = state; state = s;
     const hand = s.g && s.g.hand ? s.g.hand.join(',') : '';
     if (hand !== lastHand) { sel = new Set([...sel].filter(c => s.g.hand.includes(c))); lastHand = hand; }
+    if (s.g && s.g.id === 'quiz' && s.g.buzzer && (!prev || !prev.g || prev.g.buzzer !== s.g.buzzer)) { beep(880, .15, 'square', .2); buzz(120); }
     if (s.g && (s.g.id === 'president' || s.g.id === 'menteur') && s.g.turn === s.me && (!prev || !prev.g || prev.g.turn !== s.me)) { buzz([60, 40, 60]); beep(1040, .1, 'sine'); }
     render();
   }
@@ -398,6 +447,7 @@ A.makers.online = function () {
     if (state.g.id === 'president') return renderPresident(state.g);
     if (state.g.id === 'imposteur') return renderImposteur(state.g);
     if (state.g.id === 'menteur') return renderMenteur(state.g);
+    if (state.g.id === 'quiz') return renderQuiz(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -559,6 +609,43 @@ A.makers.online = function () {
       </div>`, null, true);
   }
 
+  /* --- Quiz buzzer --- */
+  let qTick = null;
+  function renderQuiz(g) {
+    clearInterval(qTick);
+    const board = `<div class="scores">${Object.entries(g.scores).sort((a, b) => b[1] - a[1]).map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}${p === g.me ? ' (toi)' : ''}</span><span>${s}</span></div>`).join('')}</div>`;
+    if (g.phase === 'end') return A.view(`${top('Quiz buzzer')}
+      <div class="stage">
+        <div class="card" style="--g:linear-gradient(160deg,#f7b733,#fc4a1a);flex:none;min-height:0;padding:24px">
+          <div class="tag" style="position:static">Fin du quiz</div><div class="big-num" style="font-size:4.5rem">🏆</div>
+          <div class="secret">${g.winner.map(esc).join(' & ')}</div></div>
+        ${board}
+        ${amHost() ? `<div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn primary" data-a="qagain">Rejouer</button></div>` : ''}
+      </div>`);
+    const iAmLocked = g.locked.includes(g.me), mine = g.buzzer === g.me;
+    const optCls = i => g.phase === 'reveal' ? (i === g.correct ? 'right' : 'dim') : (g.lastWrong && g.lastWrong.i === i ? 'wrongpick' : '');
+    const opts = `<div class="qopts">${g.opts.map((o, i) => `<button class="qopt ${optCls(i)}" ${mine && g.phase === 'answer' ? `data-a="qans" data-i="${i}"` : 'disabled'}><span>${'ABCD'[i]}</span>${esc(o)}</button>`).join('')}</div>`;
+    let status = '';
+    if (g.phase === 'q') status = iAmLocked ? `<div class="turnbar">❌ Raté… les autres peuvent buzzer</div>` : `<button class="buzz" data-a="buzz">BUZZ</button>`;
+    if (g.phase === 'answer') status = mine ? `<div class="turnbar mine">⏱️ Réponds vite ! <b id="qleft">${Math.ceil(g.left / 1000)}</b></div>` : `<div class="turnbar">🔔 ${esc(g.buzzer)} a buzzé… <b id="qleft">${Math.ceil(g.left / 1000)}</b></div>`;
+    if (g.phase === 'reveal') status = `<div class="turnbar ${g.foundBy ? 'mine' : ''}">${g.foundBy ? `✅ ${esc(g.foundBy)} a trouvé ! +1` : 'Personne n’a trouvé 😅'}</div>`;
+    A.view(`${top('Quiz buzzer')}
+      <div class="stage">
+        <div class="turn">Question ${g.n} / ${g.total}</div>
+        <div class="card" style="--g:linear-gradient(160deg,#2c2249,#221a3b);flex:none;min-height:130px;padding:22px 18px"><div class="txt" style="font-size:1.3rem">${esc(g.q)}</div></div>
+        ${g.lastWrong && g.phase !== 'reveal' ? `<p class="exch">${esc(g.lastWrong.who)} s'est trompé·e${g.lastWrong.i < 0 ? ' (temps écoulé)' : ''}</p>` : ''}
+        ${opts}
+        ${status}
+        ${amHost() && g.phase === 'q' ? `<button class="btn ghost" data-a="qreveal">Personne ne sait ? Révéler</button>` : ''}
+        ${amHost() && g.phase === 'reveal' ? `<button class="btn primary big block" data-a="qnext">${g.n >= g.total ? 'Voir les résultats' : 'Question suivante'}</button>` : ''}
+        ${board}
+      </div>`, null, true);
+    if (g.phase === 'answer') {
+      const end = Date.now() + g.left;
+      qTick = setInterval(() => { const el = document.getElementById('qleft'); if (!el) return clearInterval(qTick); el.textContent = Math.max(0, Math.ceil((end - Date.now()) / 1000)); }, 250);
+    }
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -587,6 +674,12 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Quiz
+    if (a === 'buzz') { buzz(60); return send({ k: 'buzz' }); }
+    if (a === 'qans') return send({ k: 'answer', i: +el.dataset.i });
+    if (a === 'qreveal') return send({ k: 'reveal' });
+    if (a === 'qnext') return send({ k: 'next' });
+    if (a === 'qagain') return send({ k: 'again' });
     // Menteur
     if (a === 'bq') { ui.bq = Math.max(1, ui.bq + +el.dataset.v); buzz(8); return render(); }
     if (a === 'bf') { ui.bf = +el.dataset.v; buzz(8); return render(); }
