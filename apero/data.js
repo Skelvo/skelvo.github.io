@@ -704,5 +704,16 @@ window.DATA = {
     ["Qu'est-ce qu'on peut attraper, mais jamais lancer ?", "Un rhume", "Atchoum !"],
     ["Un homme regarde un portrait et dit : « Je n'ai ni frère ni sœur, mais le père de cet homme est le fils de mon père. » Qui est sur le portrait ?", "Son fils", "« Le fils de mon père », c'est lui-même."],
     ["Qu'est-ce qui est vert, qui monte et qui descend ?", "Un petit pois dans un ascenseur 😄", "C'est une blague, pas une vraie énigme !"]
+  ],
+  /* Téléphone dessiné : idées de phrases de départ */
+  telephone: [
+    "Un chat qui fait du ski", "Mamie fait du skate dans la cuisine", "Un dinosaure à la plage", "Le Père Noël en vacances",
+    "Un requin qui a peur de l'eau", "Une pizza qui va au cinéma", "Un robot qui pleure devant un film", "Un pingouin dans le désert",
+    "Mon voisin fait du yoga sur le toit", "Une vache qui joue de la guitare", "Un fantôme qui fait la vaisselle", "Un astronaute qui mange une raclette",
+    "Une licorne coincée dans les bouchons", "Le prof de maths est un vampire", "Un escargot qui gagne une course", "Un poulet qui fait un selfie",
+    "Une baleine dans une baignoire", "Un chien qui conduit un bus", "Une banane qui fait du sport", "Un pirate qui a le mal de mer",
+    "Un ours qui fait les soldes", "Une soirée qui finit en karaoké", "Un hérisson qui fait un câlin", "Le soleil qui prend un coup de soleil",
+    "Un mariage sous la pluie", "Une girafe qui a un torticolis", "Un magicien qui rate son tour", "Une grand-mère qui fait du parachute",
+    "Un frigo qui a froid", "Un poisson qui fait du vélo"
   ]
 };

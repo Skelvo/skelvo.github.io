@@ -368,11 +368,64 @@ function Dessin(names, notify) {
   return { act, view, stop: () => clearTimeout(timer), min: 2, max: 10 };
 }
 
+/* ---------- Le Téléphone dessiné ---------- */
+const cleanStrokes = d => Array.isArray(d) ? d.slice(0, 400).map(s => ({ c: String(s && s.c || '#111').slice(0, 9), w: Math.min(30, +(s && s.w) || 4),
+  pts: Array.isArray(s && s.pts) ? s.pts.slice(0, 500).map(p => [+p[0] || 0, +p[1] || 0]) : [] })) : [];
+function Tel(names, notify) {
+  const WRITE_MS = 45000, DRAW_MS = 80000;
+  let order, N, step, entries, drafts, submitted, phase, deadline, timer = null, rc;
+  function start() {
+    order = shuffle(names); N = order.length; step = 0; entries = order.map(() => []); phase = 'play'; rc = 0;
+    begin();
+  }
+  const typeAt = s => s % 2 ? 'draw' : 'write';
+  const chainOf = (p, s) => ((order.indexOf(p) - s) % N + N) % N;
+  function begin() {
+    drafts = {}; submitted = new Set();
+    const ms = typeAt(step) === 'draw' ? DRAW_MS : WRITE_MS; deadline = Date.now() + ms;
+    clearTimeout(timer); timer = setTimeout(() => { if (phase === 'play') { advance(); notify(); } }, ms + 1500);
+  }
+  function advance() {
+    const t = typeAt(step);
+    order.forEach(p => {
+      const d = drafts[p];
+      entries[chainOf(p, step)][step] = { by: p, type: t, data: t === 'draw' ? cleanStrokes(d) : (String(d || '').trim().slice(0, 80) || '🤷 (rien écrit)') };
+    });
+    step++;
+    if (step >= N) { phase = 'reveal'; clearTimeout(timer); } else begin();
+  }
+  function act(who, a, isHost) {
+    if ((a.k === 'save' || a.k === 'submit') && phase === 'play' && order.includes(who) && !submitted.has(who)) {
+      drafts[who] = typeAt(step) === 'draw' ? cleanStrokes(a.data) : String(a.data || '').slice(0, 80);
+      if (a.k === 'save') return 'silent';
+      submitted.add(who);
+      if (order.every(p => submitted.has(p))) advance();
+      return;
+    }
+    if (a.k === 'rgo' && phase === 'reveal' && isHost) { rc = Math.max(0, Math.min(N - 1, rc + (a.d | 0))); return; }
+    if (a.k === 'again' && phase === 'reveal' && isHost) { start(); return; }
+  }
+  function view(me) {
+    const c = order.includes(me) ? chainOf(me, step) : 0;
+    const prev = phase === 'play' && step > 0 ? entries[c][step - 1] : null;
+    return {
+      id: 'tel', phase, me, step, steps: N, type: typeAt(step), prev,
+      left: phase === 'play' ? Math.max(0, deadline - Date.now()) : 0,
+      done: phase === 'play' ? [...submitted] : [], waitingFor: phase === 'play' ? order.filter(p => !submitted.has(p)) : [],
+      mineDone: submitted.has(me), suggestions: null,
+      chain: phase === 'reveal' ? entries[rc] : null, rc, owner: phase === 'reveal' ? order[rc] : null
+    };
+  }
+  start();
+  return { act, view, stop: () => clearTimeout(timer), min: 3, max: 10 };
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
   imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
   quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
   bac:       { make: Bac, name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
+  tel:       { make: Tel, name: 'Le Téléphone dessiné', e: '📞', d: 'Phrase → dessin → devinette… et on rigole en voyant le résultat !', min: 3, max: 10, g: 'linear-gradient(150deg,#00c6ff,#7b2ff7)' },
   dessin:    { make: Dessin, name: 'Le Dessin', e: '🎨', d: 'Un joueur dessine, les autres devinent en direct sur leur téléphone.', min: 2, max: 10, g: 'linear-gradient(150deg,#ff9a8b,#a74ea8)' },
   menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
@@ -567,6 +620,7 @@ A.makers.online = function () {
     if (state.g.id === 'quiz') return renderQuiz(state.g);
     if (state.g.id === 'bac') return renderBac(state.g);
     if (state.g.id === 'dessin') return renderDessin(state.g);
+    if (state.g.id === 'tel') return renderTel(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -922,6 +976,106 @@ A.makers.online = function () {
     }, 250);
   }
 
+  /* --- Le Téléphone dessiné --- */
+  let tKey = '', tTick = null, tSave = null, tStrokes = [], tText = '', tDirty = false;
+  function paint(canvas, strokes) {
+    const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+    const c = canvas.getContext('2d'); c.lineCap = 'round'; c.lineJoin = 'round';
+    c.fillStyle = '#fff'; c.fillRect(0, 0, canvas.width, canvas.height);
+    (strokes || []).forEach(s => {
+      if (!s.pts.length) return;
+      c.strokeStyle = s.c; c.lineWidth = s.w * canvas.width / 340; c.beginPath();
+      s.pts.forEach(([x, y], i) => i ? c.lineTo(x * canvas.width, y * canvas.height) : c.moveTo(x * canvas.width, y * canvas.height));
+      if (s.pts.length === 1) c.lineTo(s.pts[0][0] * canvas.width + .1, s.pts[0][1] * canvas.height);
+      c.stroke();
+    });
+    return c;
+  }
+  function bindLocalDraw(canvas) {
+    let cur = null;
+    const pos = e => { const r = canvas.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 1000) / 1000, Math.round((e.clientY - r.top) / r.height * 1000) / 1000]; };
+    canvas.addEventListener('pointerdown', e => { e.preventDefault(); canvas.setPointerCapture(e.pointerId); cur = { c: pen.c, w: pen.w, pts: [pos(e)] }; tStrokes.push(cur); paint(canvas, tStrokes); tDirty = true; });
+    canvas.addEventListener('pointermove', e => {
+      if (!cur) return; e.preventDefault();
+      const p = pos(e), last = cur.pts[cur.pts.length - 1]; cur.pts.push(p);
+      const c = canvas.getContext('2d'); c.strokeStyle = cur.c; c.lineWidth = cur.w * canvas.width / 340; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(last[0] * canvas.width, last[1] * canvas.height); c.lineTo(p[0] * canvas.width, p[1] * canvas.height); c.stroke();
+    });
+    const end = () => { cur = null; tDirty = true; };
+    canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  }
+  function renderTel(g) {
+    clearInterval(tTick);
+    const key = g.phase + '|' + g.step + '|' + g.mineDone + '|' + g.rc;
+    const waitLine = `${g.waitingFor.length ? `En attente de ${g.waitingFor.map(esc).join(', ')}` : ''}`;
+    if (key === tKey && document.getElementById('twait')) { document.getElementById('twait').textContent = waitLine; return startTelTick(g); }
+    if (key !== tKey && g.phase === 'play' && !g.mineDone && (!tKey.startsWith('play|' + g.step + '|'))) { tStrokes = []; tText = ''; }
+    tKey = key;
+    clearInterval(tSave);
+    if (g.phase === 'reveal') {
+      return A.view(`${top('Le Téléphone dessiné')}
+        <div class="stage">
+          <div class="turn">Chaîne ${g.rc + 1} / ${g.steps}<strong>La phrase de ${esc(g.owner)}</strong></div>
+          <div class="album">${g.chain.map((e, i) => e.type === 'draw'
+            ? `<div class="aitem"><small>${esc(e.by)} a dessiné :</small><canvas class="tcanvas small" data-ci="${i}"></canvas></div>`
+            : `<div class="aitem"><small>${esc(e.by)} ${i ? 'a cru voir' : 'a écrit'} :</small><div class="abubble">${esc(e.data)}</div></div>`).join('')}</div>
+          ${amHost() ? `<div class="row"><button class="btn" data-a="trgo" data-d="-1" ${g.rc ? '' : 'disabled'}>← Précédente</button><button class="btn primary" data-a="trgo" data-d="1" ${g.rc < g.steps - 1 ? '' : 'disabled'}>Suivante →</button></div>
+            <div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn" data-a="tagain">Nouvelle partie</button></div>` : `<p class="hint">${esc(state.host)} fait défiler les chaînes</p>`}
+        </div>`, () => document.querySelectorAll('[data-ci]').forEach(cv => paint(cv, g.chain[+cv.dataset.ci].data)));
+    }
+    if (g.mineDone) {
+      return A.view(`${top('Le Téléphone dessiné')}
+        <div class="stage" style="justify-content:center;text-align:center">
+          <div class="big-num" style="font-size:4rem">✅</div>
+          <p class="hint">C'est envoyé ! <b id="tleft">${Math.ceil(g.left / 1000)}</b> s</p>
+          <div class="waiting" id="twait">${waitLine}</div>
+        </div>`, () => startTelTick(g));
+    }
+    const head = `<div class="dhead"><span>Étape ${g.step + 1} / ${g.steps}</span><b id="tleft">${Math.ceil(g.left / 1000)}</b></div>`;
+    if (g.type === 'write') {
+      const first = g.step === 0;
+      return A.view(`${top('Le Téléphone dessiné')}
+        <div class="stage" style="gap:10px">
+          ${head}
+          ${first ? `<div class="card" style="--g:linear-gradient(160deg,#00c6ff,#7b2ff7);flex:none;min-height:0;padding:20px"><div class="txt" style="font-size:1.25rem">Écris une phrase marrante que quelqu'un devra dessiner ✍️</div></div>`
+            : `<p class="label" style="margin:0">Qu'est-ce que ce dessin représente ?</p><canvas id="tprev" class="tcanvas"></canvas>`}
+          <form class="add-row" id="tform" autocomplete="off"><input id="tin" maxlength="80" placeholder="${first ? 'Ex : un chat qui fait du ski' : 'Je pense que c’est…'}" value="${esc(tText)}"><button class="btn primary" type="submit">OK</button></form>
+          ${first ? `<button class="btn" data-a="tidea">🎲 Donne-moi une idée</button>` : ''}
+          <div class="waiting" id="twait">${waitLine}</div>
+        </div>`, () => {
+          if (!first) paint(document.getElementById('tprev'), g.prev && g.prev.data);
+          const inp = document.getElementById('tin');
+          inp.addEventListener('input', () => { tText = inp.value; tDirty = true; });
+          document.getElementById('tform').addEventListener('submit', e => { e.preventDefault(); tText = inp.value; if (!tText.trim()) return toast('Écris quelque chose 🙂'); send({ k: 'submit', data: tText }); });
+          tSave = setInterval(() => { if (tDirty) { tDirty = false; send({ k: 'save', data: tText }); } }, 1500);
+          startTelTick(g);
+        });
+    }
+    A.view(`${top('Le Téléphone dessiné')}
+      <div class="stage" style="gap:10px">
+        ${head}
+        <div class="dword">Dessine : « ${esc(g.prev ? g.prev.data : '')} »</div>
+        <canvas id="tcv" class="tcanvas mine"></canvas>
+        <div class="dtools">
+          ${PALETTE.map(c => `<button class="dcol ${pen.c === c ? 'on' : ''}" style="--c:${c}" data-a="dcolor" data-c="${c}" aria-label="Couleur"></button>`).join('')}
+          <button class="dsz ${pen.w === 4 ? 'on' : ''}" data-a="dsize" data-v="4">•</button><button class="dsz big ${pen.w === 12 ? 'on' : ''}" data-a="dsize" data-v="12">●</button>
+        </div>
+        <div class="row"><button class="btn" data-a="tundo">↩️ Annuler</button><button class="btn primary" data-a="tsend">Terminé ✓</button></div>
+        <div class="waiting" id="twait">${waitLine}</div>
+      </div>`, () => {
+        const cvs = document.getElementById('tcv'); paint(cvs, tStrokes); bindLocalDraw(cvs);
+        tSave = setInterval(() => { if (tDirty) { tDirty = false; send({ k: 'save', data: tStrokes }); } }, 2000);
+        startTelTick(g);
+      });
+  }
+  function startTelTick(g) {
+    clearInterval(tTick);
+    if (g.phase !== 'play') return;
+    const end = Date.now() + g.left;
+    tTick = setInterval(() => { const el = document.getElementById('tleft'); if (!el) return clearInterval(tTick); const l = Math.max(0, end - Date.now()); el.textContent = Math.ceil(l / 1000); el.classList.toggle('hot', l < 10000); }, 250);
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -950,6 +1104,12 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Téléphone dessiné
+    if (a === 'tidea') { tText = pick(A.D.telephone); const i = document.getElementById('tin'); if (i) i.value = tText; tDirty = true; return; }
+    if (a === 'tundo') { tStrokes.pop(); tDirty = true; const c = document.getElementById('tcv'); if (c) paint(c, tStrokes); return; }
+    if (a === 'tsend') { clearInterval(tSave); return send({ k: 'submit', data: tStrokes }); }
+    if (a === 'trgo') return send({ k: 'rgo', d: +el.dataset.d });
+    if (a === 'tagain') return send({ k: 'again' });
     // Dessin
     if (a === 'dcolor') { pen.c = el.dataset.c; document.querySelectorAll('.dcol').forEach(b => b.classList.toggle('on', b === el)); return; }
     if (a === 'dsize') { pen.w = +el.dataset.v; document.querySelectorAll('.dsz').forEach(b => b.classList.toggle('on', b === el)); return; }
