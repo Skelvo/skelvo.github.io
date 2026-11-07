@@ -24,7 +24,7 @@ const drink = n => S.drinks ? `boit ${g(n)} 🍻` : `prend ${g(n)}`;
 function tally() {
   const t = {};
   return {
-    add(p, n) { t[p] = (t[p] || 0) + n; },
+    add(p, n) { t[p] = (t[p] || 0) + n; if (A.night) A.night.sip(p, n); },
     html(title = S.drinks ? 'Gorgées' : 'Pénalités') {
       const rows = Object.entries(t).sort((a, b) => b[1] - a[1]); if (!rows.length) return '';
       return `<div class="label">${title}</div><div class="scores">${rows.map(([p, n], i) => `<div class="score ${i === 0 ? 'lead' : ''}"><span>${esc(p)}</span><span>${n}</span></div>`).join('')}</div>`;

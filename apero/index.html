@@ -663,21 +663,55 @@ html.spicy.lvl2 .spicynote{background:rgba(255,31,109,.14);border-color:rgba(255
 .busrow{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;}
 .busrow .pc{width:48px;height:68px;}
 
+/* Soirée : compteur, stats, soirée auto */
+.sipfab{position:fixed;right:16px;bottom:calc(var(--safe-b) + 16px);z-index:40;width:54px;height:54px;border-radius:50%;font-size:1.6rem;display:none;place-items:center;
+  background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.45);}
+body.ingame .sipfab{display:grid;}
+.sipfab:active{transform:scale(.92);}
+.sipsheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;animation:toastin .2s ease;}
+.sipsheet .box{width:100%;max-width:520px;max-height:80vh;overflow:auto;background:var(--panel);border-radius:var(--radius) var(--radius) 0 0;padding:18px 16px calc(var(--safe-b) + 18px);}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sheethead .x{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);}
+.siprow{display:grid;grid-template-columns:1fr 40px 40px 44px 44px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);}
+.siprow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.siprow b{text-align:center;font-size:1.15rem;}
+.siprow button{height:38px;border-radius:12px;background:rgba(255,255,255,.08);font-weight:800;}
+.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.pod{background:var(--panel);border-radius:16px;padding:12px 6px;text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;}
+.pod span{font-size:1.8rem;}
+.pod small{color:var(--muted);font-size:.72rem;}
+.pod b{font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pod em{font-style:normal;color:var(--muted);font-size:.78rem;}
+.pod.gold{background:linear-gradient(160deg,#ffd76a33,var(--panel));border:1px solid #ffd76a66;}
+.stable{background:var(--panel);border-radius:16px;padding:6px 12px;margin:10px 0;}
+.stable>div{display:grid;grid-template-columns:1fr 44px 44px 44px;padding:8px 0;border-bottom:1px solid var(--line);font-weight:700;}
+.stable>div:last-child{border-bottom:0;}
+.stable>div span:not(:first-child){text-align:center;}
+.stable .sh{color:var(--muted);font-size:.8rem;}
+.sareel{margin:16px 0;min-height:170px;border-radius:var(--radius);background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px;text-align:center;transition:background .3s;}
+.sareel span{font-size:3.4rem;}
+.sareel b{font-size:1.4rem;font-weight:800;}
+.sareel small{color:rgba(255,255,255,.85);}
+.sareel.done{background:var(--g);animation:toastin .35s ease;}
+.soiree-cta{background:linear-gradient(135deg,#ffb84d33,#ff5c8a33)!important;}
+.chip .ava{background:none;font-size:1.05rem;width:26px;}
+.homelinks{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=30"></script>
-<script src="data-epice.js?v=30"></script>
-<script src="data-enigmes.js?v=30"></script>
-<script src="app.js?v=30"></script>
-<script src="games-boire.js?v=30"></script>
-<script src="online.js?v=30"></script>
-<script src="online-social.js?v=30"></script>
-<script src="online-vote.js?v=30"></script>
-<script src="online-cards.js?v=30"></script>
-<script src="online-board.js?v=30"></script>
-<script src="online-live.js?v=30"></script>
+<script src="data.js?v=31"></script>
+<script src="data-epice.js?v=31"></script>
+<script src="data-enigmes.js?v=31"></script>
+<script src="app.js?v=31"></script>
+<script src="games-boire.js?v=31"></script>
+<script src="soiree.js?v=31"></script>
+<script src="online.js?v=31"></script>
+<script src="online-social.js?v=31"></script>
+<script src="online-vote.js?v=31"></script>
+<script src="online-cards.js?v=31"></script>
+<script src="online-board.js?v=31"></script>
+<script src="online-live.js?v=31"></script>
 </body>
 </html>
