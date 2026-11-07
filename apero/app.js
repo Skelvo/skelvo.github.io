@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 26;
+const VERSION = 27;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -1096,7 +1096,7 @@ const makers = {
               <div class="tag">${think ? 'Réfléchissez ensemble' : 'Réponse'}</div>
               <div class="txt" style="font-size:clamp(1.25rem,5.4vw,1.7rem)">${esc(e[0])}</div>
               ${hint && think ? `<div class="sub">💡 ${esc(e[2])}</div>` : ''}
-              ${!think ? `<div class="secret" style="margin-top:16px;font-size:clamp(1.5rem,7vw,2.2rem)">${esc(e[1])}</div>` : ''}
+              ${!think ? `<div class="secret" style="margin-top:16px;font-size:clamp(1.5rem,7vw,2.2rem)">${esc(e[1])}</div>${e[3] ? `<div class="explain">💡 <b>Pourquoi ?</b> ${esc(e[3])}</div>` : ''}` : ''}
             </div>
             ${think ? `<div class="row"><button class="btn" data-a="hint" ${hint ? 'disabled' : ''}>💡 Indice</button><button class="btn primary" data-a="show">Voir la réponse</button></div>`
               : `${S.players.length ? `<div class="label">Qui a trouvé ?</div><div class="chips" style="margin-top:0">${S.players.map(p => `<button class="chip pickp" data-a="who" data-p="${esc(p)}" style="padding-right:14px">${esc(p)}</button>`).join('')}<button class="chip pickp" data-a="who" data-p="" style="padding-right:14px">Personne 😅</button></div>`
