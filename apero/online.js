@@ -315,11 +315,65 @@ function Bac(names, notify) {
   return { act, view, stop: () => clearTimeout(timer), min: 2, max: 10 };
 }
 
+/* ---------- Le Dessin ---------- */
+function Dessin(names, notify) {
+  const ROUND_MS = 80000;
+  const order = shuffle(names), words = A.deck(A.D.mots);
+  const scores = {}; names.forEach(p => scores[p] = 0);
+  let turnIdx = -1, drawer, word, strokes, found, feed, phase, deadline, timer = null, roundNo = 0, changed;
+  function next() {
+    clearTimeout(timer); turnIdx = (turnIdx + 1) % order.length; drawer = order[turnIdx]; roundNo++;
+    word = words.next(); strokes = []; found = []; feed = []; phase = 'draw'; changed = false;
+    deadline = Date.now() + ROUND_MS;
+    timer = setTimeout(() => { if (phase === 'draw') { phase = 'reveal'; notify(); } }, ROUND_MS);
+  }
+  const guessers = () => order.filter(p => p !== drawer);
+  function act(who, a, isHost) {
+    if (a.k === 'stroke' && phase === 'draw' && who === drawer && Array.isArray(a.pts)) {
+      const pts = a.pts.slice(0, 200).map(p => [+p[0] || 0, +p[1] || 0]);
+      if (a.n || !strokes.length) strokes.push({ c: String(a.c || '#111').slice(0, 9), w: Math.min(30, +a.w || 4), pts });
+      else strokes[strokes.length - 1].pts.push(...pts.slice(1));
+      return { relay: { k: 'stroke', n: !!a.n, c: a.c, w: a.w, pts } };
+    }
+    if (a.k === 'clear' && phase === 'draw' && who === drawer) { strokes = []; return { relay: { k: 'clear' } }; }
+    if (a.k === 'change' && phase === 'draw' && who === drawer && !changed && !found.length) { word = words.next(); changed = true; strokes = []; return; }
+    if (a.k === 'guess' && phase === 'draw' && who !== drawer && !found.includes(who)) {
+      const t = String(a.text || '').slice(0, 40);
+      if (!t.trim()) return 'silent';
+      if (norm(t) === norm(word)) {
+        found.push(who);
+        const pts = Math.max(1, 4 - found.length);   // 3, 2, puis 1
+        scores[who] += pts; scores[drawer] += 1;
+        feed.push({ who, ok: true, pts });
+        if (guessers().every(p => found.includes(p))) { clearTimeout(timer); phase = 'reveal'; }
+      } else feed.push({ who, text: t });
+      feed = feed.slice(-12);
+      return;
+    }
+    if (a.k === 'next' && phase === 'reveal' && isHost) { next(); return; }
+    if (a.k === 'skip' && phase === 'draw' && isHost) { clearTimeout(timer); phase = 'reveal'; return; }
+  }
+  function view(me) {
+    const left = phase === 'draw' ? Math.max(0, deadline - Date.now()) : 0;
+    const showFirst = left < ROUND_MS / 2;
+    const mask = [...word].map((ch, i) => ch === ' ' || ch === '-' || ch === "'" ? ch : (i === 0 && showFirst ? ch.toUpperCase() : '_')).join(' ');
+    return {
+      id: 'dessin', phase, me, drawer, roundNo, left, total: ROUND_MS,
+      word: me === drawer || phase === 'reveal' || found.includes(me) ? word : null,
+      mask, firstAt: ROUND_MS / 2, firstLetter: word[0].toUpperCase(), canChange: me === drawer && !changed && !found.length,
+      strokes, found, feed, scores, wid: changed ? 1 : 0
+    };
+  }
+  next();
+  return { act, view, stop: () => clearTimeout(timer), min: 2, max: 10 };
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
   imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
   quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
   bac:       { make: Bac, name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
+  dessin:    { make: Dessin, name: 'Le Dessin', e: '🎨', d: 'Un joueur dessine, les autres devinent en direct sur leur téléphone.', min: 2, max: 10, g: 'linear-gradient(150deg,#ff9a8b,#a74ea8)' },
   menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
 
@@ -402,6 +456,7 @@ A.makers.online = function () {
     if (room.game) {
       const err = room.game.act(who, a, host);
       if (err === 'silent') return;
+      if (err && err.relay) { relay(who, err.relay); return; }
       if (err) { sendTo(who, { t: 'err', m: err, soft: true }); return; }
       broadcast();
     }
@@ -417,6 +472,13 @@ A.makers.online = function () {
     if (name === room.host) { if (msg.t === 'err') { toast(msg.m); buzz(60); } return; }
     const pl = room.players.find(p => p.name === name);
     if (pl && pl.conn && pl.conn.open) { try { pl.conn.send(msg); } catch {} }
+  }
+  function relay(from, e) {
+    room.players.forEach(p => {
+      if (p.name === from) return;
+      if (p.name === room.host) onEvent(e);
+      else if (p.conn && p.conn.open) { try { p.conn.send({ t: 'ev', e }); } catch {} }
+    });
   }
   function broadcast() {
     if (!room) return;
@@ -441,6 +503,7 @@ A.makers.online = function () {
       c.on('data', m => {
         if (m.t === 'state') { if (ui.screen !== 'room') { ui.screen = 'room'; } setState(m.s); }
         if (m.t === 'err') { if (m.soft) { toast(m.m); buzz(60); } else fail(m.m); }
+        if (m.t === 'ev') onEvent(m.e);
       });
       c.on('close', () => { if (ui.screen === 'room') { ui.screen = 'lost'; render(); } });
     });
@@ -463,6 +526,7 @@ A.makers.online = function () {
     const prev = state; state = s;
     const hand = s.g && s.g.hand ? s.g.hand.join(',') : '';
     if (hand !== lastHand) { sel = new Set([...sel].filter(c => s.g.hand.includes(c))); lastHand = hand; }
+    if (s.g && s.g.id === 'dessin' && prev && prev.g && prev.g.id === 'dessin' && s.g.found.length > prev.g.found.length) { beep(1320, .12, 'sine'); buzz(40); }
     if (s.g && s.g.id === 'bac' && s.g.stopBy && (!prev || !prev.g || !prev.g.stopBy)) { beep(440, .3, 'square', .2); buzz([200, 80, 200]); }
     if (s.g && s.g.id === 'quiz' && s.g.buzzer && (!prev || !prev.g || prev.g.buzzer !== s.g.buzzer)) { beep(880, .15, 'square', .2); buzz(120); }
     if (s.g && (s.g.id === 'president' || s.g.id === 'menteur') && s.g.turn === s.me && (!prev || !prev.g || prev.g.turn !== s.me)) { buzz([60, 40, 60]); beep(1040, .1, 'sine'); }
@@ -502,6 +566,7 @@ A.makers.online = function () {
     if (state.g.id === 'menteur') return renderMenteur(state.g);
     if (state.g.id === 'quiz') return renderQuiz(state.g);
     if (state.g.id === 'bac') return renderBac(state.g);
+    if (state.g.id === 'dessin') return renderDessin(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -747,6 +812,116 @@ A.makers.online = function () {
       </div>`);
   }
 
+  /* --- Le Dessin --- */
+  const PALETTE = ['#16131c', '#e8384f', '#f7b733', '#3ddc97', '#3aa0ff', '#a74ea8', '#ffffff'];
+  let dKey = '', dTick = null, cv = null, ctx2 = null, pen = { c: '#16131c', w: 4 }, drawing = null, dBuf = [], dFlush = null;
+  function sizeCanvas() {
+    if (!cv) return;
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    ctx2 = cv.getContext('2d'); ctx2.lineCap = 'round'; ctx2.lineJoin = 'round';
+    ctx2.fillStyle = '#fff'; ctx2.fillRect(0, 0, cv.width, cv.height);
+  }
+  function drawLine(s) {
+    if (!ctx2 || !s.pts || !s.pts.length) return;
+    const W = cv.width;
+    ctx2.strokeStyle = s.c; ctx2.lineWidth = s.w * W / 340;
+    ctx2.beginPath();
+    s.pts.forEach(([x, y], i) => i ? ctx2.lineTo(x * W, y * cv.height) : ctx2.moveTo(x * W, y * cv.height));
+    if (s.pts.length === 1) ctx2.lineTo(s.pts[0][0] * W + .1, s.pts[0][1] * cv.height);
+    ctx2.stroke();
+  }
+  function redraw(strokes) { sizeCanvas(); (strokes || []).forEach(drawLine); }
+  function onEvent(e) {
+    if (!state || !state.g || state.g.id !== 'dessin' || !ctx2) return;
+    if (e.k === 'stroke') drawLine(e);
+    if (e.k === 'clear') redraw([]);
+  }
+  function flushStroke(first) {
+    if (dBuf.length < (first ? 1 : 2)) return;
+    send({ k: 'stroke', n: first, c: pen.c, w: pen.w, pts: dBuf.map(p => [Math.round(p[0] * 1000) / 1000, Math.round(p[1] * 1000) / 1000]) });
+    dBuf = [dBuf[dBuf.length - 1]];   // le prochain paquet repart du dernier point
+  }
+  function bindDrawing() {
+    const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+    cv.addEventListener('pointerdown', e => {
+      e.preventDefault(); cv.setPointerCapture(e.pointerId);
+      drawing = true; dBuf = [pos(e)]; drawLine({ c: pen.c, w: pen.w, pts: dBuf });
+      flushStroke(true);
+      clearInterval(dFlush); dFlush = setInterval(() => flushStroke(false), 60);
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!drawing) return; e.preventDefault();
+      const p = pos(e), last = dBuf[dBuf.length - 1];
+      drawLine({ c: pen.c, w: pen.w, pts: [last, p] }); dBuf.push(p);
+    });
+    const end = () => { if (!drawing) return; drawing = false; clearInterval(dFlush); flushStroke(false); dBuf = []; };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  }
+  function renderDessin(g) {
+    clearInterval(dTick);
+    const isDrawer = g.me === g.drawer, key = g.roundNo + '|' + g.phase + '|' + isDrawer + '|' + !!g.word + '|' + g.wid;
+    const scores = `<div class="scores">${Object.entries(g.scores).sort((a, b) => b[1] - a[1]).map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}${p === g.drawer ? ' ✏️' : ''}</span><span>${s}</span></div>`).join('')}</div>`;
+    const feed = g.feed.slice().reverse().map(f => f.ok ? `<div class="gf ok">✅ ${esc(f.who)} a trouvé ! +${f.pts}</div>` : `<div class="gf"><b>${esc(f.who)}</b> ${esc(f.text)}</div>`).join('') || '<div class="gf muted">Les propositions s’affichent ici…</div>';
+    const wordLine = g.word ? `<b>${esc(g.word)}</b>` : `<span class="mask">${esc(g.mask)}</span>`;
+    if (key === dKey && document.getElementById('dcv')) {
+      // mise à jour légère : on ne touche pas au dessin en cours
+      const f = document.getElementById('dfeed'); if (f) f.innerHTML = feed;
+      const sc = document.getElementById('dscores'); if (sc) sc.innerHTML = scores;
+      const w = document.getElementById('dword'); if (w) w.innerHTML = wordLine;
+      startTick(g); return;
+    }
+    dKey = key;
+    if (g.phase === 'reveal') {
+      cv = null;
+      return A.view(`${top('Le Dessin')}
+        <div class="stage">
+          <div class="card" style="--g:linear-gradient(160deg,#ff9a8b,#a74ea8);flex:none;min-height:0;padding:22px">
+            <div class="tag" style="position:static">Le mot était</div><div class="secret" style="margin-top:8px">${esc(g.word)}</div>
+            <div class="sub">${g.found.length ? `Trouvé par ${g.found.map(esc).join(', ')}` : 'Personne n’a trouvé 😅'}</div></div>
+          <canvas id="dcv" class="dcanvas"></canvas>
+          <div id="dscores">${scores}</div>
+          ${amHost() ? `<div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn primary" data-a="dnext">Dessinateur suivant</button></div>` : `<div class="waiting"><div class="spinner small"></div>${esc(state.host)} lance la suite…</div>`}
+        </div>`, () => { cv = document.getElementById('dcv'); redraw(g.strokes); });
+    }
+    A.view(`${top('Le Dessin')}
+      <div class="stage" style="gap:10px">
+        <div class="dhead"><span>${isDrawer ? '✏️ À toi de dessiner' : `✏️ ${esc(g.drawer)} dessine`}</span><b id="dleft">${Math.ceil(g.left / 1000)}</b></div>
+        <div class="dword" id="dword">${wordLine}</div>
+        <canvas id="dcv" class="dcanvas ${isDrawer ? 'mine' : ''}"></canvas>
+        ${isDrawer ? `
+          <div class="dtools">
+            ${PALETTE.map(c => `<button class="dcol ${pen.c === c ? 'on' : ''}" style="--c:${c}" data-a="dcolor" data-c="${c}" aria-label="Couleur"></button>`).join('')}
+            <button class="dsz ${pen.w === 4 ? 'on' : ''}" data-a="dsize" data-v="4">•</button><button class="dsz big ${pen.w === 12 ? 'on' : ''}" data-a="dsize" data-v="12">●</button>
+          </div>
+          <div class="row"><button class="btn" data-a="dclear">🗑️ Effacer</button>${g.canChange ? `<button class="btn" data-a="dchange">🔄 Autre mot</button>` : ''}</div>`
+        : g.word ? `<div class="turnbar mine">✅ Trouvé ! Attends les autres…</div>`
+        : `<form class="add-row" id="dguess" autocomplete="off"><input id="dgin" placeholder="Ta proposition…" enterkeyhint="send" maxlength="40"><button class="btn primary" type="submit">OK</button></form>`}
+        <div class="gfeed" id="dfeed">${feed}</div>
+        <div id="dscores">${scores}</div>
+        ${amHost() ? `<button class="btn ghost" data-a="dskip">Passer ce dessin</button>` : ''}
+      </div>`, () => {
+        cv = document.getElementById('dcv'); redraw(g.strokes);
+        if (isDrawer) bindDrawing();
+        const f = document.getElementById('dguess');
+        if (f) f.addEventListener('submit', e => { e.preventDefault(); const i = document.getElementById('dgin'); if (i.value.trim()) send({ k: 'guess', text: i.value }); i.value = ''; i.focus(); });
+      });
+    startTick(g);
+  }
+  function startTick(g) {
+    clearInterval(dTick);
+    if (g.phase !== 'draw') return;
+    const end = Date.now() + g.left;
+    dTick = setInterval(() => {
+      const l = Math.max(0, end - Date.now()), el = document.getElementById('dleft');
+      if (!el) return clearInterval(dTick);
+      el.textContent = Math.ceil(l / 1000);
+      if (l < 10000) el.classList.add('hot');
+      const w = document.getElementById('dword'), m = w && w.querySelector('.mask');
+      if (m && l < g.firstAt && m.textContent[0] === '_') m.textContent = g.firstLetter + m.textContent.slice(1);
+    }, 250);
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -775,6 +950,13 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Dessin
+    if (a === 'dcolor') { pen.c = el.dataset.c; document.querySelectorAll('.dcol').forEach(b => b.classList.toggle('on', b === el)); return; }
+    if (a === 'dsize') { pen.w = +el.dataset.v; document.querySelectorAll('.dsz').forEach(b => b.classList.toggle('on', b === el)); return; }
+    if (a === 'dclear') { redraw([]); return send({ k: 'clear' }); }
+    if (a === 'dchange') { dKey = ''; return send({ k: 'change' }); }
+    if (a === 'dnext') return send({ k: 'next' });
+    if (a === 'dskip') return send({ k: 'skip' });
     // Petit Bac
     if (a === 'bacstop') { buzz([60, 40, 60]); return send({ k: 'stop', list: ui.bac }); }
     if (a === 'bactoggle') return send({ k: 'toggle', p: el.dataset.p, i: +el.dataset.i });
