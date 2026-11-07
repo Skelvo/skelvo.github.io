@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 7;
+const VERSION = 8;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -115,6 +115,7 @@ const G = {
   doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
   duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true },
   main:     { name: 'Main sûre', e: '🫳', d: 'Ne fais pas trembler le téléphone', g: 'linear-gradient(150deg,#5ee7c5,#1d7f9a)', fit: 'bbbb', free: true, isNew: true },
+  yams:     { name: 'Le Yams', e: '🎲', d: '5 dés, 3 lancers, une grille', g: 'linear-gradient(150deg,#e94560,#533483)', fit: 'bbbo', isNew: true },
   secoue:   { name: 'Secoue-le', e: '🫨', d: 'Le plus fort en 5 secondes', g: 'linear-gradient(150deg,#ff6b6b,#a1239c)', fit: 'bbbb', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
@@ -1034,6 +1035,85 @@ const makers = {
     return this_;
   },
 
+  /* ---------- Le Yams ---------- */
+  yams() {
+    const g = G.yams, names = S.players.slice();
+    const CATS = [
+      ['1', 'As', d => sumOf(d, 1)], ['2', 'Deux', d => sumOf(d, 2)], ['3', 'Trois', d => sumOf(d, 3)],
+      ['4', 'Quatre', d => sumOf(d, 4)], ['5', 'Cinq', d => sumOf(d, 5)], ['6', 'Six', d => sumOf(d, 6)],
+      ['brelan', 'Brelan', d => maxSame(d) >= 3 ? total(d) : 0], ['carre', 'Carré', d => maxSame(d) >= 4 ? total(d) : 0],
+      ['full', 'Full', d => { const c = counts(d).filter(Boolean).sort(); return c.length === 2 && c[0] === 2 && c[1] === 3 ? 25 : 0; }],
+      ['petite', 'Petite suite', d => [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]].some(q => q.every(v => d.includes(v))) ? 30 : 0],
+      ['grande', 'Grande suite', d => { const u = [...new Set(d)].sort().join(''); return u === '12345' || u === '23456' ? 40 : 0; }],
+      ['yams', 'Yams', d => maxSame(d) === 5 ? 50 : 0], ['chance', 'Chance', d => total(d)]
+    ];
+    function counts(d) { const c = [0, 0, 0, 0, 0, 0, 0]; d.forEach(v => c[v]++); return c; }
+    function sumOf(d, v) { return d.filter(x => x === v).length * v; }
+    function total(d) { return d.reduce((a, b) => a + b, 0); }
+    function maxSame(d) { return Math.max(...counts(d)); }
+    const sheets = {}; names.forEach(p => sheets[p] = {});
+    const upper = p => CATS.slice(0, 6).reduce((a, [k]) => a + (sheets[p][k] || 0), 0);
+    const bonus = p => upper(p) >= 63 ? 35 : 0;
+    const score = p => CATS.reduce((a, [k]) => a + (sheets[p][k] || 0), 0) + bonus(p);
+    let turn = 0, dice = [1, 1, 1, 1, 1], held = [false, false, false, false, false], rolls = 0, rolling = false;
+    const who = () => names[turn % names.length];
+    const done = () => names.every(p => CATS.every(([k]) => k in sheets[p]));
+    const dieHtml = (v, i) => `<button class="die ${held[i] ? 'held' : ''} ${rolling && !held[i] ? 'roll' : ''}" data-a="hold" data-i="${i}" ${rolls ? '' : 'disabled'} aria-label="Dé ${v}">
+        ${[...Array(9)].map((_, k) => `<i class="${PIPS[v].includes(k) ? 'on' : ''}"></i>`).join('')}</button>`;
+    const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+    return {
+      render() {
+        if (done()) {
+          const rank = names.slice().sort((a, b) => score(b) - score(a));
+          return view(`${header(g.name)}
+            <div class="stage">
+              <div class="card" style="--g:${g.g};flex:none;min-height:0;padding:24px 18px">
+                <div class="tag" style="position:static;margin-bottom:12px">Partie terminée</div>
+                <div class="ranking">${rank.map((p, i) => `<div><span>${i + 1}.</span><b>${esc(p)}${i === 0 ? ' 👑' : ''}</b><em>${score(p)} pts</em></div>`).join('')}</div>
+              </div>
+              <p class="hint">${S.drinks ? `${esc(rank[rank.length - 1])} boit 3 gorgées 🍻` : `Gage pour ${esc(rank[rank.length - 1])} : ${esc(pick(gages()))}`}</p>
+              <button class="btn primary big block" data-a="again">Rejouer</button>
+            </div>`);
+        }
+        const p = who(), sh = sheets[p];
+        const row = ([k, label, f], i) => {
+          const filled = k in sh, pot = rolls ? f(dice) : null;
+          return `<button class="yrow ${filled ? 'filled' : ''} ${!filled && pot ? 'good' : ''}" ${!filled && rolls ? `data-a="pick" data-k="${k}"` : 'disabled'}>
+            <span>${label}</span><b>${filled ? sh[k] : rolls ? pot : '–'}</b></button>${i === 5 ? `<div class="ybonus">Bonus (63+ en haut) <b>${upper(p)} / 63 ${bonus(p) ? '✓ +35' : ''}</b></div>` : ''}`;
+        };
+        view(`${header(g.name)}
+          <div class="stage">
+            <div class="turn">Au tour de<strong>${esc(p)} · ${score(p)} pts</strong></div>
+            <div class="dice">${dice.map(dieHtml).join('')}</div>
+            <p class="hint" style="margin-top:-4px">${rolls === 0 ? 'Lance les dés !' : rolls < 3 ? 'Touche les dés à garder, relance, ou choisis une case.' : 'Choisis une case pour marquer.'}</p>
+            <button class="btn primary big block" data-a="roll" ${rolls >= 3 || rolling ? 'disabled' : ''}>🎲 ${rolls === 0 ? 'Lancer' : `Relancer (${3 - rolls})`}</button>
+            <div class="ysheet">${CATS.map(row).join('')}</div>
+            ${names.length > 1 ? `<div class="scores">${names.map(q => `<div class="score ${q === p ? 'lead' : ''}"><span>${esc(q)}</span><span>${score(q)}</span></div>`).join('')}</div>` : ''}
+          </div>`, null, true);
+      },
+      on(a, el) {
+        if (a === 'roll' && rolls < 3 && !rolling) {
+          rolling = true; rolls++; let n = 0; this.render();
+          const spin = every(() => {
+            dice = dice.map((v, i) => held[i] ? v : 1 + rnd(6)); n++;
+            document.querySelectorAll('.die').forEach((d, i) => { if (!held[i]) d.innerHTML = [...Array(9)].map((_, k) => `<i class="${PIPS[dice[i]].includes(k) ? 'on' : ''}"></i>`).join(''); });
+            beep(300 + rnd(300), .02, 'triangle', .05);
+            if (n >= 8) { clearInterval(spin); rolling = false; buzz(20); if (maxSame(dice) === 5) { toast('🎲 YAMS !!!'); buzz([100, 50, 100, 50, 300]); } this.render(); }
+          }, 60);
+        }
+        if (a === 'hold' && rolls && !rolling) { const i = +el.dataset.i; held[i] = !held[i]; buzz(8); this.render(); }
+        if (a === 'pick') {
+          const k = el.dataset.k, c = CATS.find(x => x[0] === k);
+          sheets[who()][k] = c[2](dice);
+          turn++; rolls = 0; held = held.map(() => false);
+          if (!done() && names.length > 1) toast(`À ${who()} !`);
+          this.render();
+        }
+        if (a === 'again') { names.forEach(p => sheets[p] = {}); turn = 0; rolls = 0; held = held.map(() => false); this.render(); }
+      }
+    };
+  },
+
   /* ---------- La Roue ---------- */
   roue() {
     const g = G.roue; let name = '?', spinning = false, final = false, gage = '';
@@ -1127,6 +1207,7 @@ const makers = {
             <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
             <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
             <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
+            <h3>🎲 Le Yams</h3><p>Chacun son tour : 3 lancers maximum, on garde les dés qu'on veut entre deux lancers, puis on inscrit le résultat dans une case (une seule fois par case). Brelan et Carré = total des dés, Full = 25, Petite suite = 30, Grande suite = 40, Yams = 50. Bonus de 35 si le haut de la grille atteint 63.</p>
             <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
             <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
           </div>`);
