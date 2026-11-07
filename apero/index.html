@@ -452,13 +452,27 @@ textarea:focus{border-color:var(--accent);}
 .aitem small{color:var(--muted);font-weight:700;}
 .abubble{align-self:flex-start;max-width:90%;padding:12px 16px;border-radius:18px 18px 18px 4px;background:var(--panel-2);font-size:1.15rem;font-weight:700;}
 
+/* Loups-garous */
+.rolechip{align-self:center;padding:8px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:.9rem;cursor:pointer;}
+.rolechip.wolf{border-color:rgba(255,77,77,.4);}
+.lplayers{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.lp{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border-radius:14px;background:var(--panel);border:2px solid transparent;text-align:left;}
+.lp[data-a]{border-color:var(--line);background:var(--panel-2);}
+.lp.chosen{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);}
+.lp.dead{opacity:.45;}
+.lp:disabled{opacity:.7;}
+.lp.dead:disabled{opacity:.4;}
+.lp span{font-size:.78rem;color:var(--accent-2);font-weight:700;}
+.lp em{font-style:normal;font-size:.75rem;color:#ff8a8a;}
+.nightsky{height:6px;border-radius:999px;background:linear-gradient(90deg,#1b2a4a,#4b3b8a,#1b2a4a);}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=14"></script>
-<script src="app.js?v=14"></script>
-<script src="online.js?v=14"></script>
+<script src="data.js?v=15"></script>
+<script src="app.js?v=15"></script>
+<script src="online.js?v=15"></script>
 </body>
 </html>
