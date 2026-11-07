@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 33;
+const VERSION = 34;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -191,6 +191,7 @@ function openGame(id) {
 function openPage(id) { history.pushState({ p: id }, '', '#' + id); start(id); }
 function start(id) {
   clearTimers();
+  if (current && current.leave) { try { current.leave(); } catch {} }
   current = makers[id]();
   keepAwake(!!G[id] || id === 'online');
   document.body.classList.toggle('ingame', !!G[id] && S.players.length > 0);
@@ -213,7 +214,8 @@ const home = {
         ${g.isNew ? '<i class="new">Nouveau</i>' : ''}<span class="e">${g.e}</span><b>${g.name}</b><span>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</span></button>`; };
     // mode épicé : seulement les jeux qui ont des cartes épicées
     const th = theme(), tids = th ? Object.keys(G).filter(id => themed(id) && fitAt(id, n) !== '-') : [];
-    const ids = Object.keys(G).filter(id => (!S.spicy || G[id].spicy) && !tids.includes(id)), group = f => ids.filter(id => fitAt(id, n) === f);
+    const arc = S.spicy ? [] : Object.keys(G).filter(id => G[id].arcade);
+    const ids = Object.keys(G).filter(id => (!S.spicy || G[id].spicy) && !tids.includes(id) && !G[id].arcade), group = f => ids.filter(id => fitAt(id, n) === f);
     const block = (title, list, off) => list.length ? `<h3 class="cat">${title}</h3><div class="games">${list.map((id, i, a) => card(id, i, a, off)).join('')}</div>` : '';
     const games = `
       ${S.spicy ? '<p class="spicynote">🌶️ Mode épicé : seuls les jeux avec des cartes trash sont affichés. Désactive-le pour retrouver tous les jeux.</p>' : ''}
@@ -222,6 +224,7 @@ const home = {
         ${block(`${th.e} Pack ${esc(th.name)}`, tids)}` : ''}
       ${block(`⭐ Parfait à ${nLabel(n)}`, group('b'))}
       ${block('👍 Ça marche aussi', group('o'))}
+      ${block('🕹️ Arcade', arc)}
       ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
     view(`
       <div class="brand"><div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : theme() ? theme().e : '🥂'}</div><div><h1>Apéro${S.spicy ? ` <span class="hotbadge">${S.spicyLvl === 2 ? '18+ · sans filtre' : '18+'}</span>` : ''}</h1><p>${S.spicy ? (S.spicyLvl === 2 ? 'Niveau 2 🌶️🌶️ · aucune limite (sauf le consentement)' : 'Édition épicée 🔥 · questions trash') : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
@@ -1325,6 +1328,7 @@ const makers = {
           <div class="rules">
             <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
             <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en bas à droite compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
+            <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
             <h3>📺 Écran TV</h3><p>Pendant une partie en ligne, ouvrez l'appli sur une TV connectée, une tablette ou un ordi : Jouer en ligne › tapez le code › « 📺 Afficher sur la TV ». L'écran montre la partie en grand pour tout le monde, sans jamais dévoiler les cartes, dés, mots ou rôles secrets.</p>
             <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
@@ -1445,7 +1449,7 @@ applyTheme();
 
 /* Boîte à outils partagée avec online.js (mode connecté) */
 window.APERO = { D, S, store, save, avatar, openGame, minPlayers, fitAt, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
-  makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard, theme, themed };
+  makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard, theme, themed, askSensors };
 
 /* Démarrage une fois tous les scripts chargés (online.js ajoute ses écrans) */
 document.addEventListener('DOMContentLoaded', () => {
