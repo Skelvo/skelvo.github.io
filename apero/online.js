@@ -265,10 +265,61 @@ function Quiz(names, notify) {
   return api;
 }
 
+/* ---------- Le Petit Bac ---------- */
+const BAC_CATS = ['Prénom', 'Pays', 'Ville', 'Animal', 'Fruit ou légume', 'Métier', 'Objet', 'Marque', 'Célébrité', 'Film ou série',
+  'Sport', 'Couleur', 'Plat ou boisson', 'Partie du corps', 'Vêtement', 'Instrument de musique', 'Chanteur·se', 'Insulte gentille', 'Truc qu’on trouve dans un sac', 'Excuse bidon'];
+const BAC_LETTERS = 'ABCDEFGHIJLMNOPRSTV';
+const norm = s => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+function Bac(names, notify) {
+  const STOP_MS = 10000;
+  let phase, letter, cats, answers, rejected, roundNo = 0, stopBy = null, deadline = 0, timer = null, roundPts = {};
+  const totals = {}; names.forEach(p => totals[p] = 0);
+  const used = new Set();
+  function newRound() {
+    roundNo++; phase = 'write'; stopBy = null; answers = {}; rejected = {}; roundPts = {};
+    const pool = BAC_LETTERS.split('').filter(l => !used.has(l)); letter = pick(pool.length ? pool : BAC_LETTERS.split('')); used.add(letter);
+    cats = shuffle(BAC_CATS).slice(0, 6);
+    names.forEach(p => answers[p] = cats.map(() => ''));
+  }
+  const valid = (p, i) => { const v = norm(answers[p][i]); return v.length > 1 && v[0] === letter.toLowerCase() && !rejected[p + '|' + i]; };
+  function score() {
+    roundPts = {}; names.forEach(p => roundPts[p] = 0);
+    cats.forEach((_, i) => {
+      const ok = names.filter(p => valid(p, i));
+      ok.forEach(p => { const dup = ok.some(q => q !== p && norm(answers[q][i]) === norm(answers[p][i])); roundPts[p] += dup ? 5 : 10; });
+    });
+  }
+  function toVote() { clearTimeout(timer); phase = 'vote'; score(); }
+  function act(who, a, isHost) {
+    if (a.k === 'answers' && phase === 'write' && Array.isArray(a.list)) { answers[who] = cats.map((_, i) => String(a.list[i] || '').slice(0, 40)); return 'silent'; }
+    if (a.k === 'stop' && phase === 'write' && !stopBy) {
+      if (Array.isArray(a.list)) answers[who] = cats.map((_, i) => String(a.list[i] || '').slice(0, 40));
+      stopBy = who; deadline = Date.now() + STOP_MS;
+      timer = setTimeout(() => { if (phase === 'write') { toVote(); notify(); } }, STOP_MS + 600);  // petit délai pour recevoir les dernières réponses
+      return;
+    }
+    if (a.k === 'toggle' && phase === 'vote' && isHost) { const key = a.p + '|' + (a.i | 0); rejected[key] = !rejected[key]; score(); return; }
+    if (a.k === 'validate' && phase === 'vote' && isHost) { names.forEach(p => totals[p] += roundPts[p]); phase = 'scores'; return; }
+    if (a.k === 'next' && phase === 'scores' && isHost) { newRound(); return; }
+  }
+  function view(me) {
+    return {
+      id: 'bac', phase, me, letter, cats, roundNo, stopBy,
+      left: phase === 'write' && stopBy ? Math.max(0, deadline - Date.now()) : 0,
+      mine: answers[me] || [],
+      all: phase === 'write' ? null : names.map(p => ({ name: p, list: answers[p], ok: cats.map((_, i) => valid(p, i)) })),
+      roundPts, totals
+    };
+  }
+  newRound();
+  return { act, view, stop: () => clearTimeout(timer), min: 2, max: 10 };
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
   imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
   quiz:      { make: Quiz, name: 'Quiz buzzer', e: '🔔', d: '12 questions de culture G. Le premier qui buzze répond !', min: 2, max: 12, g: 'linear-gradient(150deg,#f7b733,#fc4a1a)' },
+  bac:       { make: Bac, name: 'Le Petit Bac', e: '📝', d: 'Une lettre, 6 catégories. Le premier qui finit crie STOP !', min: 2, max: 10, g: 'linear-gradient(150deg,#56ab2f,#1e6b52)' },
   menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
 
@@ -350,6 +401,7 @@ A.makers.online = function () {
     if (a.k === 'lobby' && host) { room.game && room.game.stop && room.game.stop(); room.game = null; room.gameId = null; broadcast(); return; }
     if (room.game) {
       const err = room.game.act(who, a, host);
+      if (err === 'silent') return;
       if (err) { sendTo(who, { t: 'err', m: err, soft: true }); return; }
       broadcast();
     }
@@ -411,6 +463,7 @@ A.makers.online = function () {
     const prev = state; state = s;
     const hand = s.g && s.g.hand ? s.g.hand.join(',') : '';
     if (hand !== lastHand) { sel = new Set([...sel].filter(c => s.g.hand.includes(c))); lastHand = hand; }
+    if (s.g && s.g.id === 'bac' && s.g.stopBy && (!prev || !prev.g || !prev.g.stopBy)) { beep(440, .3, 'square', .2); buzz([200, 80, 200]); }
     if (s.g && s.g.id === 'quiz' && s.g.buzzer && (!prev || !prev.g || prev.g.buzzer !== s.g.buzzer)) { beep(880, .15, 'square', .2); buzz(120); }
     if (s.g && (s.g.id === 'president' || s.g.id === 'menteur') && s.g.turn === s.me && (!prev || !prev.g || prev.g.turn !== s.me)) { buzz([60, 40, 60]); beep(1040, .1, 'sine'); }
     render();
@@ -448,6 +501,7 @@ A.makers.online = function () {
     if (state.g.id === 'imposteur') return renderImposteur(state.g);
     if (state.g.id === 'menteur') return renderMenteur(state.g);
     if (state.g.id === 'quiz') return renderQuiz(state.g);
+    if (state.g.id === 'bac') return renderBac(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -646,6 +700,53 @@ A.makers.online = function () {
     }
   }
 
+  /* --- Le Petit Bac --- */
+  let bacTick = null, bacSend = null;
+  function renderBac(g) {
+    clearInterval(bacTick);
+    const totals = `<div class="scores">${Object.entries(g.totals).sort((a, b) => b[1] - a[1]).map(([p, s], i) => `<div class="score ${i === 0 && s ? 'lead' : ''}"><span>${i === 0 && s ? '👑 ' : ''}${esc(p)}</span><span>${s}${g.phase === 'vote' ? ` <small style="color:var(--ok)">+${g.roundPts[p] || 0}</small>` : ''}</span></div>`).join('')}</div>`;
+    if (g.phase === 'write') {
+      if (ui.bacRound !== g.roundNo) { ui.bacRound = g.roundNo; ui.bac = g.cats.map(() => ''); }
+      // garder le curseur là où on écrit si l'écran se redessine
+      const act = document.activeElement, fid = act && act.dataset && act.dataset.bi, pos = act && act.selectionStart;
+      A.view(`${top('Le Petit Bac')}
+        <div class="stage">
+          <div class="bacletter"><small>Manche ${g.roundNo} · lettre</small><b>${esc(g.letter)}</b></div>
+          ${g.stopBy ? `<div class="turnbar mine">🛑 ${esc(g.stopBy)} a dit STOP ! <b id="bacleft">${Math.ceil(g.left / 1000)}</b> s</div>` : ''}
+          <div class="bacform">${g.cats.map((c, i) => `<label><span>${esc(c)}</span><input data-bi="${i}" value="${esc(ui.bac[i] || '')}" placeholder="${esc(g.letter)}…" autocomplete="off" autocapitalize="sentences" maxlength="40"></label>`).join('')}</div>
+          ${g.stopBy ? '' : `<button class="btn primary big block" data-a="bacstop">STOP ! J'ai fini</button>`}
+          <p class="hint" style="font-size:.82rem">Mot qui commence par la lettre : 10 points. Même mot qu'un autre joueur : 5 points.</p>
+        </div>`, () => {
+          document.querySelectorAll('[data-bi]').forEach(inp => inp.addEventListener('input', () => {
+            ui.bac[+inp.dataset.bi] = inp.value;
+            clearTimeout(bacSend); bacSend = setTimeout(() => send({ k: 'answers', list: ui.bac }), 350);
+          }));
+          if (fid != null) { const el = document.querySelector(`[data-bi="${fid}"]`); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch {} } }
+        }, true);
+      if (g.stopBy) {
+        send({ k: 'answers', list: ui.bac });
+        const end = Date.now() + g.left;
+        bacTick = setInterval(() => { const el = document.getElementById('bacleft'); if (!el) return clearInterval(bacTick); el.textContent = Math.max(0, Math.ceil((end - Date.now()) / 1000)); }, 250);
+      }
+      return;
+    }
+    if (g.phase === 'vote') return A.view(`${top('Le Petit Bac')}
+      <div class="stage">
+        <div class="bacletter"><small>Résultats · lettre</small><b>${esc(g.letter)}</b></div>
+        ${g.cats.map((c, i) => `<div class="baccat"><h4>${esc(c)}</h4>${g.all.map(p => `<button class="bacans ${p.ok[i] ? 'ok' : 'ko'}" ${amHost() && p.list[i] ? `data-a="bactoggle" data-p="${esc(p.name)}" data-i="${i}"` : 'disabled'}>
+          <span>${esc(p.name)}</span><b>${esc(p.list[i] || '—')}</b></button>`).join('')}</div>`).join('')}
+        <p class="hint">${amHost() ? 'Touche une réponse pour la refuser ou l’accepter (après discussion 😇).' : `${esc(state.host)} valide les réponses…`}</p>
+        ${amHost() ? `<button class="btn primary big block" data-a="bacvalidate">Valider les points</button>` : ''}
+        ${totals}
+      </div>`, null, true);
+    A.view(`${top('Le Petit Bac')}
+      <div class="stage">
+        <div class="card" style="--g:linear-gradient(160deg,#56ab2f,#1e6b52);flex:none;min-height:0;padding:22px"><div class="tag" style="position:static">Après ${g.roundNo} manche${g.roundNo > 1 ? 's' : ''}</div></div>
+        ${totals}
+        ${amHost() ? `<div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn primary" data-a="bacnext">Nouvelle lettre</button></div>` : `<div class="waiting"><div class="spinner small"></div>${esc(state.host)} tire une nouvelle lettre…</div>`}
+      </div>`);
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -674,6 +775,11 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Petit Bac
+    if (a === 'bacstop') { buzz([60, 40, 60]); return send({ k: 'stop', list: ui.bac }); }
+    if (a === 'bactoggle') return send({ k: 'toggle', p: el.dataset.p, i: +el.dataset.i });
+    if (a === 'bacvalidate') return send({ k: 'validate' });
+    if (a === 'bacnext') return send({ k: 'next' });
     // Quiz
     if (a === 'buzz') { buzz(60); return send({ k: 'buzz' }); }
     if (a === 'qans') return send({ k: 'answer', i: +el.dataset.i });

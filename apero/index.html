@@ -404,13 +404,31 @@ textarea:focus{border-color:var(--accent);}
   background:radial-gradient(circle at 35% 30%,#ff8080,#e01e1e 60%,#9e0c0c);box-shadow:0 12px 0 #7a0909,0 20px 40px rgba(224,30,30,.5);transition:transform .06s,box-shadow .06s;}
 .buzz:active{transform:translateY(10px);box-shadow:0 2px 0 #7a0909,0 6px 16px rgba(224,30,30,.5);}
 
+/* Petit Bac */
+.bacletter{display:flex;flex-direction:column;align-items:center;padding:12px;border-radius:20px;background:linear-gradient(160deg,#56ab2f,#1e6b52);}
+.bacletter small{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;opacity:.85;}
+.bacletter b{font-size:3.6rem;line-height:1;font-weight:800;}
+.bacform{display:flex;flex-direction:column;gap:8px;}
+.bacform label{display:flex;flex-direction:column;gap:4px;}
+.bacform span{font-size:.8rem;color:var(--muted);font-weight:700;}
+.bacform input{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:1.05rem;outline:none;user-select:text;-webkit-user-select:text;}
+.bacform input:focus{border-color:var(--accent);}
+.baccat{background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:10px;}
+.baccat h4{margin:0 0 6px;font-size:.85rem;color:var(--muted);}
+.bacans{display:flex;justify-content:space-between;width:100%;padding:8px 10px;border-radius:10px;margin-top:4px;text-align:left;gap:10px;}
+.bacans span{font-size:.85rem;color:var(--muted);}
+.bacans.ok{background:rgba(61,220,151,.14);}
+.bacans.ok b{color:var(--ok);}
+.bacans.ko b{color:var(--muted);text-decoration:line-through;}
+.bacans:disabled{opacity:1;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=10"></script>
-<script src="app.js?v=10"></script>
-<script src="online.js?v=10"></script>
+<script src="data.js?v=11"></script>
+<script src="app.js?v=11"></script>
+<script src="online.js?v=11"></script>
 </body>
 </html>
