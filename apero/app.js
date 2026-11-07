@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 32;
+const VERSION = 33;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -1325,6 +1325,7 @@ const makers = {
           <div class="rules">
             <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
             <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en bas à droite compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
+            <h3>📺 Écran TV</h3><p>Pendant une partie en ligne, ouvrez l'appli sur une TV connectée, une tablette ou un ordi : Jouer en ligne › tapez le code › « 📺 Afficher sur la TV ». L'écran montre la partie en grand pour tout le monde, sans jamais dévoiler les cartes, dés, mots ou rôles secrets.</p>
             <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
