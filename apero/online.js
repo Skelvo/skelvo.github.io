@@ -734,6 +734,8 @@ A.makers.online = function () {
         <div class="codecard">
           <span>Code de la partie</span>
           <b>${esc(state.code)}</b>
+          <div class="qr" id="qr"></div>
+          <small class="qrhint">Scanne avec l'appareil photo pour rejoindre</small>
           <button class="btn" data-a="share">📤 Inviter</button>
         </div>
         <div class="label">Joueurs connectés · ${online}</div>
@@ -752,7 +754,17 @@ A.makers.online = function () {
             }).join('')}</div>`;
           }).join('')}`
           : `<div class="waiting"><div class="spinner small"></div>En attente que ${esc(state.host)} lance un jeu…</div>`}
-      </div>`);
+      </div>`, () => drawQR(location.origin + location.pathname + '#join=' + state.code));
+  }
+
+  /* QR code d'invitation (bibliothèque chargée à la demande) */
+  let qrLib = null;
+  function drawQR(url) {
+    const el = document.getElementById('qr'); if (!el) return;
+    const paint = () => { try { const q = window.qrcode(0, 'M'); q.addData(url); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch { el.remove(); } };
+    if (window.qrcode) return paint();
+    qrLib = qrLib || new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'vendor/qrcode-1.4.4.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+    qrLib.then(paint, () => el.remove());
   }
 
   /* --- Président --- */
