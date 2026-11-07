@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 23;
+const VERSION = 24;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -51,7 +51,7 @@ function fill(text, cur) {
   });
 }
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
-const gages = () => S.drinks ? D.gages : D.gages.filter(g => !/gorgée/i.test(g));
+const gages = () => { const g = S.spicy && D.gagesHot ? D.gagesHot : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
 
 function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch {} }
 function toast(msg) {
@@ -112,8 +112,8 @@ const G = {
   qui:      { spicy: true, name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', fit: '-obb' },
   preferes: { spicy: true, name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
   mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
-  roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
-  doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
+  roue:     { spicy: true, name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
+  doigt:    { spicy: true, name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
   duel:     { name: 'Duel de réflexes', e: '⚡', d: 'Face à face, premier qui tape', g: 'linear-gradient(150deg,#ffd23f,#ee6c1f)', fit: 'booo', free: true, isNew: true },
   main:     { name: 'Main sûre', e: '🫳', d: 'Ne fais pas trembler le téléphone', g: 'linear-gradient(150deg,#5ee7c5,#1d7f9a)', fit: 'bbbb', free: true, isNew: true },
   enigmes:  { name: 'Énigmes', e: '🧩', d: 'Devinettes et casse-têtes en équipe', g: 'linear-gradient(150deg,#4facfe,#6a3093)', fit: 'bbbb', free: true, isNew: true },
@@ -798,7 +798,7 @@ const makers = {
       if (mode === 'un') {
         const w = ids[0];
         pts.forEach((p, id) => p.el.classList.add(id === w ? 'win' : 'lose'));
-        setLabel(`👆 L'élu ! ${S.drinks ? 'Il boit… ou il choisit qui boit 🍻' : esc(pick(gages()))}`);
+        setLabel(`👆 L'élu ! ${S.spicy ? '🌶️ ' + esc(pick(gages())) : S.drinks ? 'Il boit… ou il choisit qui boit 🍻' : esc(pick(gages()))}`);
       } else {
         const half = Math.ceil(ids.length / 2);
         ids.forEach((id, i) => { const p = pts.get(id); const c = i < half ? '#ff5c8a' : '#3aa0ff'; p.el.style.setProperty('--c', c); p.el.classList.add('team'); });

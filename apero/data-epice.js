@@ -230,4 +230,178 @@ D.quiecritHot = [
   "Ton plus gros mensonge pour séduire quelqu'un ?", "Où t'es-tu réveillé·e de pire après une soirée ?",
   "Ton record de shots en une soirée ?", "La pire chose que tu aies faite en vacances ?"
 ];
+
+/* ---------- Niveau supérieur 🌶️🌶️ ---------- */
+add('verite', [
+  "Ton plus gros kink, assume.",
+  "La partie de ton corps que tu préfères qu'on embrasse ?",
+  "Tu as déjà couché avec quelqu'un présent ce soir ? Oui ou non.",
+  "Combien de personnes ici as-tu déjà imaginées nues ?",
+  "Ton record de fois dans la même nuit ?",
+  "La pire chose que tu aies dite au lit ?",
+  "Tu as déjà fait l'amour en sachant que quelqu'un pouvait entendre ?",
+  "Lumière allumée ou éteinte ? Pourquoi ?",
+  "Avec qui ici tu tenterais un plan à trois ? Deux prénoms.",
+  "Le truc le plus coquin que tu aies acheté ?",
+  "L'endroit le plus improbable où tu as eu envie de quelqu'un ?",
+  "Ton fantasme avec un uniforme : lequel ?",
+  "Tu as déjà recouché avec ton ex alors que tu étais en couple avec quelqu'un d'autre ?",
+  "Ta pire conversation sur une appli de rencontre : montre-la.",
+  "Le compliment le plus coquin qu'on t'ait fait ?",
+  "Tu as déjà dragué quelqu'un pendant que ton / ta partenaire était dans la même pièce ?",
+  "La chose la plus osée sur ton téléphone en ce moment ?",
+  "La dernière chose qui t'a vraiment excité·e ?",
+  "Tu as déjà été jaloux·se d'un·e ex de {p} ?",
+  "Tu as déjà eu une relation purement physique qui a duré plus d'un an ?",
+  "Ce que tu fais de plus bizarre quand tu es seul·e chez toi ?",
+  "Tu as déjà menti sur ton nombre de partenaires ? Vers le haut ou vers le bas ?",
+  "Ton pire bruit en plein acte ?",
+  "Si {p} te proposait une nuit ce soir, tu répondrais quoi ?",
+  "Si ta vie sexuelle actuelle était un film, ce serait quoi le titre ?",
+  "Plutôt le matin, l'après-midi ou la nuit ?",
+  "Tu as déjà dit « je t'aime » en plein acte sans le penser ?",
+  "La chose que tu as faite au lit et que tu ne referas jamais ?",
+  "Quelle personne ici a, selon toi, la vie sexuelle la plus active ?",
+  "Tu as déjà été tenté·e par un club libertin ?"
+]);
+
+add('action', [
+  "Retire deux vêtements (les accessoires ne comptent pas).",
+  "Fais une danse sensuelle de 30 secondes avec une chaise comme seul partenaire.",
+  "Embrasse le ventre de {p} s'il / si elle est d'accord, sinon 3 gorgées.",
+  "Laisse {p} choisir un contact : tu lui envoies « Je pense à toi ce soir 🔥 ».",
+  "Mime ta position préférée sans coussin cette fois. Le groupe doit deviner.",
+  "Passe un glaçon de ta bouche à celle de {p}, sans les mains (si accord), sinon 3 gorgées.",
+  "Chuchote à {p} ce que tu lui ferais s'il / si elle était ton crush.",
+  "Strip-tease jusqu'au haut (t-shirt ou plus, à toi de voir).",
+  "Laisse {p} te faire un suçon où tu veux… ou bois 4 gorgées.",
+  "Donne ton téléphone déverrouillé à {p} pendant 1 minute : il / elle peut tout lire (mais rien envoyer).",
+  "Masse {p} pendant 1 minute, là où il / elle le demande (dans la limite du raisonnable).",
+  "Embrasse {p} 5 secondes (avec son accord), sinon 3 gorgées.",
+  "Va 2 minutes dans la pièce d'à côté avec {p}. Personne ne pose de questions.",
+  "Imite la tête que tu fais au moment fatidique.",
+  "Le groupe choisit ta photo de profil pour les 24 prochaines heures.",
+  "Lis à voix haute ta dernière conversation avec ton crush, avec l'intonation.",
+  "À quatre pattes, miaule de façon sexy jusqu'à ce que quelqu'un rie.",
+  "Donne une fessée à {p} (avec son accord).",
+  "Échange ton pantalon ou ta jupe avec {p} pour un tour.",
+  "Écris ton fantasme sur un papier : le groupe le lit à voix haute.",
+  "Les yeux bandés, devine qui te touche la main. Raté ? 2 gorgées.",
+  "Fais 10 pompes au-dessus de {p}.",
+  "Respire le cou de {p} pendant 5 secondes et donne une note à son odeur.",
+  "Raconte ta dernière fois… uniquement avec des bruits.",
+  "Fais un slow collé-serré de 30 secondes avec {p}.",
+  "Laisse {p} te dessiner un tatouage coquin au feutre (où tu veux).",
+  "Assieds-toi sur les genoux de chaque joueur pendant 5 secondes.",
+  "Envoie un vocal de 5 secondes de ton meilleur gémissement à {p}."
+]);
+
+add('jamais', [
+  "Je n'ai jamais couché avec deux personnes différentes dans la même journée.",
+  "Je n'ai jamais fait l'amour au travail.",
+  "Je n'ai jamais été attaché·e.",
+  "Je n'ai jamais filmé un moment intime.",
+  "Je n'ai jamais fait l'amour dans un avion, un train ou un bateau.",
+  "Je n'ai jamais eu de relation libre.",
+  "Je n'ai jamais couché avec quelqu'un pour me venger.",
+  "Je n'ai jamais fantasmé sur le / la partenaire d'un·e pote.",
+  "Je n'ai jamais fait l'amour chez mes beaux-parents.",
+  "Je n'ai jamais mis les pieds dans un club libertin.",
+  "Je n'ai jamais fait de jeu de rôle coquin.",
+  "Je n'ai jamais fait l'amour dans une cabine d'essayage.",
+  "Je n'ai jamais fait l'amour sous la douche.",
+  "Je n'ai jamais dit le mauvais prénom au lit.",
+  "Je n'ai jamais fait de strip poker jusqu'au bout.",
+  "Je n'ai jamais fait l'amour devant un miroir.",
+  "Je n'ai jamais couché avec un·e ami·e d'enfance.",
+  "Je n'ai jamais fait l'amour dans la nature.",
+  "Je n'ai jamais fait de sauna nu·e avec des inconnus.",
+  "Je n'ai jamais couché avec quelqu'un rencontré moins de 2 heures avant.",
+  "Je n'ai jamais eu de crush sur quelqu'un dans cette pièce.",
+  "Je n'ai jamais fait l'amour en écoutant une musique très gênante.",
+  "Je n'ai jamais eu de plan avec un·e voisin·e.",
+  "Je n'ai jamais couché avec quelqu'un dont je connaissais à peine le prénom."
+]);
+
+add('qui', [
+  "avoir déjà fait l'amour au travail ?",
+  "avoir le kink le plus bizarre ?",
+  "avoir un crush secret sur quelqu'un ici ?",
+  "dire le mauvais prénom au lit ?",
+  "dire oui à un club libertin ?",
+  "finir menotté·e ?",
+  "envoyer un nude ce soir ?",
+  "faire l'amour dans un avion ?",
+  "avoir des photos coquines dans son téléphone en ce moment ?",
+  "coucher avec quelqu'un juste pour son appart ?",
+  "être le / la plus bruyant·e au lit ?",
+  "faire un strip-tease ce soir sans qu'on le lui demande ?",
+  "avoir un plan avec son ex en cachette ?",
+  "tester absolument tout au lit au moins une fois ?",
+  "tomber amoureux·se d'un plan cul ?",
+  "être le / la plus coquin·e de la bande ?",
+  "avoir un jouet coquin dans sa valise en vacances ?",
+  "avoir déjà fait l'amour chez quelqu'un de la bande ?",
+  "réveiller ses voisins cette nuit ?",
+  "finir la soirée en sous-vêtements ?"
+]);
+
+add('preferes', [
+  ["Le faire devant un miroir", "Le faire les yeux bandés"],
+  ["Que ton ex raconte tout de toi au lit dans un podcast", "Que ta mère tombe sur ton jouet coquin"],
+  ["Ne plus jamais embrasser avec la langue", "Ne plus jamais de câlin après l'amour"],
+  ["Être attaché·e", "Attacher"],
+  ["Un massage érotique d'une heure", "Une nuit endiablée de 10 minutes"],
+  ["Que tout le monde ici t'entende faire l'amour", "Entendre {p} faire l'amour"],
+  ["Faire l'amour dans la neige", "Dans le désert"],
+  ["Un date dans un club libertin", "Un date chez ta grand-mère"],
+  ["Être super bruyant·e au lit", "Être muet·te comme une tombe"],
+  ["Montrer ta dernière recherche coquine", "Lire ton dernier sexto à voix haute"],
+  ["Un plan cul avec {p}", "Un plan cul avec l'ex de {p}"],
+  ["Que ton crush te voie nu·e par erreur", "Voir ton crush nu·e par erreur"],
+  ["Une nuit avec quelqu'un de très expérimenté", "Avec quelqu'un qui découvre tout"],
+  ["Le faire dans un lieu public sans te faire prendre", "Te faire prendre mais chez toi"],
+  ["Un strip-tease pour toi tout seul", "Faire un strip-tease devant 10 personnes"]
+]);
+
+add('juge', [
+  "Fais ta meilleure imitation de quelqu'un qui découvre un jouet coquin pour la première fois.",
+  "Invente la pire technique de drague du monde et teste-la sur le juge.",
+  "Décris le pire préliminaire possible.",
+  "Fais un discours de remerciement pour un Oscar du meilleur coup d'un soir.",
+  "Raconte une fausse confession coquine assez crédible pour tromper le juge.",
+  "Vends ton corps… à une agence de mannequins, en 20 secondes.",
+  "Fais la pire déclaration d'amour après un plan d'un soir.",
+  "Imite un·e partenaire qui fait semblant de dormir pour éviter la seconde fois.",
+  "Trouve un nouveau nom pour « plan cul ».",
+  "Fais une pub pour une appli de rencontre très, très spécialisée."
+]);
+
+D.motfinHot = D.motfinHot.concat([
+  "Ce que ton ex a vraiment pensé de toi au lit : …", "Le pire bruit entendu à travers le mur : …",
+  "Le pire jeu de rôle possible : …", "Ce qu'il ne faut jamais faire pendant un strip-tease : …",
+  "La pire réponse à « c'était bien pour toi ? » : …", "Le nom de ton club libertin : …",
+  "Ce que fait le Père Noël avec la Mère Noël le 26 décembre : …", "La pire chose à trouver dans le tiroir de tes parents : …",
+  "Le dernier recours après une panne : …", "Le pire safe word : …",
+  "Le titre de l'autobiographie de ta vie sexuelle : …", "Ce que ton lit raconterait s'il pouvait parler : …"
+]);
+D.quiecritHot = D.quiecritHot.concat([
+  "Ton kink, en un mot ?", "Ton plus gros regret coquin ?", "La chose la plus osée que tu aies faite en public ?",
+  "Ton pire date, en une phrase ?", "Ce que tu n'as jamais avoué à un·e partenaire ?", "Le lieu où tu rêves de le faire ?",
+  "Ta pire excuse pour partir de chez quelqu'un le matin ?", "Le surnom le plus gênant qu'on t'ait donné au lit ?",
+  "Ton record de shots avant une bêtise ?", "La personne la plus inattendue que tu aies embrassée ?"
+]);
+
+/* Gages épicés (La Roue, Le Doigt élu, Qui pourrait…) */
+D.gagesHot = [
+  "Enlève un vêtement de ton choix.", "Raconte ta pire expérience au lit.", "Montre la dernière photo de ta galerie à tout le monde.",
+  "Donne ton téléphone déverrouillé à ton voisin de gauche pendant 1 minute.", "Fais un lap dance de 20 secondes à la personne de ton choix.",
+  "Envoie 🍑 à la 5e personne de tes conversations.", "Bois 3 gorgées sans les mains.", "Bois une gorgée dans le verre de ton voisin de droite.",
+  "Avoue le nom de ton dernier crush.", "Fais un bisou sur la joue de la personne à ta gauche.",
+  "Mime une scène de film érotique pendant 10 secondes.", "Ton voisin de droite écrit un message à ton ex : tu l'envoies ou tu bois 4 gorgées.",
+  "Gémis de façon très dramatique pendant 5 secondes.", "Dis à voix haute ton fantasme le plus soft.",
+  "Fais un câlin de 15 secondes à la personne de ton choix.", "Donne une note sur 10 au physique de chaque joueur.",
+  "Raconte ton dernier rêve coquin.", "Reste en sous-vêtement du haut jusqu'à la fin du tour (ou 4 gorgées).",
+  "Le groupe choisit quelqu'un que tu dois embrasser sur la joue.", "Avoue la chose la plus coquine que tu aies faite cette année."
+];
 })();
