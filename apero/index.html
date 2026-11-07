@@ -586,17 +586,40 @@ textarea:focus{border-color:var(--accent);}
 .cf,.cr{position:absolute;font-style:normal;font-size:.55rem;font-weight:800;opacity:.7;color:#3a2a1a;}
 .cf{right:2px;bottom:1px;} .cr{left:2px;top:1px;}
 
+/* Courses en direct */
+.tpad{width:100%;aspect-ratio:1.4;border-radius:28px;background:var(--panel);border:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;transition:background .2s;}
+.tpad b{font-size:4.5rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.tpad small{color:var(--muted);font-weight:700;}
+.tpad.on{background:linear-gradient(150deg,#f857a6,#ff5858);border-color:transparent;}
+.tpad.on small{color:#fff;}
+.tpad.pulse{animation:tpp .12s;}
+@keyframes tpp{50%{transform:scale(.97)}}
+.rzone{width:100%;min-height:62vh;border-radius:28px;background:#2b2147;display:grid;place-items:center;touch-action:none;}
+.rzone b{font-size:2.2rem;font-weight:800;}
+.rzone.go{background:#18c76f;color:#06281a;}
+.rzone.done{background:var(--panel-2);}
+.ranking div.lose{background:rgba(255,77,77,.18);}
+.mgrid{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:3px;}
+.mcell{aspect-ratio:1;border-radius:8px;background:var(--panel);font-weight:800;font-size:1.05rem;padding:0;}
+.mcell.found{background:rgba(61,220,151,.28);color:var(--ok);}
+.mcell.sel{background:var(--accent);color:#fff;}
+.mwords{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.mwords span{padding:6px 10px;border-radius:999px;background:var(--panel);font-weight:700;font-size:.85rem;letter-spacing:.06em;}
+.mwords span.ok{background:rgba(61,220,151,.18);color:var(--ok);}
+.mwords small{color:var(--muted);letter-spacing:0;font-weight:600;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=20"></script>
-<script src="app.js?v=20"></script>
-<script src="online.js?v=20"></script>
-<script src="online-social.js?v=20"></script>
-<script src="online-vote.js?v=20"></script>
-<script src="online-cards.js?v=20"></script>
-<script src="online-board.js?v=20"></script>
+<script src="data.js?v=21"></script>
+<script src="app.js?v=21"></script>
+<script src="online.js?v=21"></script>
+<script src="online-social.js?v=21"></script>
+<script src="online-vote.js?v=21"></script>
+<script src="online-cards.js?v=21"></script>
+<script src="online-board.js?v=21"></script>
+<script src="online-live.js?v=21"></script>
 </body>
 </html>
