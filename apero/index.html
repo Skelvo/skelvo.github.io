@@ -713,23 +713,41 @@ html.tv .mineonly,html.tv .stage .buzz{display:none!important;}
 html.tv .cboard,html.tv .dboard,html.tv .ngrid,html.tv .gomoku,html.tv .c4,html.tv .mgrid{width:min(100%,40vh)!important;max-width:min(100%,40vh)!important;margin-left:auto;margin-right:auto;}
 html.tv .tvlobby .codecard b{font-size:4.5rem;letter-spacing:.2em;}
 html.tv .tvlobby .qr{width:260px;height:260px;}
+/* Arcade */
+.arena{position:relative;flex:1;min-height:0;height:calc(100dvh - var(--safe-t) - var(--safe-b) - 110px);border-radius:20px;overflow:hidden;background:#120d1f;touch-action:none;user-select:none;-webkit-user-select:none;}
+.arena canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+.duelarena{height:calc(100dvh - var(--safe-t) - var(--safe-b) - 96px);}
+.ahud{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.45);padding:6px 14px;border-radius:999px;font-size:1rem;white-space:nowrap;pointer-events:none;}
+.ahud b{font-size:1.3rem;}
+.ahud small{color:rgba(255,255,255,.75);margin-left:4px;}
+.arules{display:flex;gap:14px;align-items:center;background:var(--panel);border-radius:18px;padding:14px 16px;text-align:left;}
+.arules span{font-size:2.6rem;}
+.arules p{margin:0;line-height:1.45;font-size:.95rem;}
+.arecord{text-align:center;font-weight:800;font-size:1.2rem;color:#ffd76a;margin:0;animation:toastin .4s ease;}
+.dpair{display:flex;align-items:center;gap:10px;}
+.dpair div{flex:1;background:var(--panel);border-radius:16px;padding:12px;text-align:center;}
+.dpair small{display:block;color:var(--muted);font-size:.75rem;}
+.dpair b{font-size:1.1rem;}
+.dpair i{font-style:normal;font-weight:800;color:var(--muted);}
+body:has(.arena) .sipfab{display:none;}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=33"></script>
-<script src="data-epice.js?v=33"></script>
-<script src="data-enigmes.js?v=33"></script>
-<script src="data-themes.js?v=33"></script>
-<script src="app.js?v=33"></script>
-<script src="games-boire.js?v=33"></script>
-<script src="soiree.js?v=33"></script>
-<script src="online.js?v=33"></script>
-<script src="online-social.js?v=33"></script>
-<script src="online-vote.js?v=33"></script>
-<script src="online-cards.js?v=33"></script>
-<script src="online-board.js?v=33"></script>
-<script src="online-live.js?v=33"></script>
+<script src="data.js?v=34"></script>
+<script src="data-epice.js?v=34"></script>
+<script src="data-enigmes.js?v=34"></script>
+<script src="data-themes.js?v=34"></script>
+<script src="app.js?v=34"></script>
+<script src="games-boire.js?v=34"></script>
+<script src="soiree.js?v=34"></script>
+<script src="arcade.js?v=34"></script>
+<script src="online.js?v=34"></script>
+<script src="online-social.js?v=34"></script>
+<script src="online-vote.js?v=34"></script>
+<script src="online-cards.js?v=34"></script>
+<script src="online-board.js?v=34"></script>
+<script src="online-live.js?v=34"></script>
 </body>
 </html>
