@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 27;
+const VERSION = 28;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
