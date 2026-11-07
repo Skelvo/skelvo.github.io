@@ -153,7 +153,7 @@ function renderBluff(g, ctx) {
    💬 LE MOT DE LA FIN — réponses drôles anonymes
    ====================================================================== */
 function MotFin(names, notify) {
-  const prompts = A.deck(A.D.motfin), totals = totalsInit(names);
+  const prompts = A.deck(A.S.spicy ? A.D.motfinHot : A.D.motfin), totals = totalsInit(names);
   let round = 0, prompt, phase, texts, opts, votes, deadline, timer = null, gain = {};
   function newRound() {
     round++; prompt = prompts.next(); phase = 'write'; texts = {}; votes = {}; opts = null; gain = {};
@@ -222,7 +222,7 @@ function renderMotFin(g, ctx) {
    🕵️ QUI A ÉCRIT ÇA ? — réponses perso anonymes, on devine l'auteur
    ====================================================================== */
 function QuiEcrit(names, notify) {
-  const qs = A.deck(A.D.quiecrit), totals = totalsInit(names);
+  const qs = A.deck(A.S.spicy ? A.D.quiecritHot : A.D.quiecrit), totals = totalsInit(names);
   let round = 0, q, phase, texts, order, idx, guesses, deadline, timer = null, gain = {};
   function newRound() {
     round++; q = qs.next(); phase = 'write'; texts = {}; order = []; idx = 0; guesses = {}; gain = {};
