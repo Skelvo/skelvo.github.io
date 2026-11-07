@@ -1,7 +1,7 @@
 /* Hors-ligne : on garde l'appli en cache, et on la met à jour en arrière-plan. */
 /* À chaque mise à jour : augmenter ce numéro, les ?v= ici et dans index.html, VERSION dans app.js et version.json. */
-const CACHE = 'apero-v19';
-const FILES = ['./', 'index.html', 'app.js?v=19', 'data.js?v=19', 'online.js?v=19', 'online-social.js?v=19', 'online-vote.js?v=19', 'online-cards.js?v=19', 'vendor/peerjs-1.5.4.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'apero-v20';
+const FILES = ['./', 'index.html', 'app.js?v=20', 'data.js?v=20', 'online.js?v=20', 'online-social.js?v=20', 'online-vote.js?v=20', 'online-cards.js?v=20', 'online-board.js?v=20', 'vendor/peerjs-1.5.4.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));

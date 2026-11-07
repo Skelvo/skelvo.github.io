@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 19;
+const VERSION = 20;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -198,7 +198,7 @@ const home = {
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Poker, Bluff, Loups-garous, Dessin…</small></span><span class="go">›</span>
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Poker, Échecs, Bluff, Loups-garous…</small></span><span class="go">›</span>
       </button>
       ${games}
 
@@ -1255,6 +1255,7 @@ const makers = {
             <h3>🎨 Le Dessin <small>en ligne · 2-10 joueurs</small></h3><p>Chacun son tour, un joueur reçoit un mot secret et le dessine sur son téléphone : le dessin apparaît en direct chez les autres, qui tapent leurs propositions. 80 secondes par dessin, la première lettre s'affiche à mi-temps. Trouver vite rapporte 3, 2 puis 1 point ; le dessinateur gagne 1 point par joueur qui trouve.</p>
             <h3>📝 Le Petit Bac <small>en ligne · 2-10 joueurs</small></h3><p>Une lettre et 6 catégories tirées au hasard. Chacun remplit sur son téléphone ; le premier qui a fini appuie sur STOP et les autres ont 10 secondes. Réponse valable : 10 points, 5 si quelqu'un a la même. L'hôte peut refuser une réponse douteuse.</p>
             <h3>🔔 Quiz buzzer <small>en ligne · 2-12 joueurs</small></h3><p>12 questions de culture générale s'affichent sur tous les téléphones. Le premier qui appuie sur BUZZ a 8 secondes pour répondre. Faux ? Il est bloqué et les autres peuvent buzzer. Un point par bonne réponse.</p>
+            <h3>♟️ Plateau en ligne <small>2 joueurs, les autres regardent</small></h3><p>Bataille navale, Aligne 4, Morpion géant (5 alignés sur 15×15), Dames (règles internationales : prise obligatoire et majoritaire, dames volantes) et Échecs (règles complètes). Avec plus de 2 joueurs : « le gagnant reste », le perdant laisse sa place au suivant de la file. On peut abandonner ou proposer le match nul.</p>
             <h3>♠️ Poker <small>en ligne · 2-8 · jetons fictifs</small></h3><p>Texas Hold'em : 2 cartes cachées chacun, 5 cartes communes (flop, turn, river). Blindes 10/20, 1000 jetons au départ. Parole, suivre, relancer ou se coucher ; à l'abattage la meilleure main de 5 cartes gagne (pots annexes gérés pour les tapis). L'hôte peut recaver les joueurs éliminés.</p>
             <h3>🎴 8 américain <small>en ligne · 2-8</small></h3><p>Pose une carte de la même couleur ou de la même valeur que celle du dessus. Le 8 se pose sur tout et change la couleur ; le 2 fait piocher 2 au suivant (cumulable avec un autre 2) ; le Valet fait passer le tour ; l'As change le sens. Pas de carte jouable ? Pioche. Le premier qui vide sa main gagne.</p>
             <h3>🂮 Belote <small>en ligne · 4 joueurs</small></h3><p>Deux équipes (partenaires face à face), 32 cartes. Enchères en deux tours sur la carte retournée. Il faut fournir la couleur demandée ; sinon couper (sauf si ton partenaire est maître) et monter à l'atout si possible. Atout : Valet 20, 9 14, As 11, 10 10, Roi 4, Dame 3. Belote-rebelote +20, dix de der +10, capot 252. Si l'équipe qui a pris fait moins que l'autre, elle est « dedans » : 162 pour la défense. Partie en 501 (sans annonces).</p>
