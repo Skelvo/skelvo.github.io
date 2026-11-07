@@ -369,13 +369,35 @@ textarea:focus{border-color:var(--accent);}
 .ybonus{display:flex;justify-content:space-between;padding:8px 12px;margin:2px 0 6px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);font-size:.85rem;color:var(--muted);}
 .ybonus b{color:var(--accent-2);}
 
+/* Le Menteur */
+.die.small{width:40px;height:40px;padding:5px;border-radius:10px;box-shadow:0 4px 0 #c9c2b6;display:inline-grid;vertical-align:middle;}
+.die.small i{width:7px;height:7px;}
+.die.hit{box-shadow:0 0 0 3px var(--ok),0 4px 0 #c9c2b6;}
+.die.dim{opacity:.35;}
+.bidbox{text-align:center;padding:14px;border-radius:18px;background:var(--bg-2);border:1px solid var(--line);}
+.bidbox small{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;}
+.bidbox div{font-size:1.5rem;font-weight:800;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.bidpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+.stepper{display:flex;align-items:center;gap:8px;}
+.stepper .btn{width:46px;height:46px;padding:0;font-size:1.4rem;}
+.stepper b{font-size:1.8rem;min-width:36px;text-align:center;}
+.faces{display:flex;gap:4px;}
+.faces button{padding:3px;border-radius:12px;border:2px solid transparent;}
+.faces button.on{border-color:var(--accent);background:var(--panel-2);}
+.faces .die.small{width:34px;height:34px;padding:4px;}
+.faces .die.small i{width:6px;height:6px;}
+.allDice{display:flex;flex-direction:column;gap:8px;}
+.allDice>div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:var(--bg-2);}
+.allDice .pname{min-width:64px;font-weight:700;font-size:.9rem;}
+.allDice>div>div{display:flex;gap:5px;flex-wrap:wrap;}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=8"></script>
-<script src="app.js?v=8"></script>
-<script src="online.js?v=8"></script>
+<script src="data.js?v=9"></script>
+<script src="app.js?v=9"></script>
+<script src="online.js?v=9"></script>
 </body>
 </html>

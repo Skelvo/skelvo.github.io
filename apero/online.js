@@ -171,9 +171,57 @@ function Imposteur(names) {
   return { act, view, min: 3, max: 12 };
 }
 
+/* ---------- Le Menteur aux dés ---------- */
+function Menteur(names) {
+  const order = shuffle(names);
+  const count = {}; order.forEach(p => count[p] = 5);
+  let dice = {}, bid = null, turn = null, phase = 'bid', reveal = null, winner = null, roundNo = 0, log = '';
+  const alive = () => order.filter(p => count[p] > 0);
+  const total = () => alive().reduce((a, p) => a + count[p], 0);
+  const nextAlive = from => { let i = order.indexOf(from); for (let k = 0; k < order.length; k++) { i = (i + 1) % order.length; if (count[order[i]] > 0) return order[i]; } return null; };
+  function roll(starter) {
+    roundNo++; dice = {}; bid = null; reveal = null; phase = 'bid';
+    alive().forEach(p => dice[p] = Array.from({ length: count[p] }, () => 1 + Math.floor(Math.random() * 6)).sort());
+    turn = starter && count[starter] > 0 ? starter : nextAlive(starter || order[order.length - 1]);
+    log = `Manche ${roundNo} · ${turn} ouvre les enchères`;
+  }
+  const higher = (q, f) => !bid || q > bid.q || (q === bid.q && f > bid.f);
+  function act(who, a, isHost) {
+    if (a.k === 'next' && phase === 'reveal' && isHost) { roll(reveal.loser); return; }
+    if (a.k === 'again' && phase === 'end' && isHost) { order.forEach(p => count[p] = 5); winner = null; roundNo = 0; roll(); return; }
+    if (phase !== 'bid' || who !== turn) return 'Ce n’est pas ton tour';
+    if (a.k === 'bid') {
+      const q = a.q | 0, f = a.f | 0;
+      if (q < 1 || q > total() || f < 1 || f > 6) return 'Annonce impossible';
+      if (!higher(q, f)) return 'Il faut annoncer plus : plus de dés, ou une face plus forte';
+      bid = { q, f, by: who }; log = `${who} annonce ${q} × ${f}`; turn = nextAlive(who); return;
+    }
+    if (a.k === 'call') {
+      if (!bid) return 'Il n’y a encore aucune annonce';
+      const n = alive().reduce((acc, p) => acc + dice[p].filter(v => v === bid.f).length, 0);
+      const truth = n >= bid.q, loser = truth ? who : bid.by;
+      count[loser]--;
+      reveal = { bid, n, caller: who, truth, loser, dice: { ...dice } };
+      log = truth ? `${bid.by} disait vrai ! ${who} perd un dé` : `${bid.by} mentait ! Il perd un dé`;
+      const al = alive();
+      if (al.length === 1) { winner = al[0]; phase = 'end'; } else phase = 'reveal';
+    }
+  }
+  function view(me) {
+    return {
+      id: 'menteur', phase, me, turn, bid, log, roundNo, total: total(), winner,
+      mine: dice[me] || [], reveal,
+      players: order.map(p => ({ name: p, n: count[p] }))
+    };
+  }
+  roll();
+  return { act, view, min: 2, max: 8 };
+}
+
 const GAMES = {
   president: { make: President, name: 'Président', e: '🃏', d: 'Le jeu de cartes de soirée. Débarrasse-toi de tes cartes le premier !', min: 3, max: 8, g: 'linear-gradient(150deg,#e2364f,#7a1630)' },
-  imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' }
+  imposteur: { make: Imposteur, name: "L'Imposteur", e: '🕵️', d: 'Chacun voit son mot sur son téléphone, puis tout le monde vote.', min: 3, max: 12, g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)' },
+  menteur:   { make: Menteur, name: 'Le Menteur', e: '🎲', d: 'Dés cachés et annonces de plus en plus folles. Bluffe ou accuse !', min: 2, max: 8, g: 'linear-gradient(150deg,#8e44ad,#2c3e91)' }
 };
 
 /* ================= Écran « En ligne » ================= */
@@ -315,7 +363,7 @@ A.makers.online = function () {
     const prev = state; state = s;
     const hand = s.g && s.g.hand ? s.g.hand.join(',') : '';
     if (hand !== lastHand) { sel = new Set([...sel].filter(c => s.g.hand.includes(c))); lastHand = hand; }
-    if (s.g && s.g.id === 'president' && s.g.turn === s.me && (!prev || !prev.g || prev.g.turn !== s.me)) { buzz([60, 40, 60]); beep(1040, .1, 'sine'); }
+    if (s.g && (s.g.id === 'president' || s.g.id === 'menteur') && s.g.turn === s.me && (!prev || !prev.g || prev.g.turn !== s.me)) { buzz([60, 40, 60]); beep(1040, .1, 'sine'); }
     render();
   }
 
@@ -349,6 +397,7 @@ A.makers.online = function () {
     if (!state.g) return renderLobby();
     if (state.g.id === 'president') return renderPresident(state.g);
     if (state.g.id === 'imposteur') return renderImposteur(state.g);
+    if (state.g.id === 'menteur') return renderMenteur(state.g);
   }
 
   const amHost = () => state && state.me === state.host;
@@ -456,6 +505,60 @@ A.makers.online = function () {
       </div>`);
   }
 
+  /* --- Le Menteur --- */
+  const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  const die = (v, cls = '') => `<span class="die small ${cls}">${[...Array(9)].map((_, k) => `<i class="${PIPS[v].includes(k) ? 'on' : ''}"></i>`).join('')}</span>`;
+  function renderMenteur(g) {
+    const players = `<div class="seats">${g.players.map(p => `<div class="seat ${p.name === g.turn && g.phase === 'bid' ? 'now' : ''} ${p.n ? '' : 'done'}">
+        <b>${esc(p.name)}${p.name === g.me ? ' (toi)' : ''}</b><span>${p.n ? '🎲'.repeat(Math.min(p.n, 5)) : 'Éliminé·e'}</span></div>`).join('')}</div>`;
+    const bidBox = g.bid ? `<div class="bidbox"><small>Annonce de ${esc(g.bid.by)}</small><div>Au moins <b>${g.bid.q}</b> × ${die(g.bid.f)}</div></div>`
+      : `<div class="bidbox"><small>Pas encore d'annonce</small><div>${esc(g.turn)} ouvre</div></div>`;
+    if (g.phase === 'reveal' || g.phase === 'end') {
+      const r = g.reveal;
+      return A.view(`${top('Le Menteur')}
+        <div class="stage">
+          <div class="card" style="--g:${r.truth ? 'linear-gradient(160deg,#3ddc97,#16865c)' : 'linear-gradient(160deg,#ff5c8a,#8f2059)'};flex:none;min-height:0;padding:22px 16px">
+            <div class="tag" style="position:static">${esc(r.caller)} crie « Menteur ! »</div>
+            <div class="txt" style="margin:10px 0">Il y a <b>${r.n}</b> × ${die(r.bid.f)}<br><small style="font-size:.9rem;opacity:.85">annonce : au moins ${r.bid.q}</small></div>
+            <div class="sub" style="margin-top:4px"><b>${r.truth ? `${esc(r.bid.by)} disait vrai` : `${esc(r.bid.by)} bluffait`}</b> · ${esc(r.loser)} perd un dé</div>
+          </div>
+          <div class="allDice">${Object.entries(r.dice).map(([p, d]) => `<div><span class="pname">${esc(p)}</span><div>${d.map(v => die(v, v === r.bid.f ? 'hit' : 'dim')).join('')}</div></div>`).join('')}</div>
+          ${g.phase === 'end' ? `<div class="card" style="--g:linear-gradient(160deg,#ffb547,#e0702a);flex:none;min-height:0;padding:18px"><div class="secret">👑 ${esc(g.winner)}</div><div class="sub">remporte la partie !</div></div>` : ''}
+          ${amHost() ? (g.phase === 'end' ? `<div class="row"><button class="btn" data-a="lobby">Salon</button><button class="btn primary" data-a="magain">Rejouer</button></div>` : `<button class="btn primary big block" data-a="mnext">Manche suivante</button>`)
+            : `<div class="waiting"><div class="spinner small"></div>${esc(state.host)} lance la suite…</div>`}
+        </div>`);
+    }
+    const myTurn = g.turn === g.me;
+    // proposition par défaut : la plus petite surenchère possible
+    if (myTurn) {
+      const minQ = g.bid ? g.bid.q : 1;
+      if (!ui.bq || ui.bidKey !== JSON.stringify(g.bid)) { ui.bidKey = JSON.stringify(g.bid); ui.bq = g.bid ? (g.bid.f < 6 ? g.bid.q : g.bid.q + 1) : 1; ui.bf = g.bid ? (g.bid.f < 6 ? g.bid.f + 1 : 2) : 2; }
+      ui.bq = Math.max(minQ, Math.min(g.total, ui.bq));
+    }
+    const valid = !g.bid || ui.bq > g.bid.q || (ui.bq === g.bid.q && ui.bf > g.bid.f);
+    A.view(`${top('Le Menteur')}
+      <div class="stage">
+        ${players}
+        ${bidBox}
+        <div class="label">Tes dés (secrets 🤫) · ${g.total} dés en jeu</div>
+        <div class="dice">${g.mine.map(v => die(v)).join('')}</div>
+        <p class="log">${esc(g.log)}</p>
+        ${myTurn ? `
+          <div class="turnbar mine">👉 À toi : surenchéris ou accuse !</div>
+          <div class="bidpick">
+            <div class="stepper"><button class="btn" data-a="bq" data-v="-1">−</button><b>${ui.bq}</b><button class="btn" data-a="bq" data-v="1">+</button></div>
+            <span>×</span>
+            <div class="faces">${[1, 2, 3, 4, 5, 6].map(f => `<button class="${ui.bf === f ? 'on' : ''}" data-a="bf" data-v="${f}">${die(f)}</button>`).join('')}</div>
+          </div>
+          <div class="row">
+            <button class="btn" data-a="mcall" ${g.bid ? '' : 'disabled'} style="background:#ff4d4d;color:#fff;border:0">Menteur !</button>
+            <button class="btn primary" data-a="mbid" ${valid ? '' : 'disabled'}>Annoncer ${ui.bq} × ${ui.bf}</button>
+          </div>` : `<div class="turnbar">Au tour de ${esc(g.turn)}…</div>`}
+        <p class="hint" style="font-size:.82rem">On annonce combien de dés d'une face il y a <b>au total</b> (tous les joueurs). Surenchère = plus de dés, ou même nombre avec une face plus forte.</p>
+        ${amHost() ? `<button class="btn ghost" data-a="lobby">Arrêter et revenir au salon</button>` : ''}
+      </div>`, null, true);
+  }
+
   /* ---------- Actions ---------- */
   function on(a, el) {
     if (a === 'create' || a === 'join') {
@@ -484,6 +587,13 @@ A.makers.online = function () {
     if (a === 'pplay') { const cards = [...sel]; sel = new Set(); return send({ k: 'play', cards }); }
     if (a === 'ppass') { sel = new Set(); return send({ k: 'pass' }); }
     if (a === 'pnext') return send({ k: 'next' });
+    // Menteur
+    if (a === 'bq') { ui.bq = Math.max(1, ui.bq + +el.dataset.v); buzz(8); return render(); }
+    if (a === 'bf') { ui.bf = +el.dataset.v; buzz(8); return render(); }
+    if (a === 'mbid') return send({ k: 'bid', q: ui.bq, f: ui.bf });
+    if (a === 'mcall') { buzz([80, 40, 80]); return send({ k: 'call' }); }
+    if (a === 'mnext') return send({ k: 'next' });
+    if (a === 'magain') return send({ k: 'again' });
     // Imposteur
     if (a === 'peek') { ui.peek = !ui.peek; return render(); }
     if (a === 'tovote') { ui.peek = false; return send({ k: 'tovote' }); }

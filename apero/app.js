@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 8;
+const VERSION = 9;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -197,7 +197,7 @@ const home = {
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Président, Imposteur</small></span><span class="go">›</span>
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Président, Imposteur, Menteur</small></span><span class="go">›</span>
       </button>
       ${games}
 
@@ -1198,6 +1198,7 @@ const makers = {
             <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
             <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
             <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
+            <h3>🎲 Le Menteur <small>en ligne · 2-8 joueurs</small></h3><p>Chacun a 5 dés cachés sur son téléphone. À tour de rôle, on annonce combien de dés d'une face il y a au total sur la table (« au moins 4 × 5 ») en surenchérissant à chaque fois, ou on crie « Menteur ! ». On révèle : si l'annonce était vraie, l'accusateur perd un dé, sinon c'est le menteur. Le dernier à avoir des dés gagne.</p>
             <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
             <h3>💣 La Bombe</h3><p>Une catégorie s'affiche. On allume la mèche, on donne un mot et on passe le téléphone. La bombe explose au hasard : celui qui la tient a perdu.</p>
             <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
