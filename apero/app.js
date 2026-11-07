@@ -2,7 +2,7 @@
 'use strict';
 
 const D = window.DATA;
-const VERSION = 22;
+const VERSION = 23;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -102,15 +102,15 @@ const clearTimers = () => { timers.forEach(id => { clearTimeout(id); clearInterv
 /* ================= Jeux ================= */
 /* fit : adaptation à 2 / 3 / 4 / 5+ joueurs — b = idéal, o = ça marche, - = pas jouable */
 const G = {
-  aov:      { name: 'Action ou Vérité', e: '🎭', d: 'Le classique, en mieux', g: 'linear-gradient(150deg,#ff5c8a,#b0306e)', fit: 'obbb' },
-  jamais:   { name: "Je n'ai jamais", e: '🙊', d: 'Les secrets sortent', g: 'linear-gradient(150deg,#7b5cff,#4b2bb8)', fit: 'obbb' },
-  juge:     { name: 'Le Juge', e: '🧑‍⚖️', d: 'Un duel, un arbitre', g: 'linear-gradient(150deg,#f2c14e,#c0661c)', fit: '-bbo', isNew: true },
+  aov:      { spicy: true, name: 'Action ou Vérité', e: '🎭', d: 'Le classique, en mieux', g: 'linear-gradient(150deg,#ff5c8a,#b0306e)', fit: 'obbb' },
+  jamais:   { spicy: true, name: "Je n'ai jamais", e: '🙊', d: 'Les secrets sortent', g: 'linear-gradient(150deg,#7b5cff,#4b2bb8)', fit: 'obbb' },
+  juge:     { spicy: true, name: 'Le Juge', e: '🧑‍⚖️', d: 'Un duel, un arbitre', g: 'linear-gradient(150deg,#f2c14e,#c0661c)', fit: '-bbo', isNew: true },
   connais:  { name: 'Tu me connais ?', e: '🔮', d: 'Devine ce qu’il va répondre', g: 'linear-gradient(150deg,#ff6fb5,#8a3ad6)', fit: 'bbbo', isNew: true },
   synchro:  { name: 'Synchro', e: '🧠', d: 'Dites le même mot', g: 'linear-gradient(150deg,#28c7d9,#2b5fd6)', fit: 'bbbo', isNew: true },
   imposteur:{ name: "L'Imposteur", e: '🕵️', d: 'Qui n’a pas le même mot ?', g: 'linear-gradient(150deg,#1fb5a4,#0e6a71)', fit: '--bb' },
   bombe:    { name: 'La Bombe', e: '💣', d: 'Réponds avant le boum', g: 'linear-gradient(150deg,#ff8a3d,#d13b1f)', fit: 'obbb' },
-  qui:      { name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', fit: '-obb' },
-  preferes: { name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
+  qui:      { spicy: true, name: 'Qui pourrait…', e: '👉', d: 'Tout le monde pointe', g: 'linear-gradient(150deg,#ffb547,#e0702a)', fit: '-obb' },
+  preferes: { spicy: true, name: 'Tu préfères ?', e: '⚖️', d: 'Choix impossibles', g: 'linear-gradient(150deg,#3aa0ff,#2952d6)', fit: 'obbb' },
   mime:     { name: 'Fais deviner', e: '⏱️', d: 'Mime, parle, un seul mot', g: 'linear-gradient(150deg,#3ddc97,#16865c)', fit: 'obbb' },
   roue:     { name: 'La Roue', e: '🎡', d: 'Le hasard désigne un joueur', g: 'linear-gradient(150deg,#d65cff,#7a2bb8)', fit: 'oooo' },
   doigt:    { name: 'Le Doigt élu', e: '👆', d: 'Tous un doigt, un seul élu', g: 'linear-gradient(150deg,#ff4fa3,#ff8a3d)', fit: 'bbbb', free: true, isNew: true },
@@ -174,9 +174,11 @@ const home = {
     const card = (id, i, arr, off) => { const g = G[id];
       return `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
         ${g.isNew ? '<i class="new">Nouveau</i>' : ''}<span class="e">${g.e}</span><b>${g.name}</b><span>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</span></button>`; };
-    const ids = Object.keys(G), group = f => ids.filter(id => fitAt(id, n) === f);
+    // mode épicé : seulement les jeux qui ont des cartes épicées
+    const ids = Object.keys(G).filter(id => !S.spicy || G[id].spicy), group = f => ids.filter(id => fitAt(id, n) === f);
     const block = (title, list, off) => list.length ? `<h3 class="cat">${title}</h3><div class="games">${list.map((id, i, a) => card(id, i, a, off)).join('')}</div>` : '';
     const games = `
+      ${S.spicy ? '<p class="spicynote">🌶️ Mode épicé : seuls les jeux avec des cartes trash sont affichés. Désactive-le pour retrouver tous les jeux.</p>' : ''}
       <div class="nfilter"><span>Vous êtes</span>${[2, 3, 4, 5].map(k => `<button class="${k === n ? 'on' : ''}" data-a="n" data-v="${k}">${nLabel(k)}</button>`).join('')}</div>
       ${block(`⭐ Parfait à ${nLabel(n)}`, group('b'))}
       ${block('👍 Ça marche aussi', group('o'))}
@@ -199,7 +201,7 @@ const home = {
       </div>
 
       <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>Chacun sur son téléphone · Poker, Échecs, Bluff, Loups-garous…</small></span><span class="go">›</span>
+        <span class="e">📡</span><span><b>Jouer en ligne</b><small>${S.spicy ? 'Version épicée · Qui pourrait…, Mot de la fin, Qui a écrit ça ?' : 'Chacun sur son téléphone · Poker, Échecs, Bluff, Loups-garous…'}</small></span><span class="go">›</span>
       </button>
       ${games}
 

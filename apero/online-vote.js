@@ -220,7 +220,7 @@ function on(a, el, ctx) {
   if (a === 'vnext') { ctx.send({ k: 'next' }); return true; }
   return false;
 }
-O.register('quio', { make: QuiOnline, cat: 'ambiance', name: 'Qui pourrait… (en ligne)', e: '👉', d: 'Vote anonyme sur ton téléphone, résultats en barres.', min: 3, max: 16, g: 'linear-gradient(150deg,#ffb547,#e0702a)', render: renderQuiO, on });
+O.register('quio', { spicy: true, make: QuiOnline, cat: 'ambiance', name: 'Qui pourrait… (en ligne)', e: '👉', d: 'Vote anonyme sur ton téléphone, résultats en barres.', min: 3, max: 16, g: 'linear-gradient(150deg,#ffb547,#e0702a)', render: renderQuiO, on });
 O.register('connaiso', { make: ConnaisOnline, cat: 'ambiance', name: 'Tu me connais ? (en ligne)', e: '🔮', d: 'Un joueur répond en secret, les autres devinent sur leur téléphone.', min: 2, max: 12, g: 'linear-gradient(150deg,#ff6fb5,#8a3ad6)', render: renderConnaisO, on });
 O.register('synchroo', { make: SynchroOnline, cat: 'ambiance', name: 'Synchro (en ligne)', e: '🧠', d: 'Chacun écrit un mot en secret : dites tous le même !', min: 2, max: 12, g: 'linear-gradient(150deg,#28c7d9,#2b5fd6)', render: renderSynchroO, on });
 O.register('estim', { make: Estim, cat: 'ambiance', name: 'Estimations', e: '📏', d: 'Questions chiffrées : le plus proche gagne, pas besoin de savoir !', min: 2, max: 16, g: 'linear-gradient(150deg,#f2994a,#c0392b)', render: renderEstim, on });
