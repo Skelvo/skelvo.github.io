@@ -71,6 +71,7 @@ A.makers.stats = function () {
 
 /* ---------- Soirée auto ---------- */
 let SA = { round: 0, last: [], pending: null, cur: null };
+A.soiree = { round: () => SA.round, game: () => SA.pending };
 A.makers.soiree = function () {
   const n = A.S.players.length;
   const pool = () => Object.keys(A.G).filter(id => (!A.S.spicy || A.G[id].spicy) && A.fitAt(id, n) !== '-' && n >= A.minPlayers(id));
@@ -91,6 +92,7 @@ A.makers.soiree = function () {
     step();
   }
   const self = {
+    get confirmLeave() { return SA.round ? 'Quitter la Soirée auto ?\n\nPas de souci : la soirée et le classement sont gardés. Tu pourras la reprendre depuis l’accueil (bouton « Reprendre la soirée »).' : null; },
     render(spinning) {
       const wins = N.wins, rows = A.S.players.map(p => [p, wins[p] || 0]).sort((a, b) => b[1] - a[1]);
       if (SA.pending) {
@@ -101,6 +103,7 @@ A.makers.soiree = function () {
             <div class="label">Qui a gagné cette manche ?</div>
             <div class="chips" style="margin-top:0">${A.S.players.map(p => `<button class="chip pickp" data-a="sawin" data-p="${esc(p)}" style="padding-right:14px">${who(p)}</button>`).join('')}</div>
             <button class="btn" data-a="sawin" data-p="">Personne / pas de gagnant</button>
+            <div class="row"><button class="btn" data-a="sareplay">🔄 Rejouer à ${esc(g.name)}</button></div>
           </div>`);
       }
       const g = SA.cur && A.G[SA.cur];
@@ -118,6 +121,7 @@ A.makers.soiree = function () {
     on(a, el) {
       if (a === 'saspin') spin(self);
       if (a === 'saplay' && SA.cur) { SA.round++; SA.pending = SA.cur; A.night.played(SA.cur); A.openGame(SA.cur); }
+      if (a === 'sareplay' && SA.pending) { A.openGame(SA.pending); return; }
       if (a === 'sawin') { if (el.dataset.p) { A.night.win(el.dataset.p); toast(`+1 victoire pour ${el.dataset.p} 🏆`); } SA.pending = null; SA.cur = null; self.render(); }
       if (a === 'saend') {
         const loser = top(N.sips), champ = top(N.wins);
