@@ -1,7 +1,7 @@
 /* Hors-ligne : on garde l'appli en cache, et on la met à jour en arrière-plan. */
 /* À chaque mise à jour : augmenter ce numéro, les ?v= ici et dans index.html, VERSION dans app.js et version.json. */
-const CACHE = 'apero-v39';
-const FILES = ['./', 'index.html', 'app.js?v=39', 'games-boire.js?v=39', 'soiree.js?v=39', 'arcade.js?v=39', 'data.js?v=39', 'data-epice.js?v=39', 'data-enigmes.js?v=39', 'data-themes.js?v=39', 'online.js?v=39', 'online-social.js?v=39', 'online-vote.js?v=39', 'online-cards.js?v=39', 'online-board.js?v=39', 'online-live.js?v=39', 'vendor/peerjs-1.5.4.min.js', 'vendor/qrcode-1.4.4.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'apero-v40';
+const FILES = ['./', 'index.html', 'app.js?v=40', 'games-boire.js?v=40', 'soiree.js?v=40', 'arcade.js?v=40', 'data.js?v=40', 'data-epice.js?v=40', 'data-enigmes.js?v=40', 'data-themes.js?v=40', 'online.js?v=40', 'online-social.js?v=40', 'online-vote.js?v=40', 'online-cards.js?v=40', 'online-board.js?v=40', 'online-live.js?v=40', 'vendor/peerjs-1.5.4.min.js', 'vendor/qrcode-1.4.4.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));

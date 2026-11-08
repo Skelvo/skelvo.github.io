@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 39;
+const VERSION = 40;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -371,7 +371,7 @@ const rulesBody = () => `
             <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
             <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en haut de chaque jeu compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
             <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
-            <h3>📺 Écran TV</h3><p>Pendant une partie en ligne, ouvrez l'appli sur une TV connectée, une tablette ou un ordi : Jouer en ligne › tapez le code › « 📺 Afficher sur la TV ». L'écran montre la partie en grand pour tout le monde, sans jamais dévoiler les cartes, dés, mots ou rôles secrets.</p>
+            <h3>📺 Écran TV</h3><p>Facultatif. Pendant une partie en ligne, ouvrez <b>skelvo.fr/apero/tv</b> sur une TV connectée, une tablette ou un ordi, puis tapez le code de la partie. L'écran montre la partie en grand pour tout le monde, sans jouer et sans jamais dévoiler les cartes, dés, mots ou rôles secrets. Chaque joueur garde son téléphone.</p>
             <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
@@ -1674,6 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cards = startHash.match(/^cards=([A-Za-z0-9_-]+)$/);
   if (cards) setTimeout(() => importCards(cards[1]), 300);
   if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
+  else if (startHash === 'tv' && makers.online) { APERO.joinTv = true; openPage('online'); }
   else if (makers[startHash] && (!G[startHash] || G[startHash].free || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
   else if (!store.get('onboarded', false) && !S.players.length) openPage('bienvenue');
 });

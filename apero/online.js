@@ -530,8 +530,8 @@ A.online = { games: GAMES, register: (id, def) => { GAMES[id] = def; }, norm, cl
 
 /* ================= Écran « En ligne » ================= */
 A.makers.online = function () {
-  let ui = { screen: A.joinCode ? 'join' : 'menu', err: '', tv: false, ocat: 'tous', qr: false, code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
-  A.joinCode = null;
+  let ui = { screen: A.joinCode || A.joinTv ? 'join' : 'menu', err: '', tv: !!A.joinTv, ocat: 'tous', qr: false, code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
+  A.joinCode = null; A.joinTv = false;
   let peer = null, conn = null, isHost = false, state = null, sel = new Set(), lastHand = '';
   // Côté hôte
   let room = null;
@@ -712,11 +712,11 @@ A.makers.online = function () {
       </div>`, bindName);
     if (ui.screen === 'join') return A.view(`${H(ui.tv ? 'Écran TV' : 'Rejoindre')}
       <div class="stage">
-        ${ui.tv ? '<div class="tvexp"><b>📺 À faire sur la TV ou l’ordi, pas sur un téléphone de joueur</b><p>C’est facultatif : on peut très bien jouer sans. Si vous avez une TV connectée (avec un navigateur internet) ou un ordinateur, ouvrez skelvo.fr/apero dessus, puis Jouer en ligne › « Afficher sur la TV ». Elle montre la partie en grand pour tout le monde, sans jouer. Chaque joueur garde son propre téléphone.</p></div>' : nameField}
+        ${ui.tv ? '<div class="tvexp"><b>📺 À faire sur la TV ou l’ordi, pas sur un téléphone de joueur</b><p>C’est facultatif : on peut très bien jouer sans. Ouvrez simplement <b>skelvo.fr/apero/tv</b> dans le navigateur de la TV connectée ou de l’ordinateur, puis tapez le code affiché sur le téléphone de celui qui a créé la partie. L’écran montre la partie en grand pour tout le monde, sans jouer. Chaque joueur garde son propre téléphone.</p></div>' : nameField}
         <div class="label" style="text-align:center">Code de la partie</div>
         <label class="codecells"><input id="ocode" maxlength="4" value="${esc(ui.code)}" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" />
           ${[0, 1, 2, 3].map(i => `<span class="${i === Math.min(ui.code.length, 3) ? 'cur' : ''}">${esc(ui.code[i] || '')}</span>`).join('')}</label>
-        <p class="hint" style="font-size:.85rem">Le code est affiché sur le téléphone de celui qui a créé la partie. Tu peux aussi scanner son QR code avec l'appareil photo.</p>
+        <p class="hint" style="font-size:.85rem">${ui.tv ? 'Le code est affiché sur le téléphone de celui qui a créé la partie.' : 'Le code est affiché sur le téléphone de celui qui a créé la partie. Tu peux aussi scanner son QR code avec l’appareil photo.'}</p>
         ${ui.err ? `<p class="errbox">${esc(ui.err)}</p>` : ''}
         <button class="btn primary big block" data-a="${ui.tv ? 'tvjoin' : 'join'}">${ui.tv ? '📺 Afficher la partie' : 'Rejoindre la partie'}</button>
       </div>`, () => {
@@ -781,7 +781,7 @@ A.makers.online = function () {
           <div class="cats">${[['tous', '✨ Tout'], ...cats].map(([k, t]) => `<button class="${ui.ocat === k ? 'on' : ''}" data-a="ocat" data-v="${k}">${t}</button>`).join('')}</div>
           <div class="ggrid">${list.map(([id, g]) => { const ok = online >= g.min && online <= g.max;
             return `<button class="gcard ${ok ? '' : 'off'}" style="--g:${g.g}" data-a="start" data-g="${id}"><span class="ge">${g.e}</span><b>${g.name}</b><small>${ok ? g.d : g.min === g.max ? `À ${g.min} joueurs` : `De ${g.min} à ${g.max} joueurs`}</small></button>`; }).join('')}</div>
-          ${state.tvs ? '' : `<p class="hint tvhint">📺 Pour afficher la partie en grand : ouvre skelvo.fr/apero sur la TV › Jouer en ligne › « Afficher une partie sur la TV » › code <b>${esc(state.code)}</b>.</p>`}`;
+          ${state.tvs ? '' : `<p class="hint tvhint">📺 Pour afficher la partie en grand : ouvre <b>skelvo.fr/apero/tv</b> sur la TV ou un ordi, et tape le code <b>${esc(state.code)}</b>.</p>`}`;
         })()
           : `<div class="waiting"><div class="spinner small"></div>En attente que ${esc(state.host)} lance un jeu…</div>`}
       </div>`, () => { if (ui.qr) drawQR(location.origin + location.pathname + '#join=' + state.code); });
