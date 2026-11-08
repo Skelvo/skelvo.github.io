@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 40;
+const VERSION = 41;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -199,6 +199,8 @@ function view(html, after, keepScroll) {
   const y = window.scrollY;
   $app.innerHTML = html;
   const top = $app.querySelector('.top');
+  if (curId && G[curId] && top && window.APERO && APERO.soiree && APERO.soiree.game() === curId)
+    top.insertAdjacentHTML('afterend', `<div class="sbar"><span>🎲 Soirée auto · manche ${APERO.soiree.round()}</span><button data-a="sanext">Jeu suivant ›</button></div>`);
   if (curId && G[curId] && top) top.insertAdjacentHTML('beforeend', `<div class="tbtns">${S.players.length ? '<button class="icon-btn sm" data-a="sips" aria-label="Gorgées">🍻</button>' : ''}<button class="icon-btn sm" data-a="rules" aria-label="Règles">?</button></div>`);
   const card = $app.querySelector('.stage .card');
   if (card) { const t = card.textContent.replace(/\s+/g, ' '); if (t === lastCard) card.classList.add('still'); lastCard = t; } else lastCard = '';
@@ -210,6 +212,7 @@ function onAction(e) {
   const el = e.currentTarget, a = el.dataset.a;
   if (a === 'home') return goHome();
   if (a === 'rules') return showRules(curId);
+  if (a === 'sanext') { if (history.state && history.state.g) history.back(); else openPage('soiree'); return; }
   if (a === 'sips') return APERO.openSips && APERO.openSips();
   if (current && current.on) current.on(a, el);
   else if (home.on) home.on(a, el);
@@ -322,7 +325,7 @@ const home = {
         ${CATS.map(([k, e, nm, d, gr]) => { const n = Object.keys(G).filter(id => visibleG(id) && catOf(id) === k && playableG(id)).length;
           if (!Object.keys(G).some(id => visibleG(id) && catOf(id) === k)) return '';
           return `<button class="bcat ${np >= 2 && !n ? 'empty' : ''}" style="--g:${gr}" data-a="${np >= 2 ? 'cat' : 'need2'}" data-v="${k}"><span>${e}</span><b>${nm}</b><small>${np >= 2 ? (n ? `${n} jeu${n > 1 ? 'x' : ''}` : 'Pas à ce nombre') : d}</small></button>`; }).join('')}
-        <button class="bcat" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>Soirée auto</b><small>L'appli enchaîne les jeux</small></button>
+        ${(() => { const r = window.APERO && APERO.soiree ? APERO.soiree.round() : 0; return `<button class="bcat ${r ? 'resume' : ''}" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>${r ? 'Reprendre la soirée' : 'Soirée auto'}</b><small>${r ? `Manche ${r} · classement en cours` : 'L’appli enchaîne les jeux'}</small></button>`; })()}
       </div>
 
       <p class="steplbl">📱 Chacun sur son téléphone</p>
