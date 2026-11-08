@@ -39,7 +39,7 @@ function openSheet() {
       <p class="hint" style="font-size:.8rem;margin-top:8px">Le compteur suit toute la soirée : retrouve les stats dans 📊 Soirée.</p>
     </div>`;
     wrap.querySelector('.x').onclick = () => wrap.remove();
-    wrap.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { A.night.sip(b.dataset.p, +b.dataset.n); buzz(10); draw(); });
+    wrap.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { A.night.sip(b.dataset.p, +b.dataset.n); buzz(10); b.parentElement.querySelector('b').textContent = N.sips[b.dataset.p] || 0; });
   };
   wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
   draw(); document.body.appendChild(wrap);

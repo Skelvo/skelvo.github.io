@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 34;
+const VERSION = 35;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -205,71 +205,95 @@ function showHome() { document.body.classList.remove('ingame'); clearTimers(); i
 window.addEventListener('popstate', e => { const st = e.state; if (st && st.p && makers[st.p]) start(st.p); else showHome(); });
 
 /* ================= Accueil ================= */
+/* Catégories de l'accueil */
+const CATS = [
+  ['ambiance', '🎉', 'Ambiance', ['aov', 'jamais', 'qui', 'preferes', 'juge', 'connais', 'imposteur', 'mime', 'bombe', 'roue', 'doigt']],
+  ['boire', '🍻', 'À boire', ['roi', 'pyramide', 'bus']],
+  ['tete', '🧠', 'Réflexion', ['synchro', 'enigmes', 'yams']],
+  ['reflexes', '⚡', 'Réflexes', ['duel', 'main', 'secoue']],
+  ['arcade', '🕹️', 'Arcade', []]
+];
+const catOf = id => G[id].arcade ? 'arcade' : (CATS.find(c => c[3].includes(id)) || CATS[0])[0];
+
+/* Réglages partagés entre l'accueil et la page Réglages */
+function setting(a, el, rerender) {
+  if (a === 'lvl') {
+    const v = +el.dataset.v;
+    if (v === 2 && S.spicyLvl !== 2 && !confirm('🌶️🌶️ Niveau 2 « Sans filtre » : questions sexuelles très directes (pratiques, fantasmes, body count…) et actions chaudes.\n\nUniquement entre adultes consentants. Tout le monde est d’accord ?\n(Le Joker reste toujours possible.)')) return true;
+    S.spicyLvl = v; save(); applyTheme(); rerender(); toast(v === 2 ? 'Niveau 2 : sans filtre 😈' : 'Niveau 1 : coquin 🌶️'); return true;
+  }
+  if (a === 'sound') { S.sound = !S.sound; save(); rerender(); if (S.sound) beep(880, .08, 'sine'); return true; }
+  if (a === 'vibrate') { S.vibrate = !S.vibrate; save(); rerender(); buzz(60); return true; }
+  if (a === 'drinks') { S.drinks = !S.drinks; save(); rerender(); return true; }
+  if (a === 'spicy') {
+    if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return true;
+    S.spicy = !S.spicy; save(); applyTheme(); rerender(); toast(S.spicy ? 'Mode épicé activé 🌶️🔥' : 'Retour au mode normal 🥂'); return true;
+  }
+  if (a === 'theme') {
+    const k = el.dataset.v || null, t = THEMES[k];
+    S.theme = k;
+    if (t && t.noDrinks && S.drinks) { S.drinks = false; toast(`${t.e} Pack ${t.name} : alcool désactivé`); }
+    else toast(t ? `${t.e} Pack ${t.name} activé` : 'Cartes classiques 🥂');
+    save(); applyTheme(); rerender(); buzz(15); return true;
+  }
+  return false;
+}
+
 const home = {
+  cat: 'tous',
   render() {
-    const chips = S.players.map((p, i) => `<span class="chip"><button class="ava" data-a="ava" data-i="${i}" aria-label="Changer l’emoji de ${esc(p)}">${avatar(p)}</button>${esc(p)}<button data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
-    const n = home.n || (S.players.length >= 2 ? clampN(S.players.length) : 3);
-    const card = (id, i, arr, off) => { const g = G[id];
-      return `<button class="game${i === arr.length - 1 && arr.length % 2 ? ' wide' : ''}${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
-        ${g.isNew ? '<i class="new">Nouveau</i>' : ''}<span class="e">${g.e}</span><b>${g.name}</b><span>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</span></button>`; };
-    // mode épicé : seulement les jeux qui ont des cartes épicées
-    const th = theme(), tids = th ? Object.keys(G).filter(id => themed(id) && fitAt(id, n) !== '-') : [];
-    const arc = S.spicy ? [] : Object.keys(G).filter(id => G[id].arcade);
-    const ids = Object.keys(G).filter(id => (!S.spicy || G[id].spicy) && !tids.includes(id) && !G[id].arcade), group = f => ids.filter(id => fitAt(id, n) === f);
-    const block = (title, list, off) => list.length ? `<h3 class="cat">${title}</h3><div class="games">${list.map((id, i, a) => card(id, i, a, off)).join('')}</div>` : '';
-    const games = `
-      ${S.spicy ? '<p class="spicynote">🌶️ Mode épicé : seuls les jeux avec des cartes trash sont affichés. Désactive-le pour retrouver tous les jeux.</p>' : ''}
-      <div class="nfilter"><span>Vous êtes</span>${[2, 3, 4, 5].map(k => `<button class="${k === n ? 'on' : ''}" data-a="n" data-v="${k}">${nLabel(k)}</button>`).join('')}</div>
-      ${th ? `<p class="spicynote themenote">${esc(th.note || `${th.e} Pack ${th.name} : les jeux ci-dessous utilisent ses cartes.`)}</p>
-        ${block(`${th.e} Pack ${esc(th.name)}`, tids)}` : ''}
-      ${block(`⭐ Parfait à ${nLabel(n)}`, group('b'))}
-      ${block('👍 Ça marche aussi', group('o'))}
-      ${block('🕹️ Arcade', arc)}
-      ${block(`Pas à ${nLabel(n)}`, group('-'), true)}`;
+    const np = S.players.length, th = theme();
+    const playable = id => np < 2 || fitAt(id, np) !== '-';
+    const visible = id => S.spicy ? G[id].spicy : true;
+    const cats = CATS.filter(c => Object.keys(G).some(id => visible(id) && catOf(id) === c[0]));
+    if (home.cat !== 'tous' && !cats.some(c => c[0] === home.cat)) home.cat = 'tous';
+    let list = Object.keys(G).filter(id => visible(id) && (home.cat === 'tous' || catOf(id) === home.cat));
+    if (th) list.sort((a, b) => themed(b) - themed(a));
+    const ok = list.filter(playable), later = list.filter(id => !playable(id));
+    const card = (id, off) => { const g = G[id];
+      return `<button class="gcard${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
+        <span class="ge">${g.e}</span><b>${g.name}</b><small>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</small>${th && themed(id) ? `<i class="gtag">${th.e}</i>` : ''}</button>`; };
+    const modes = [S.spicy ? (S.spicyLvl === 2 ? '😈 Sans filtre' : '🌶️ Épicé') : '', th ? `${th.e} ${th.name}` : '', S.drinks ? '🍻 Avec alcool' : '🧃 Sans alcool'].filter(Boolean);
+    const chips = S.players.map((p, i) => `<span class="pchip"><button class="ava" data-a="ava" data-i="${i}" aria-label="Changer l’emoji de ${esc(p)}">${avatar(p)}</button><span>${esc(p)}</span><button class="x" data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
     view(`
-      <div class="brand"><div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : theme() ? theme().e : '🥂'}</div><div><h1>Apéro${S.spicy ? ` <span class="hotbadge">${S.spicyLvl === 2 ? '18+ · sans filtre' : '18+'}</span>` : ''}</h1><p>${S.spicy ? (S.spicyLvl === 2 ? 'Niveau 2 🌶️🌶️ · aucune limite (sauf le consentement)' : 'Édition épicée 🔥 · questions trash') : 'Jeux de soirée · gratuit · sans pub'}</p></div></div>
+      <div class="hbar">
+        <div class="logo">${S.spicy ? (S.spicyLvl === 2 ? '😈' : '🌶️') : th ? th.e : '🥂'}</div>
+        <h1>Apéro</h1>
+        <button class="icon-btn" data-a="page" data-id="reglages" aria-label="Réglages">⚙️</button>
+      </div>
+      <button class="modes" data-a="page" data-id="reglages">${modes.map(m => `<span>${m}</span>`).join('')}<em>Modifier</em></button>
 
-      <div class="section">
-        <h2><span>Joueurs</span><span>${S.players.length || ''}</span></h2>
+      <div class="pcard">
+        <div class="pcard-h"><b>👥 Qui joue ?</b><small>${np ? `${np} joueur${np > 1 ? 's' : ''} · touche un emoji pour le changer` : 'Ajoute les prénoms : les jeux désignent qui joue'}</small></div>
+        ${np ? `<div class="pchips">${chips}</div>` : ''}
         <form class="add-row" id="addf" autocomplete="off">
-          <input id="pname" maxlength="18" placeholder="Prénom du joueur" enterkeyhint="done" />
-          <button class="btn primary" type="submit">Ajouter</button>
+          <input id="pname" maxlength="18" placeholder="Prénom" enterkeyhint="done" />
+          <button class="btn primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
-        ${S.players.length ? `<div class="chips">${chips}</div>` : `<p class="empty">Ajoutez les prénoms de tout le monde : les jeux s'en servent pour désigner qui joue.</p>`}
       </div>
 
-      <div class="section">
-        <div class="toggle"><div class="t"><b>Son et vibrations</b><span>Bips, buzzer, vibreur du téléphone</span></div>
-          <div class="minis"><button class="mini ${S.sound ? 'on' : ''}" data-a="sound" aria-label="Son">${S.sound ? '🔊' : '🔇'}</button><button class="mini ${S.vibrate ? 'on' : ''}" data-a="vibrate" aria-label="Vibrations">📳</button></div></div>
-        <div class="toggle"><div class="t"><b>Avec alcool 🍻</b><span>Gorgées dans les règles (sinon : gages)</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
-        <div class="toggle"><div class="t"><b>Mode épicé 🌶️</b><span>${S.spicy ? 'Activé : uniquement des questions trash et sexy' : 'Questions trash et sexy · 18+'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
-        ${S.spicy ? `<div class="seg lvlseg"><button class="${S.spicyLvl !== 2 ? 'on' : ''}" data-a="lvl" data-v="1">🌶️ Coquin</button><button class="${S.spicyLvl === 2 ? 'on' : ''}" data-a="lvl" data-v="2">🌶️🌶️ Sans filtre</button></div>` : ''}
-        <div class="toggle"><div class="t"><b>Pack à thème</b><span>${theme() ? `${theme().e} ${esc(theme().d)}` : 'Des cartes spéciales pour l’occasion'}</span></div></div>
-        <div class="themes">${[['', '🥂', 'Classique'], ...Object.entries(THEMES).filter(([k]) => themeOK(k)).map(([k, t]) => [k, t.e, t.name])].map(([k, e, nm]) =>
-          `<button class="${(theme() ? S.theme : '') === k ? 'on' : ''}" data-a="theme" data-v="${k}">${e} ${esc(nm)}</button>`).join('')}</div>
+      <div class="quick">
+        <button class="qtile" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>Soirée auto</b><small>L'appli choisit les jeux</small></button>
+        <button class="qtile" style="--g:linear-gradient(150deg,#3aa0ff,#7b5cff)" data-a="page" data-id="online"><span>📡</span><b>En ligne</b><small>Chacun son téléphone</small></button>
       </div>
 
-      <button class="online-cta" data-a="page" data-id="online">
-        <span class="e">📡</span><span><b>Jouer en ligne</b><small>${S.spicy ? 'Version épicée · Qui pourrait…, Mot de la fin, Qui a écrit ça ?' : 'Chacun sur son téléphone · Poker, Échecs, Bluff, Loups-garous…'}</small></span><span class="go">›</span>
-      </button>
-      ${S.players.length >= 2 ? `<button class="online-cta soiree-cta" data-a="page" data-id="soiree">
-        <span class="e">🎲</span><span><b>Soirée auto</b><small>L'appli enchaîne les jeux au hasard · classement de la soirée</small></span><span class="go">›</span>
-      </button>` : ''}
-      ${games}
+      <div class="cats">${[['tous', '✨', 'Tout'], ...cats].map(([k, e, nm]) => `<button class="${home.cat === k ? 'on' : ''}" data-a="cat" data-v="${k}">${e} ${nm}</button>`).join('')}</div>
+      ${S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux avec des cartes trash.</p>' : ''}
+      <div class="ggrid">${ok.map(id => card(id)).join('')}</div>
+      ${later.length ? `<p class="glater">Avec plus de joueurs</p><div class="ggrid">${later.map(id => card(id, true)).join('')}</div>` : ''}
 
       <div class="links">
-        <button class="btn" data-a="page" data-id="stats">📊 Soirée</button>
-        <button class="btn" data-a="page" data-id="cartes">✍️ Cartes</button>
+        <button class="btn" data-a="page" data-id="stats">📊 Stats</button>
         <button class="btn" data-a="page" data-id="regles">📖 Règles</button>
       </div>
-      <p class="foot">Un seul téléphone qui tourne · Installe-moi : « Partager › Sur l'écran d'accueil »<br>Version ${VERSION}</p>
+      <p class="foot">Gratuit · sans pub · Version ${VERSION}</p>
     `, () => {
       document.getElementById('addf').addEventListener('submit', e => {
         e.preventDefault();
         const inp = document.getElementById('pname'), v = inp.value.trim().replace(/\s+/g, ' ');
         if (!v) return;
         if (S.players.some(p => p.toLowerCase() === v.toLowerCase())) { toast('Ce prénom est déjà là'); return; }
-        S.players.push(v); home.n = null; save(); home.render();
+        S.players.push(v); save(); home.render();
         document.getElementById('pname').focus();
       });
     }, true);
@@ -279,31 +303,15 @@ const home = {
       const p = S.players[+el.dataset.i], i = AVATARS.indexOf(avatar(p));
       S.avatars[p] = AVATARS[(i + 1) % AVATARS.length]; save(); home.render(); buzz(10); return;
     }
-    if (a === 'del') { S.players.splice(+el.dataset.i, 1); home.n = null; save(); home.render(); }
-    if (a === 'n') { home.n = +el.dataset.v; home.render(); }
-    if (a === 'lvl') {
-      const v = +el.dataset.v;
-      if (v === 2 && S.spicyLvl !== 2 && !confirm('🌶️🌶️ Niveau 2 « Sans filtre » : questions sexuelles très directes (pratiques, fantasmes, body count…) et actions chaudes.\n\nUniquement entre adultes consentants. Tout le monde est d’accord ?\n(Le Joker reste toujours possible.)')) return;
-      S.spicyLvl = v; save(); applyTheme(); home.render(); toast(v === 2 ? 'Niveau 2 : sans filtre 😈' : 'Niveau 1 : coquin 🌶️'); return;
-    }
-    if (a === 'sound') { S.sound = !S.sound; save(); home.render(); if (S.sound) beep(880, .08, 'sine'); return; }
-    if (a === 'vibrate') { S.vibrate = !S.vibrate; save(); home.render(); buzz(60); return; }
-    if (a === 'drinks') { S.drinks = !S.drinks; save(); home.render(); }
-    if (a === 'spicy') {
-      if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return;
-      S.spicy = !S.spicy; save(); applyTheme(); home.render(); toast(S.spicy ? 'Mode épicé activé 🌶️🔥' : 'Retour au mode normal 🥂');
-    }
-    if (a === 'theme') {
-      const k = el.dataset.v || null, t = THEMES[k];
-      S.theme = k; home.n = null;
-      if (t && t.noDrinks && S.drinks) { S.drinks = false; toast(`${t.e} Pack ${t.name} : alcool désactivé`); }
-      else toast(t ? `${t.e} Pack ${t.name} activé` : 'Cartes classiques 🥂');
-      save(); applyTheme(); home.render(); buzz(15); return;
-    }
+    if (a === 'del') { S.players.splice(+el.dataset.i, 1); save(); home.render(); }
+    if (a === 'cat') { home.cat = el.dataset.v; home.render(); buzz(8); return; }
+    if (a === 'need2') { toast('Ajoute au moins 2 joueurs 🙂'); document.getElementById('pname')?.focus(); return; }
+    if (setting(a, el, () => home.render())) return;
     if (a === 'game') openGame(el.dataset.id);
     if (a === 'page') openPage(el.dataset.id);
   }
 };
+
 
 /* Joueur qui tourne */
 function rotation() {
@@ -1448,6 +1456,43 @@ function applyTheme() {
 applyTheme();
 
 /* Boîte à outils partagée avec online.js (mode connecté) */
+/* ---------- Page Réglages ---------- */
+makers.reglages = () => {
+  const self = {
+    render() {
+      const th = theme();
+      view(`${header('Réglages')}
+        <div class="stage">
+          <div class="section">
+            <div class="toggle"><div class="t"><b>🍻 Avec alcool</b><span>${S.drinks ? 'Les règles parlent de gorgées' : 'Gages et points à la place des gorgées'}</span></div><button class="switch ${S.drinks ? 'on' : ''}" data-a="drinks" aria-label="Avec alcool"></button></div>
+            <div class="toggle"><div class="t"><b>🔊 Son</b><span>Bips et buzzers</span></div><button class="switch ${S.sound ? 'on' : ''}" data-a="sound" aria-label="Son"></button></div>
+            <div class="toggle"><div class="t"><b>📳 Vibrations</b><span>Le téléphone vibre pendant les jeux</span></div><button class="switch ${S.vibrate ? 'on' : ''}" data-a="vibrate" aria-label="Vibrations"></button></div>
+          </div>
+          <div class="section">
+            <div class="toggle"><div class="t"><b>🌶️ Mode épicé · 18+</b><span>${S.spicy ? 'Activé : questions trash et sexy uniquement' : 'Questions trash et sexy, entre adultes'}</span></div><button class="switch ${S.spicy ? 'on' : ''}" data-a="spicy" aria-label="Mode épicé"></button></div>
+            ${S.spicy ? `<div class="seg lvlseg"><button class="${S.spicyLvl !== 2 ? 'on' : ''}" data-a="lvl" data-v="1">🌶️ Coquin</button><button class="${S.spicyLvl === 2 ? 'on' : ''}" data-a="lvl" data-v="2">🌶️🌶️ Sans filtre</button></div>` : ''}
+          </div>
+          <div class="section">
+            <h2><span>Pack de cartes</span></h2>
+            <div class="packs">${[['', '🥂', 'Classique', 'Les cartes de base'], ...Object.entries(THEMES).filter(([k]) => themeOK(k)).map(([k, t]) => [k, t.e, t.name, t.d])].map(([k, e, nm, d]) =>
+              `<button class="${(th ? S.theme : '') === k ? 'on' : ''}" data-a="theme" data-v="${k}"><span>${e}</span><b>${esc(nm)}</b><small>${esc(d)}</small></button>`).join('')}</div>
+          </div>
+          <div class="section">
+            <button class="rowlink" data-a="page" data-id="cartes"><span>✍️</span><b>Mes cartes perso</b><i>›</i></button>
+            <button class="rowlink" data-a="page" data-id="regles"><span>📖</span><b>Règles des jeux</b><i>›</i></button>
+            <button class="rowlink" data-a="page" data-id="stats"><span>📊</span><b>Stats de la soirée</b><i>›</i></button>
+          </div>
+          <p class="foot">Pour l’installer : « Partager › Sur l’écran d’accueil »<br>Version ${VERSION}</p>
+        </div>`, null, true);
+    },
+    on(a, el) {
+      if (setting(a, el, () => self.render())) return;
+      if (a === 'page') openPage(el.dataset.id);
+    }
+  };
+  return self;
+};
+
 window.APERO = { D, S, store, save, avatar, openGame, minPlayers, fitAt, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
   makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard, theme, themed, askSensors };
 
