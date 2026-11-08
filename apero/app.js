@@ -76,7 +76,9 @@ function pool(key) {
   const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft).concat(theme().mix ? normal : []) : normal;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
-  return base.concat(mine);
+  // sans doublons (un pack et les cartes normales peuvent contenir la même phrase)
+  const seenK = new Set();
+  return base.concat(mine).filter(c => { const k = JSON.stringify(c); if (seenK.has(k)) return false; seenK.add(k); return true; });
 }
 const others = cur => S.players.filter(p => p !== cur);
 /* Remplit une carte : {p} = un autre joueur (jamais deux fois le même sur une carte),
