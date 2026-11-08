@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 43;
+const VERSION = 44;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -76,14 +76,20 @@ function pool(key) {
   const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft).concat(theme().mix ? normal : []) : normal;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
-  return base.concat(mine);
+  // sans doublons (un pack et les cartes normales peuvent contenir la même phrase)
+  const seenK = new Set();
+  return base.concat(mine).filter(c => { const k = JSON.stringify(c); if (seenK.has(k)) return false; seenK.add(k); return true; });
 }
 const others = cur => S.players.filter(p => p !== cur);
+/* Remplit une carte : {p} = un autre joueur (jamais deux fois le même sur une carte),
+   {s} = une durée au hasard, {n} = un nombre au hasard (3 à 5) : la même carte change à chaque fois */
 function fill(text, cur) {
+  const used = new Set();
   return esc(text).replace(/\{p\}/g, () => {
-    const o = others(cur);
-    return '<u>' + esc(o.length ? pick(o) : 'quelqu’un') + '</u>';
-  });
+    let o = others(cur).filter(x => !used.has(x)); if (!o.length) o = others(cur);
+    const p = o.length ? pick(o) : null; if (p) used.add(p);
+    return '<u>' + esc(p || 'quelqu’un') + '</u>';
+  }).replace(/\{s\}/g, () => pick([10, 15, 20, 30]) + ' secondes').replace(/\{n\}/g, () => String(3 + rnd(3)));
 }
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
 const gages = () => { const t = theme(), tg = t && (S.spicy && t.cards.gagesHot || t.cards.gages); const g = tg ? tg : S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
