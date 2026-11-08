@@ -708,11 +708,11 @@ A.makers.online = function () {
           <button data-a="create" style="--g:linear-gradient(150deg,#ff5c8a,#ff9f1c)"><span>✨</span><b>Créer une partie</b><small>Tu choisis les jeux, les autres te rejoignent</small></button>
           <button data-a="tojoin" style="--g:linear-gradient(150deg,#3aa0ff,#7b5cff)"><span>🔑</span><b>Rejoindre</b><small>Avec le code ou le QR code d'un ami</small></button>
         </div>
-        <button class="linkbtn" data-a="totv">📺 Afficher une partie sur la TV ou un ordi</button>
+        <button class="linkbtn" data-a="totv">📺 Facultatif : afficher la partie en grand sur une TV ou un ordi</button>
       </div>`, bindName);
     if (ui.screen === 'join') return A.view(`${H(ui.tv ? 'Écran TV' : 'Rejoindre')}
       <div class="stage">
-        ${ui.tv ? '<p class="hint">📺 Cet écran affichera la partie en grand, sans jouer.</p>' : nameField}
+        ${ui.tv ? '<div class="tvexp"><b>📺 À faire sur la TV ou l’ordi, pas sur un téléphone de joueur</b><p>C’est facultatif : on peut très bien jouer sans. Si vous avez une TV connectée (avec un navigateur internet) ou un ordinateur, ouvrez skelvo.fr/apero dessus, puis Jouer en ligne › « Afficher sur la TV ». Elle montre la partie en grand pour tout le monde, sans jouer. Chaque joueur garde son propre téléphone.</p></div>' : nameField}
         <div class="label" style="text-align:center">Code de la partie</div>
         <label class="codecells"><input id="ocode" maxlength="4" value="${esc(ui.code)}" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" />
           ${[0, 1, 2, 3].map(i => `<span class="${i === Math.min(ui.code.length, 3) ? 'cur' : ''}">${esc(ui.code[i] || '')}</span>`).join('')}</label>
