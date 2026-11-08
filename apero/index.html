@@ -781,24 +781,65 @@ body:has(.arena) .sipfab{display:none;}
 .rowlink span{font-size:1.3rem;}
 .rowlink b{flex:1;font-weight:700;}
 .rowlink i{font-style:normal;color:var(--muted);font-size:1.4rem;}
+/* ---------- v36 : sélecteur, récents, bienvenue ---------- */
+.qpick{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;margin-bottom:10px;border-radius:20px;text-align:left;background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 30%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+.qpick > span:first-child{font-size:1.8rem;}
+.qpick .qt{display:flex;flex-direction:column;}
+.qpick b{display:block;font-size:1.1rem;font-weight:800;}
+.qpick small{display:block;color:var(--muted);font-size:.8rem;}
+.qpick i{margin-left:auto;font-style:normal;font-size:1.6rem;color:var(--muted);}
+.qpick:active{transform:scale(.98);}
+.rrow{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 6px;padding:0 16px 4px;scrollbar-width:none;}
+.rrow::-webkit-scrollbar{display:none;}
+.rcard{flex:none;width:96px;padding:10px 8px;border-radius:16px;background:var(--g);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;color:#fff;}
+.rcard span{font-size:1.7rem;}
+.rcard b{font-size:.74rem;line-height:1.15;font-weight:800;}
+.pstep{text-align:center;margin:8px 0 6px;}
+.pstep i{display:block;font-style:normal;color:var(--muted);font-weight:700;font-size:.8rem;letter-spacing:.1em;}
+.pstep b{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;}
+.plist{display:flex;flex-direction:column;gap:10px;}
+.plist button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:14px;align-items:center;text-align:left;padding:14px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line);}
+.plist button span{grid-row:1/3;font-size:2.1rem;}
+.plist button b{font-size:1.08rem;}
+.plist button small{color:var(--muted);font-size:.82rem;}
+.plist button:active{transform:scale(.98);background:var(--panel-2);}
+.plist.two button{padding:20px 16px;}
+.presults{display:flex;flex-direction:column;gap:10px;}
+.pres{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;background:var(--g);color:#fff;text-align:left;box-shadow:0 10px 24px rgba(0,0,0,.25);animation:fadein .3s ease both;}
+.pres:nth-child(2){animation-delay:.08s}.pres:nth-child(3){animation-delay:.16s}
+.pres .ge{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:2rem;background:rgba(0,0,0,.18);flex:none;}
+.pres .t{flex:1;display:flex;flex-direction:column;}
+.pres b{font-size:1.15rem;font-weight:800;}
+.pres small{font-size:.82rem;opacity:.9;}
+.pres i{font-style:normal;font-weight:800;font-size:.75rem;background:rgba(255,255,255,.25);padding:4px 8px;border-radius:999px;}
+.onboard{justify-content:center;text-align:center;padding-top:20px;}
+.onboard h1{margin:0;font-size:2.2rem;font-weight:800;letter-spacing:-.03em;}
+.obhero{font-size:4.5rem;line-height:1;animation:sheetup .5s cubic-bezier(.2,.9,.3,1) both;}
+.obdots{display:flex;justify-content:center;gap:6px;}
+.obdots i{width:8px;height:8px;border-radius:50%;background:var(--line);}
+.obdots i.on{background:var(--accent);width:22px;border-radius:4px;}
+.obtips{display:flex;flex-direction:column;gap:8px;text-align:left;}
+.obtips p{margin:0;background:var(--panel);border-radius:16px;padding:12px 14px;font-size:.92rem;line-height:1.35;display:flex;gap:10px;align-items:flex-start;}
+.obtips span{font-size:1.3rem;}
+.obtips b{margin-right:4px;}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=35"></script>
-<script src="data-epice.js?v=35"></script>
-<script src="data-enigmes.js?v=35"></script>
-<script src="data-themes.js?v=35"></script>
-<script src="app.js?v=35"></script>
-<script src="games-boire.js?v=35"></script>
-<script src="soiree.js?v=35"></script>
-<script src="arcade.js?v=35"></script>
-<script src="online.js?v=35"></script>
-<script src="online-social.js?v=35"></script>
-<script src="online-vote.js?v=35"></script>
-<script src="online-cards.js?v=35"></script>
-<script src="online-board.js?v=35"></script>
-<script src="online-live.js?v=35"></script>
+<script src="data.js?v=36"></script>
+<script src="data-epice.js?v=36"></script>
+<script src="data-enigmes.js?v=36"></script>
+<script src="data-themes.js?v=36"></script>
+<script src="app.js?v=36"></script>
+<script src="games-boire.js?v=36"></script>
+<script src="soiree.js?v=36"></script>
+<script src="arcade.js?v=36"></script>
+<script src="online.js?v=36"></script>
+<script src="online-social.js?v=36"></script>
+<script src="online-vote.js?v=36"></script>
+<script src="online-cards.js?v=36"></script>
+<script src="online-board.js?v=36"></script>
+<script src="online-live.js?v=36"></script>
 </body>
 </html>
