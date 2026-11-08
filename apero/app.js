@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 42;
+const VERSION = 43;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -70,7 +70,8 @@ const themed = id => { const t = theme(); return !!t && (id === 'aov' ? !!(t.car
 function pool(key) {
   const src = D[key], tc = theme() && theme().cards[key];
   // pack à thème : ses cartes REMPLACENT les cartes normales ; mode épicé : idem avec les cartes épicées
-  const normal = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
+  // niveau 2 « Sans filtre » = ses cartes + celles du niveau 1
+  const normal = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2.concat(src.hot || []) : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
   // les packs « mix » ajoutent leurs cartes aux cartes normales (plus de variété) ; Famille reste à part
   const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft).concat(theme().mix ? normal : []) : normal;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
@@ -376,7 +377,7 @@ const rulesBody = () => `
             <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en haut de chaque jeu compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
             <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
             <h3>📺 Écran TV</h3><p>Facultatif. Pendant une partie en ligne, ouvrez <b>skelvo.fr/apero/tv</b> sur une TV connectée, une tablette ou un ordi, puis tapez le code de la partie. L'écran montre la partie en grand pour tout le monde, sans jouer et sans jamais dévoiler les cartes, dés, mots ou rôles secrets. Chaque joueur garde son téléphone.</p>
-            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
+            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack ajoute ses cartes à celles d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et des gages (le pack Famille, lui, les remplace pour rester tout public). Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
             <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
