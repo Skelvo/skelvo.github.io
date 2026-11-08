@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 36;
+const VERSION = 37;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -163,12 +163,45 @@ const nLabel = n => n >= 5 ? '5 et +' : String(n);
 
 let current = null;   // jeu en cours (objet avec render)
 
+/* Règles d'un jeu (fenêtre) + favoris */
+const normN = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’']/g, "'").replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim();
+function rulesFor(id) {
+  const g = G[id]; if (g.rules) return `<p>${g.rules}</p>`;
+  const d = document.createElement('div'); d.innerHTML = rulesBody();
+  const want = normN(g.name), hs = [...d.querySelectorAll('h3')];
+  const h = hs.find(h => { const sm = h.querySelector('small'); return !(sm && /en ligne/.test(sm.textContent)) && normN(h.textContent).includes(want); });
+  if (!h) return `<p>${esc(g.d)}.</p>`;
+  let out = '', n = h.nextElementSibling; while (n && n.tagName !== 'H3') { if (!/aucune donnée envoyée/.test(n.textContent)) out += n.outerHTML; n = n.nextElementSibling; }
+  return out;
+}
+const favs = () => store.get('favs', []);
+function showRules(id) {
+  if (!G[id]) return;
+  document.querySelector('.sipsheet')?.remove();
+  const w = document.createElement('div'); w.className = 'sipsheet';
+  const draw = () => {
+    const f = favs().includes(id);
+    w.innerHTML = `<div class="box rulesbox"><div class="sheethead"><b>${G[id].e} ${esc(G[id].name)}</b><button class="x" aria-label="Fermer">✕</button></div>
+      <div class="rtext">${rulesFor(id)}</div>
+      <button class="btn block favbtn ${f ? 'on' : ''}">${f ? '⭐ Dans tes favoris' : '☆ Ajouter aux favoris'}</button></div>`;
+    w.querySelector('.x').onclick = () => w.remove();
+    w.querySelector('.favbtn').onclick = () => { const l = favs(); store.set('favs', f ? l.filter(x => x !== id) : [id, ...l]); buzz(15); toast(f ? 'Retiré des favoris' : 'Ajouté aux favoris ⭐'); draw(); w.querySelector('.box').style.animation = 'none'; };
+  };
+  w.addEventListener('click', e => { if (e.target === w) w.remove(); });
+  draw(); document.body.appendChild(w);
+}
+
 function header(title, extra = '') {
   return `<div class="top"><button class="icon-btn" data-a="home" aria-label="Retour">←</button><h1>${esc(title)}</h1>${extra}</div>`;
 }
+let curId = null, lastCard = '';
 function view(html, after, keepScroll) {
   const y = window.scrollY;
   $app.innerHTML = html;
+  const top = $app.querySelector('.top');
+  if (curId && G[curId] && top) top.insertAdjacentHTML('beforeend', `<div class="tbtns">${S.players.length ? '<button class="icon-btn sm" data-a="sips" aria-label="Gorgées">🍻</button>' : ''}<button class="icon-btn sm" data-a="rules" aria-label="Règles">?</button></div>`);
+  const card = $app.querySelector('.stage .card');
+  if (card) { const t = card.textContent.replace(/\s+/g, ' '); if (t === lastCard) card.classList.add('still'); lastCard = t; } else lastCard = '';
   $app.querySelectorAll('[data-a]').forEach(el => el.addEventListener('click', onAction));
   after && after();
   window.scrollTo(0, keepScroll ? y : 0);
@@ -176,6 +209,8 @@ function view(html, after, keepScroll) {
 function onAction(e) {
   const el = e.currentTarget, a = el.dataset.a;
   if (a === 'home') return goHome();
+  if (a === 'rules') return showRules(curId);
+  if (a === 'sips') return APERO.openSips && APERO.openSips();
   if (current && current.on) current.on(a, el);
   else if (home.on) home.on(a, el);
 }
@@ -191,7 +226,7 @@ function openGame(id) {
 }
 function openPage(id) { history.pushState({ p: id }, '', '#' + id); start(id); }
 function start(id) {
-  clearTimers();
+  clearTimers(); curId = id; lastCard = '';
   if (current && current.leave) { try { current.leave(); } catch {} }
   current = makers[id]();
   keepAwake(!!G[id] || id === 'online');
@@ -202,7 +237,7 @@ function goHome() {
   if (current && current.confirmLeave && !confirm(current.confirmLeave)) return;
   if (history.state && (history.state.g || history.state.p)) history.back(); else showHome();
 }
-function showHome() { document.body.classList.remove('ingame'); clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
+function showHome() { curId = null; document.body.classList.remove('ingame'); clearTimers(); if (current && current.leave) current.leave(); current = null; keepAwake(false); home.render(); }
 window.addEventListener('popstate', e => { const st = e.state; if (st && st.p && makers[st.p]) start(st.p); else showHome(); });
 
 /* ================= Accueil ================= */
@@ -259,7 +294,8 @@ const home = {
     let list = Object.keys(G).filter(id => visible(id) && (home.cat === 'tous' || catOf(id) === home.cat));
     if (th) list.sort((a, b) => themed(b) - themed(a));
     const ok = list.filter(playable), later = list.filter(id => !playable(id));
-    const recent = store.get('recent', []).filter(id => G[id] && visible(id) && playable(id)).slice(0, 5);
+    const fv = favs().filter(id => G[id] && visible(id));
+    const recent = [...fv, ...store.get('recent', []).filter(id => !fv.includes(id))].filter(id => G[id] && visible(id) && playable(id)).slice(0, 8);
     const card = (id, off) => { const g = G[id];
       return `<button class="gcard${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
         <span class="ge">${g.e}</span><b>${g.name}</b><small>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</small>${th && themed(id) ? `<i class="gtag">${th.e}</i>` : ''}</button>`; };
@@ -290,7 +326,7 @@ const home = {
 
       <div class="cats">${[['tous', '✨', 'Tout'], ...cats].map(([k, e, nm]) => `<button class="${home.cat === k ? 'on' : ''}" data-a="cat" data-v="${k}">${e} ${nm}</button>`).join('')}</div>
       ${S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux avec des cartes trash.</p>' : ''}
-      ${recent.length && home.cat === 'tous' ? `<p class="glater" style="margin-top:4px">🕘 Récemment</p><div class="rrow">${recent.map(id => `<button class="rcard" style="--g:${G[id].g}" data-a="game" data-id="${id}"><span>${G[id].e}</span><b>${G[id].name}</b></button>`).join('')}</div><p class="glater">Tous les jeux</p>` : ''}
+      ${recent.length && home.cat === 'tous' ? `<p class="glater" style="margin-top:4px">${fv.length ? '⭐ Favoris et récents' : '🕘 Récemment'}</p><div class="rrow">${recent.map(id => `<button class="rcard" style="--g:${G[id].g}" data-a="game" data-id="${id}">${fv.includes(id) ? '<i>⭐</i>' : ''}<span>${G[id].e}</span><b>${G[id].name}</b></button>`).join('')}</div><p class="glater">Tous les jeux</p>` : ''}
       <div class="ggrid">${ok.map(id => card(id)).join('')}</div>
       ${later.length ? `<p class="glater">Avec plus de joueurs</p><div class="ggrid">${later.map(id => card(id, true)).join('')}</div>` : ''}
 
@@ -332,6 +368,55 @@ function rotation() {
 }
 
 /* ================= Fabriques de jeux ================= */
+const rulesBody = () => `
+          <div class="rules">
+            <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
+            <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en haut de chaque jeu compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
+            <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
+            <h3>📺 Écran TV</h3><p>Pendant une partie en ligne, ouvrez l'appli sur une TV connectée, une tablette ou un ordi : Jouer en ligne › tapez le code › « 📺 Afficher sur la TV ». L'écran montre la partie en grand pour tout le monde, sans jamais dévoiler les cartes, dés, mots ou rôles secrets.</p>
+            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
+            <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
+            <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
+            <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
+            <h3>🔮 Tu me connais ? <small>2-4 joueurs</small></h3><p>Le téléphone pose une question à un joueur, qui répond en secret. Les autres annoncent à voix haute ce qu'il a répondu selon eux. Un point par bonne réponse.</p>
+            <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
+            <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
+            <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
+            <h3>🎭 Le Bluff <small>en ligne · 3-10</small></h3><p>Un mot très rare s'affiche. Chacun invente une fausse définition, puis toutes les définitions (la vraie au milieu) sont mélangées : votez pour celle que vous croyez vraie. +2 si tu trouves la vraie, +1 pour chaque joueur piégé par la tienne.</p>
+            <h3>💬 Le Mot de la fin <small>en ligne · 3-12</small></h3><p>Une phrase à compléter : chacun écrit sa réponse la plus drôle, elles s'affichent sans les noms et on vote pour la meilleure (pas la sienne !). Un point par vote, bonus si tout le monde l'a choisie.</p>
+            <h3>🕵️‍♀️ Qui a écrit ça ? <small>en ligne · 3-12</small></h3><p>Une question perso : chacun répond en secret. Les réponses s'affichent une par une, sans nom, et tout le monde vote pour l'auteur. Un point si tu le reconnais ; l'auteur marque un point pour chaque joueur qu'il a trompé.</p>
+            <h3>👉 🔮 🧠 Qui pourrait…, Tu me connais ?, Synchro <small>en ligne</small></h3><p>Les mêmes jeux qu'en local, mais chacun vote ou répond en secret sur son téléphone, et tout est révélé en même temps.</p>
+            <h3>📏 Estimations <small>en ligne · 2-16</small></h3><p>Une question chiffrée (« Combien d'os dans le corps humain ? ») : chacun donne son estimation, le plus proche marque 3 points, puis 2 et 1.</p>
+            <h3>🐺 Loups-garous <small>en ligne · 5-16 joueurs</small></h3><p>Chacun reçoit un rôle secret : loup-garou, voyante, docteur ou villageois. La nuit, tout le monde touche son écran (les loups choisissent une victime, la voyante espionne, le docteur protège, les villageois font semblant). Le jour, on découvre la victime, on débat et on vote pour éliminer un suspect. Le village gagne s'il élimine tous les loups ; les loups gagnent s'ils sont aussi nombreux que les autres.</p>
+            <h3>📞 Le Téléphone dessiné <small>en ligne · 3-10 joueurs</small></h3><p>Chacun écrit une phrase. Elle passe au voisin, qui la dessine ; le suivant devine le dessin par écrit ; le suivant redessine sa devinette… À la fin, on fait défiler chaque chaîne pour voir comment la phrase s'est transformée.</p>
+            <h3>🎨 Le Dessin <small>en ligne · 2-10 joueurs</small></h3><p>Chacun son tour, un joueur reçoit un mot secret et le dessine sur son téléphone : le dessin apparaît en direct chez les autres, qui tapent leurs propositions. 80 secondes par dessin, la première lettre s'affiche à mi-temps. Trouver vite rapporte 3, 2 puis 1 point ; le dessinateur gagne 1 point par joueur qui trouve.</p>
+            <h3>📝 Le Petit Bac <small>en ligne · 2-10 joueurs</small></h3><p>Une lettre et 6 catégories tirées au hasard. Chacun remplit sur son téléphone ; le premier qui a fini appuie sur STOP et les autres ont 10 secondes. Réponse valable : 10 points, 5 si quelqu'un a la même. L'hôte peut refuser une réponse douteuse.</p>
+            <h3>🔔 Quiz buzzer <small>en ligne · 2-12 joueurs</small></h3><p>12 questions de culture générale s'affichent sur tous les téléphones. Le premier qui appuie sur BUZZ a 8 secondes pour répondre. Faux ? Il est bloqué et les autres peuvent buzzer. Un point par bonne réponse.</p>
+            <h3>⚡ Courses en direct <small>en ligne</small></h3><p><b>Course de taps</b> : le plus de taps en 10 secondes, classement en direct. <b>Réflexes en groupe</b> : touche ton écran dès qu'il devient vert ; le plus rapide marque, le plus lent (ou celui qui touche trop tôt) a perdu. <b>Mots cachés</b> : la même grille sur tous les téléphones, touche la première puis la dernière lettre d'un mot ; le premier qui le trouve marque (2 points pour les mots de 7 lettres et plus).</p>
+            <h3>♟️ Plateau en ligne <small>2 joueurs, les autres regardent</small></h3><p>Bataille navale, Aligne 4, Morpion géant (5 alignés sur 15×15), Dames (règles internationales : prise obligatoire et majoritaire, dames volantes) et Échecs (règles complètes). Avec plus de 2 joueurs : « le gagnant reste », le perdant laisse sa place au suivant de la file. On peut abandonner ou proposer le match nul.</p>
+            <h3>♠️ Poker <small>en ligne · 2-8 · jetons fictifs</small></h3><p>Texas Hold'em : 2 cartes cachées chacun, 5 cartes communes (flop, turn, river). Blindes 10/20, 1000 jetons au départ. Parole, suivre, relancer ou se coucher ; à l'abattage la meilleure main de 5 cartes gagne (pots annexes gérés pour les tapis). L'hôte peut recaver les joueurs éliminés.</p>
+            <h3>🎴 8 américain <small>en ligne · 2-8</small></h3><p>Pose une carte de la même couleur ou de la même valeur que celle du dessus. Le 8 se pose sur tout et change la couleur ; le 2 fait piocher 2 au suivant (cumulable avec un autre 2) ; le Valet fait passer le tour ; l'As change le sens. Pas de carte jouable ? Pioche. Le premier qui vide sa main gagne.</p>
+            <h3>🂮 Belote <small>en ligne · 4 joueurs</small></h3><p>Deux équipes (partenaires face à face), 32 cartes. Enchères en deux tours sur la carte retournée. Il faut fournir la couleur demandée ; sinon couper (sauf si ton partenaire est maître) et monter à l'atout si possible. Atout : Valet 20, 9 14, As 11, 10 10, Roi 4, Dame 3. Belote-rebelote +20, dix de der +10, capot 252. Si l'équipe qui a pris fait moins que l'autre, elle est « dedans » : 162 pour la défense. Partie en 501 (sans annonces).</p>
+            <h3>🂡 Blackjack <small>en ligne · 1-7 · jetons fictifs</small></h3><p>Tout le monde joue en même temps contre la banque. Approche-toi de 21 sans dépasser : Carte, Rester ou Doubler. Un Blackjack (As + figure) paie 3 pour 2 ; la banque tire jusqu'à 17.</p>
+            <h3>🎲 Le Menteur <small>en ligne · 2-8 joueurs</small></h3><p>Chacun a 5 dés cachés sur son téléphone. À tour de rôle, on annonce combien de dés d'une face il y a au total sur la table (« au moins 4 × 5 ») en surenchérissant à chaque fois, ou on crie « Menteur ! ». On révèle : si l'annonce était vraie, l'accusateur perd un dé, sinon c'est le menteur. Le dernier à avoir des dés gagne.</p>
+            <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
+            <h3>💣 La Bombe</h3><p>Une catégorie s'affiche. On allume la mèche, on donne un mot et on passe le téléphone. La bombe explose au hasard : celui qui la tient a perdu.</p>
+            <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
+            <h3>⚖️ Tu préfères ?</h3><p>Deux choix, tout le monde vote à main levée en même temps. La minorité boit. Il faut justifier les choix bizarres.</p>
+            <h3>⏱️ Fais deviner</h3><p>Un joueur fait deviner un max de mots en un temps limité, en parlant, en mimant ou avec un seul mot. Il marque un point par mot trouvé.</p>
+            <h3>👆 Le Doigt élu</h3><p>Tout le monde pose un doigt sur l'écran. Quand plus personne ne bouge, l'appli en choisit un au hasard… ou forme deux équipes. Pas besoin d'entrer les prénoms.</p>
+            <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
+            <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
+            <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
+            <h3>🧩 Énigmes</h3><p>Une devinette, une charade ou un casse-tête : vous avez 60 secondes pour trouver ensemble. Un indice est disponible si vous bloquez. Celui qui trouve marque un point (et l'équipe aussi).</p>
+            <h3>👑 Le Jeu du Roi</h3><p>Chacun son tour tire une carte : As = cascade, 2 = pour toi, 3 = pour moi, 4 = le sol, 5 = la main, 6 = je n'ai jamais, 7 = le ciel, 8 = partenaire de boisson, 9 = rimes, 10 = catégories, Valet = nouvelle règle, Dame = maître des questions, Roi = on remplit la coupe… et le 4e Roi la boit.</p>
+            <h3>🔺 La Pyramide</h3><p>Chacun mémorise 4 cartes pendant 10 secondes. On retourne ensuite la pyramide de 15 cartes : si tu as (ou prétends avoir) la même valeur, tu donnes des gorgées (1 en bas, 5 en haut). La cible peut crier « Menteur ! » : si tu bluffais, tu bois le double, sinon c'est elle.</p>
+            <h3>🚌 Le Bus</h3><p>Chacun répond à 4 questions sur des cartes tirées (rouge ou noir, plus haut ou plus bas, entre ou à l'extérieur, quelle couleur) ; chaque erreur coûte 1, 2, 3 puis 4 gorgées. Celui qui a fait le plus d'erreurs prend le bus : 5 cartes à passer en devinant plus haut ou plus bas, et on repart de zéro à chaque erreur.</p>
+            <h3>🎲 Le Yams</h3><p>Chacun son tour : 3 lancers maximum, on garde les dés qu'on veut entre deux lancers, puis on inscrit le résultat dans une case (une seule fois par case). Brelan et Carré = total des dés, Full = 25, Petite suite = 30, Grande suite = 40, Yams = 50. Bonus de 35 si le haut de la grille atteint 63.</p>
+            <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
+            <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
+          </div>`;
+
 const makers = {
 
   /* ---------- Action ou Vérité ---------- */
@@ -1261,40 +1346,45 @@ const makers = {
 
   /* ---------- La Roue ---------- */
   roue() {
-    const g = G.roue; let name = '?', spinning = false, final = false, gage = '';
-    return {
+    const g = G.roue, names = S.players.slice(), N = names.length, A = 360 / N;
+    const COLORS = ['#ff5c8a', '#7b5cff', '#3aa0ff', '#3ddc97', '#ffb547', '#d65cff', '#ff8a3d', '#28c7d9', '#e94560', '#f2c14e'];
+    let rot = 0, spinning = false, final = null, gage = '';
+    const pt = (deg, r) => { const t = (deg - 90) * Math.PI / 180; return [100 + r * Math.cos(t), 100 + r * Math.sin(t)]; };
+    const wheel = () => names.map((p, i) => {
+      const [x0, y0] = pt(i * A, 98), [x1, y1] = pt((i + 1) * A, 98), mid = (i + .5) * A, [tx, ty] = pt(mid, 64);
+      const path = N === 1 ? `<circle cx="100" cy="100" r="98" fill="${COLORS[0]}"/>` : `<path d="M100 100 L${x0} ${y0} A98 98 0 ${A > 180 ? 1 : 0} 1 ${x1} ${y1} Z" fill="${COLORS[i % COLORS.length]}" stroke="rgba(0,0,0,.25)" stroke-width="1"/>`;
+      const fs = Math.max(8, Math.min(15, 70 / N + 5));
+      return `${path}<g transform="translate(${tx} ${ty}) rotate(${mid})"><text text-anchor="middle" y="-2" font-size="${fs * 1.3}">${avatar(p)}</text><text text-anchor="middle" y="${fs + 2}" font-size="${fs}" font-weight="800" fill="#fff">${esc(p.length > 9 ? p.slice(0, 8) + '…' : p)}</text></g>`;
+    }).join('');
+    const self = {
       render() {
         view(`${header(g.name)}
           <div class="stage">
-            <div class="card" style="--g:${g.g}">
-              <div class="tag">Le hasard a choisi</div>
-              <div class="wheel-name ${final ? 'final' : ''}" id="wn">${esc(name)}</div>
-              ${final ? `<div class="sub"><b>${esc(gage)}</b></div>` : ''}
+            <div class="wheelbox">
+              <div class="wpin">▼</div>
+              <svg id="wheel" viewBox="0 0 200 200" style="transform:rotate(${rot}deg)">${wheel()}<circle cx="100" cy="100" r="16" fill="#1a1430" stroke="#fff" stroke-width="3"/></svg>
             </div>
+            <div class="wres ${final ? 'show' : ''}">${final ? `<b>${avatar(final)} ${esc(final)}</b>${gage ? `<span>${esc(gage)}</span>` : ''}` : '<span>Qui va être désigné·e ?</span>'}</div>
             <div class="row">
-              <button class="btn" data-a="mode-gage" ${spinning ? 'disabled' : ''}>🎲 + Gage</button>
+              <button class="btn" data-a="mode-gage" ${spinning ? 'disabled' : ''}>🎲 Avec un gage</button>
               <button class="btn primary" data-a="spin" ${spinning ? 'disabled' : ''}>Tourner</button>
             </div>
-            <p class="hint">Pour savoir qui commence, qui ressert, ou qui fait le gage.</p>
           </div>`);
       },
       on(a) {
-        if (a !== 'spin' && a !== 'mode-gage') return;
-        const withGage = a === 'mode-gage';
-        spinning = true; final = false; this.render();
-        const target = pick(S.players), steps = 22 + rnd(8); let i = 0, list = shuffle(S.players);
-        const step = () => {
-          i++;
-          const el = document.getElementById('wn');
-          name = i >= steps ? target : list[i % list.length];
-          if (el) el.textContent = name;
-          beep(500 + i * 25, .03, 'triangle', .1);
-          if (i >= steps) { spinning = false; final = true; gage = withGage ? pick(gages()) : ''; buzz(80); return this.render(); }
-          later(step, 40 + Math.pow(i / steps, 3) * 380);
-        };
-        step();
+        if ((a !== 'spin' && a !== 'mode-gage') || spinning) return;
+        const withGage = a === 'mode-gage', t = Math.floor(Math.random() * N);
+        const want = (((-(t + .5) * A + (Math.random() - .5) * .7 * A) % 360) + 360) % 360;
+        rot = rot - (rot % 360) + 360 * 5 + want;
+        spinning = true; final = null; gage = ''; self.render();
+        const el = document.getElementById('wheel');
+        el.style.transform = `rotate(${rot - 360 * 5}deg)`; el.getBoundingClientRect();
+        el.style.transition = 'transform 4.2s cubic-bezier(.15,.75,.1,1)'; el.style.transform = `rotate(${rot}deg)`;
+        let k = 0; const tick = () => { if (!spinning) return; k++; beep(600 + Math.random() * 200, .02, 'triangle', .06); later(tick, 40 + k * k * 1.6); }; tick();
+        later(() => { spinning = false; final = names[t]; gage = withGage ? pick(gages()) : ''; buzz(80); beep(1200, .15, 'sine'); self.render(); }, 4300);
       }
     };
+    return self;
   },
 
   /* ---------- Mes cartes ---------- */
@@ -1344,54 +1434,7 @@ const makers = {
   regles() {
     return {
       render() {
-        view(`${header('Règles')}
-          <div class="rules">
-            <p>Ajoute tous les joueurs sur l'accueil, puis fais tourner le téléphone. Active « Avec alcool » pour jouer aux gorgées, ou désactive-le pour des gages à la place. Buvez avec modération, et de l'eau entre deux verres 💧</p>
-            <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en bas à droite compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
-            <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
-            <h3>📺 Écran TV</h3><p>Pendant une partie en ligne, ouvrez l'appli sur une TV connectée, une tablette ou un ordi : Jouer en ligne › tapez le code › « 📺 Afficher sur la TV ». L'écran montre la partie en grand pour tout le monde, sans jamais dévoiler les cartes, dés, mots ou rôles secrets.</p>
-            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack remplace les cartes d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et les gages. Les jeux concernés sont affichés en haut de l'accueil.</p>
-            <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
-            <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
-            <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
-            <h3>🔮 Tu me connais ? <small>2-4 joueurs</small></h3><p>Le téléphone pose une question à un joueur, qui répond en secret. Les autres annoncent à voix haute ce qu'il a répondu selon eux. Un point par bonne réponse.</p>
-            <h3>🧠 Synchro <small>2-4 joueurs</small></h3><p>Un thème s'affiche. À « 3, 2, 1 », tout le monde dit un mot en même temps. Le but : dire le même mot ! Jeu en équipe, 10 manches pour faire le meilleur score.</p>
-            <h3>📡 Jouer en ligne</h3><p>Chacun sur son téléphone : un joueur crée la partie, les autres entrent le code (ou ouvrent le lien d'invitation). Il faut internet sur chaque téléphone, le même wifi c'est l'idéal. Le téléphone qui a créé la partie doit garder l'appli ouverte.</p>
-            <h3>🃏 Président <small>en ligne · 3-8 joueurs</small></h3><p>Toutes les cartes sont distribuées. Le premier joueur pose 1 à 4 cartes de même valeur ; les suivants doivent poser le même nombre de cartes, de valeur égale ou plus forte, ou passer. Ordre : 3 (la plus faible) … 10, Valet, Dame, Roi, As, 2 (la plus forte). Un 2 ferme le pli. Quand tout le monde passe, celui qui a joué en dernier repart. Le premier à vider sa main est Président, le dernier Trou du cul : à la manche suivante, il donne ses 2 meilleures cartes au Président.</p>
-            <h3>🎭 Le Bluff <small>en ligne · 3-10</small></h3><p>Un mot très rare s'affiche. Chacun invente une fausse définition, puis toutes les définitions (la vraie au milieu) sont mélangées : votez pour celle que vous croyez vraie. +2 si tu trouves la vraie, +1 pour chaque joueur piégé par la tienne.</p>
-            <h3>💬 Le Mot de la fin <small>en ligne · 3-12</small></h3><p>Une phrase à compléter : chacun écrit sa réponse la plus drôle, elles s'affichent sans les noms et on vote pour la meilleure (pas la sienne !). Un point par vote, bonus si tout le monde l'a choisie.</p>
-            <h3>🕵️‍♀️ Qui a écrit ça ? <small>en ligne · 3-12</small></h3><p>Une question perso : chacun répond en secret. Les réponses s'affichent une par une, sans nom, et tout le monde vote pour l'auteur. Un point si tu le reconnais ; l'auteur marque un point pour chaque joueur qu'il a trompé.</p>
-            <h3>👉 🔮 🧠 Qui pourrait…, Tu me connais ?, Synchro <small>en ligne</small></h3><p>Les mêmes jeux qu'en local, mais chacun vote ou répond en secret sur son téléphone, et tout est révélé en même temps.</p>
-            <h3>📏 Estimations <small>en ligne · 2-16</small></h3><p>Une question chiffrée (« Combien d'os dans le corps humain ? ») : chacun donne son estimation, le plus proche marque 3 points, puis 2 et 1.</p>
-            <h3>🐺 Loups-garous <small>en ligne · 5-16 joueurs</small></h3><p>Chacun reçoit un rôle secret : loup-garou, voyante, docteur ou villageois. La nuit, tout le monde touche son écran (les loups choisissent une victime, la voyante espionne, le docteur protège, les villageois font semblant). Le jour, on découvre la victime, on débat et on vote pour éliminer un suspect. Le village gagne s'il élimine tous les loups ; les loups gagnent s'ils sont aussi nombreux que les autres.</p>
-            <h3>📞 Le Téléphone dessiné <small>en ligne · 3-10 joueurs</small></h3><p>Chacun écrit une phrase. Elle passe au voisin, qui la dessine ; le suivant devine le dessin par écrit ; le suivant redessine sa devinette… À la fin, on fait défiler chaque chaîne pour voir comment la phrase s'est transformée.</p>
-            <h3>🎨 Le Dessin <small>en ligne · 2-10 joueurs</small></h3><p>Chacun son tour, un joueur reçoit un mot secret et le dessine sur son téléphone : le dessin apparaît en direct chez les autres, qui tapent leurs propositions. 80 secondes par dessin, la première lettre s'affiche à mi-temps. Trouver vite rapporte 3, 2 puis 1 point ; le dessinateur gagne 1 point par joueur qui trouve.</p>
-            <h3>📝 Le Petit Bac <small>en ligne · 2-10 joueurs</small></h3><p>Une lettre et 6 catégories tirées au hasard. Chacun remplit sur son téléphone ; le premier qui a fini appuie sur STOP et les autres ont 10 secondes. Réponse valable : 10 points, 5 si quelqu'un a la même. L'hôte peut refuser une réponse douteuse.</p>
-            <h3>🔔 Quiz buzzer <small>en ligne · 2-12 joueurs</small></h3><p>12 questions de culture générale s'affichent sur tous les téléphones. Le premier qui appuie sur BUZZ a 8 secondes pour répondre. Faux ? Il est bloqué et les autres peuvent buzzer. Un point par bonne réponse.</p>
-            <h3>⚡ Courses en direct <small>en ligne</small></h3><p><b>Course de taps</b> : le plus de taps en 10 secondes, classement en direct. <b>Réflexes en groupe</b> : touche ton écran dès qu'il devient vert ; le plus rapide marque, le plus lent (ou celui qui touche trop tôt) a perdu. <b>Mots cachés</b> : la même grille sur tous les téléphones, touche la première puis la dernière lettre d'un mot ; le premier qui le trouve marque (2 points pour les mots de 7 lettres et plus).</p>
-            <h3>♟️ Plateau en ligne <small>2 joueurs, les autres regardent</small></h3><p>Bataille navale, Aligne 4, Morpion géant (5 alignés sur 15×15), Dames (règles internationales : prise obligatoire et majoritaire, dames volantes) et Échecs (règles complètes). Avec plus de 2 joueurs : « le gagnant reste », le perdant laisse sa place au suivant de la file. On peut abandonner ou proposer le match nul.</p>
-            <h3>♠️ Poker <small>en ligne · 2-8 · jetons fictifs</small></h3><p>Texas Hold'em : 2 cartes cachées chacun, 5 cartes communes (flop, turn, river). Blindes 10/20, 1000 jetons au départ. Parole, suivre, relancer ou se coucher ; à l'abattage la meilleure main de 5 cartes gagne (pots annexes gérés pour les tapis). L'hôte peut recaver les joueurs éliminés.</p>
-            <h3>🎴 8 américain <small>en ligne · 2-8</small></h3><p>Pose une carte de la même couleur ou de la même valeur que celle du dessus. Le 8 se pose sur tout et change la couleur ; le 2 fait piocher 2 au suivant (cumulable avec un autre 2) ; le Valet fait passer le tour ; l'As change le sens. Pas de carte jouable ? Pioche. Le premier qui vide sa main gagne.</p>
-            <h3>🂮 Belote <small>en ligne · 4 joueurs</small></h3><p>Deux équipes (partenaires face à face), 32 cartes. Enchères en deux tours sur la carte retournée. Il faut fournir la couleur demandée ; sinon couper (sauf si ton partenaire est maître) et monter à l'atout si possible. Atout : Valet 20, 9 14, As 11, 10 10, Roi 4, Dame 3. Belote-rebelote +20, dix de der +10, capot 252. Si l'équipe qui a pris fait moins que l'autre, elle est « dedans » : 162 pour la défense. Partie en 501 (sans annonces).</p>
-            <h3>🂡 Blackjack <small>en ligne · 1-7 · jetons fictifs</small></h3><p>Tout le monde joue en même temps contre la banque. Approche-toi de 21 sans dépasser : Carte, Rester ou Doubler. Un Blackjack (As + figure) paie 3 pour 2 ; la banque tire jusqu'à 17.</p>
-            <h3>🎲 Le Menteur <small>en ligne · 2-8 joueurs</small></h3><p>Chacun a 5 dés cachés sur son téléphone. À tour de rôle, on annonce combien de dés d'une face il y a au total sur la table (« au moins 4 × 5 ») en surenchérissant à chaque fois, ou on crie « Menteur ! ». On révèle : si l'annonce était vraie, l'accusateur perd un dé, sinon c'est le menteur. Le dernier à avoir des dés gagne.</p>
-            <h3>🕵️ L'Imposteur</h3><p>Chacun regarde son mot en secret. Tour à tour, chacun dit un mot qui s'y rapporte, sans être trop évident. Après un ou deux tours, on vote pour éliminer l'imposteur. En version « mot proche », l'imposteur ne sait même pas qu'il l'est !</p>
-            <h3>💣 La Bombe</h3><p>Une catégorie s'affiche. On allume la mèche, on donne un mot et on passe le téléphone. La bombe explose au hasard : celui qui la tient a perdu.</p>
-            <h3>👉 Qui pourrait…</h3><p>On lit la phrase, compte à rebours, et tout le monde pointe quelqu'un en même temps. Le plus désigné boit autant de gorgées que de doigts pointés sur lui.</p>
-            <h3>⚖️ Tu préfères ?</h3><p>Deux choix, tout le monde vote à main levée en même temps. La minorité boit. Il faut justifier les choix bizarres.</p>
-            <h3>⏱️ Fais deviner</h3><p>Un joueur fait deviner un max de mots en un temps limité, en parlant, en mimant ou avec un seul mot. Il marque un point par mot trouvé.</p>
-            <h3>👆 Le Doigt élu</h3><p>Tout le monde pose un doigt sur l'écran. Quand plus personne ne bouge, l'appli en choisit un au hasard… ou forme deux équipes. Pas besoin d'entrer les prénoms.</p>
-            <h3>⚡ Duel de réflexes <small>2 joueurs</small></h3><p>Posez le téléphone à plat entre vous deux : chacun a sa moitié d'écran. Tapez dès qu'elle devient verte. Taper trop tôt (ou sur le piège jaune) donne le point à l'adversaire. Premier à 5 !</p>
-            <h3>🫳 Main sûre</h3><p>Chacun son tour, tiens le téléphone à plat dans ta main et garde la bille dans le cercle, qui rétrécit. Le plus long temps gagne. Sur iPhone, accepte l'accès aux capteurs de mouvement.</p>
-            <h3>🫨 Secoue-le</h3><p>Chacun son tour, secoue le téléphone le plus fort possible pendant 5 secondes. Tiens-le bien !</p>
-            <h3>🧩 Énigmes</h3><p>Une devinette, une charade ou un casse-tête : vous avez 60 secondes pour trouver ensemble. Un indice est disponible si vous bloquez. Celui qui trouve marque un point (et l'équipe aussi).</p>
-            <h3>👑 Le Jeu du Roi</h3><p>Chacun son tour tire une carte : As = cascade, 2 = pour toi, 3 = pour moi, 4 = le sol, 5 = la main, 6 = je n'ai jamais, 7 = le ciel, 8 = partenaire de boisson, 9 = rimes, 10 = catégories, Valet = nouvelle règle, Dame = maître des questions, Roi = on remplit la coupe… et le 4e Roi la boit.</p>
-            <h3>🔺 La Pyramide</h3><p>Chacun mémorise 4 cartes pendant 10 secondes. On retourne ensuite la pyramide de 15 cartes : si tu as (ou prétends avoir) la même valeur, tu donnes des gorgées (1 en bas, 5 en haut). La cible peut crier « Menteur ! » : si tu bluffais, tu bois le double, sinon c'est elle.</p>
-            <h3>🚌 Le Bus</h3><p>Chacun répond à 4 questions sur des cartes tirées (rouge ou noir, plus haut ou plus bas, entre ou à l'extérieur, quelle couleur) ; chaque erreur coûte 1, 2, 3 puis 4 gorgées. Celui qui a fait le plus d'erreurs prend le bus : 5 cartes à passer en devinant plus haut ou plus bas, et on repart de zéro à chaque erreur.</p>
-            <h3>🎲 Le Yams</h3><p>Chacun son tour : 3 lancers maximum, on garde les dés qu'on veut entre deux lancers, puis on inscrit le résultat dans une case (une seule fois par case). Brelan et Carré = total des dés, Full = 25, Petite suite = 30, Grande suite = 40, Yams = 50. Bonus de 35 si le haut de la grille atteint 63.</p>
-            <h3>🎡 La Roue</h3><p>Le hasard désigne un joueur, avec ou sans gage. Pratique pour savoir qui commence… ou qui va chercher les glaçons.</p>
-            <p style="margin-top:22px">Tout reste sur ton téléphone : aucune donnée envoyée, aucun compte, aucune pub.</p>
-          </div>`);
+        view(`${header('Règles')}${rulesBody()}`);
       }
     };
   }
@@ -1587,7 +1630,7 @@ makers.bienvenue = () => {
             <p><span>✨</span><b>On joue à quoi ?</b> L'appli vous propose des jeux selon votre humeur.</p>
             <p><span>🎲</span><b>Soirée auto</b> enchaîne les jeux au hasard avec un classement.</p>
             <p><span>📡</span><b>En ligne</b> : chacun joue sur son téléphone.</p>
-            <p><span>🍻</span>Pendant un jeu, le bouton en bas à droite compte les gorgées.</p>
+            <p><span>❓</span>Dans chaque jeu, <b>?</b> rappelle les règles et <b>🍻</b> compte les gorgées.</p>
           </div>
           <button class="btn primary big block" data-a="obdone">Voir les jeux</button>
         </div>`);

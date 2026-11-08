@@ -709,6 +709,7 @@ Object.assign(A.G, {
   ping:    { arcade: 1, duel: 1, name: 'Ping', e: '🏓', d: 'Tennis de table à deux, sur l’écran', g: 'linear-gradient(150deg,#2fbf71,#0e6a4a)', fit: 'bboo', free: true, isNew: true },
   tir:     { arcade: 1, duel: 1, name: 'Tir rapide', e: '🎯', d: 'Le plus rapide sur sa cible', g: 'linear-gradient(150deg,#ff5f6d,#ffc371)', fit: 'bboo', free: true, isNew: true }
 });
+Object.entries({ ...SOLO, ...DUEL }).forEach(([id, o]) => { A.G[id].rules = o.rules; });
 Object.entries(SOLO).forEach(([id, o]) => A.makers[id] = () => Solo(id, o));
 Object.entries(DUEL).forEach(([id, o]) => A.makers[id] = () => Duel(id, o));
 })();

@@ -25,10 +25,7 @@ const top = o => { const r = Object.entries(o).filter(([, v]) => v > 0).sort((a,
 const who = p => `${A.avatar(p)} ${esc(p)}`;
 
 /* ---------- Bouton flottant 🍻 : ajouter des gorgées pendant un jeu ---------- */
-const fab = document.createElement('button');
-fab.className = 'sipfab'; fab.setAttribute('aria-label', 'Compteur de gorgées'); fab.textContent = '🍻';
-document.body.appendChild(fab);
-fab.addEventListener('click', openSheet);
+A.openSips = openSheet;
 function openSheet() {
   const old = document.querySelector('.sipsheet'); if (old) old.remove();
   const wrap = document.createElement('div'); wrap.className = 'sipsheet';
@@ -36,7 +33,7 @@ function openSheet() {
     wrap.innerHTML = `<div class="box">
       <div class="sheethead"><b>${S.drinks ? '🍻 Gorgées de la soirée' : '⚠️ Pénalités de la soirée'}</b><button class="x" aria-label="Fermer">✕</button></div>
       ${S.players.map(p => `<div class="siprow"><span>${who(p)}</span><button data-p="${esc(p)}" data-n="-1">−</button><b>${N.sips[p] || 0}</b><button data-p="${esc(p)}" data-n="1">+1</button><button data-p="${esc(p)}" data-n="3">+3</button></div>`).join('')}
-      <p class="hint" style="font-size:.8rem;margin-top:8px">Le compteur suit toute la soirée : retrouve les stats dans 📊 Soirée.</p>
+      <p class="hint" style="font-size:.8rem;margin-top:8px">Le compteur suit toute la soirée : retrouve les stats dans 📊 Stats.</p>
     </div>`;
     wrap.querySelector('.x').onclick = () => wrap.remove();
     wrap.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { A.night.sip(b.dataset.p, +b.dataset.n); buzz(10); b.parentElement.querySelector('b').textContent = N.sips[b.dataset.p] || 0; });
