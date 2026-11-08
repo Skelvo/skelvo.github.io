@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 35;
+const VERSION = 36;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -186,6 +186,7 @@ function openGame(id) {
   const m = minPlayers(id);
   if (!g.free && S.players.length < m) { toast(`${g.name} se joue à partir de ${m} joueurs 🙂`); document.querySelector('#pname')?.focus(); return; }
   history.pushState({ g: id }, '', '#' + id);
+  store.set('recent', [id, ...store.get('recent', []).filter(x => x !== id)].slice(0, 6));
   start(id);
 }
 function openPage(id) { history.pushState({ p: id }, '', '#' + id); start(id); }
@@ -212,6 +213,14 @@ const CATS = [
   ['tete', '🧠', 'Réflexion', ['synchro', 'enigmes', 'yams']],
   ['reflexes', '⚡', 'Réflexes', ['duel', 'main', 'secoue']],
   ['arcade', '🕹️', 'Arcade', []]
+];
+/* « On joue à quoi ? » : envies → jeux */
+const MOODS = [
+  ['rire', '😂', 'Délire et fous rires', 'Mimes, bluff, chaos', ['mime', 'bombe', 'imposteur', 'qui', 'doigt', 'roue', 'juge', 'hockey', 'tir']],
+  ['parler', '🗣️', 'Se découvrir', 'Questions, secrets, confidences', ['aov', 'jamais', 'preferes', 'connais', 'qui', 'juge']],
+  ['tete', '🧠', 'Réfléchir ensemble', 'Énigmes, mots, stratégie', ['synchro', 'enigmes', 'imposteur', 'yams', 'connais']],
+  ['bouger', '⚡', 'Réflexes et adresse', 'Le plus rapide gagne', ['duel', 'main', 'secoue', 'tour', 'sprint', 'lancer', 'hockey', 'ping', 'tir', 'briques', 'esquive', 'serpent']],
+  ['boire', '🍻', 'Faire boire', 'Cartes et règles à boire', ['roi', 'pyramide', 'bus', 'jamais', 'doigt', 'roue']]
 ];
 const catOf = id => G[id].arcade ? 'arcade' : (CATS.find(c => c[3].includes(id)) || CATS[0])[0];
 
@@ -250,6 +259,7 @@ const home = {
     let list = Object.keys(G).filter(id => visible(id) && (home.cat === 'tous' || catOf(id) === home.cat));
     if (th) list.sort((a, b) => themed(b) - themed(a));
     const ok = list.filter(playable), later = list.filter(id => !playable(id));
+    const recent = store.get('recent', []).filter(id => G[id] && visible(id) && playable(id)).slice(0, 5);
     const card = (id, off) => { const g = G[id];
       return `<button class="gcard${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
         <span class="ge">${g.e}</span><b>${g.name}</b><small>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</small>${th && themed(id) ? `<i class="gtag">${th.e}</i>` : ''}</button>`; };
@@ -272,6 +282,7 @@ const home = {
         </form>
       </div>
 
+      <button class="qpick" data-a="page" data-id="picker"><span>✨</span><span class="qt"><b>On joue à quoi ?</b><small>2 questions, 3 idées de jeux</small></span><i>›</i></button>
       <div class="quick">
         <button class="qtile" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>Soirée auto</b><small>L'appli choisit les jeux</small></button>
         <button class="qtile" style="--g:linear-gradient(150deg,#3aa0ff,#7b5cff)" data-a="page" data-id="online"><span>📡</span><b>En ligne</b><small>Chacun son téléphone</small></button>
@@ -279,6 +290,7 @@ const home = {
 
       <div class="cats">${[['tous', '✨', 'Tout'], ...cats].map(([k, e, nm]) => `<button class="${home.cat === k ? 'on' : ''}" data-a="cat" data-v="${k}">${e} ${nm}</button>`).join('')}</div>
       ${S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux avec des cartes trash.</p>' : ''}
+      ${recent.length && home.cat === 'tous' ? `<p class="glater" style="margin-top:4px">🕘 Récemment</p><div class="rrow">${recent.map(id => `<button class="rcard" style="--g:${G[id].g}" data-a="game" data-id="${id}"><span>${G[id].e}</span><b>${G[id].name}</b></button>`).join('')}</div><p class="glater">Tous les jeux</p>` : ''}
       <div class="ggrid">${ok.map(id => card(id)).join('')}</div>
       ${later.length ? `<p class="glater">Avec plus de joueurs</p><div class="ggrid">${later.map(id => card(id, true)).join('')}</div>` : ''}
 
@@ -1493,6 +1505,102 @@ makers.reglages = () => {
   return self;
 };
 
+/* ---------- On joue à quoi ? ---------- */
+makers.picker = () => {
+  let step = 0, mood = null, seen = [];
+  const np = S.players.length;
+  const ok = id => G[id] && (!S.spicy || G[id].spicy) && (np < 2 ? true : fitAt(id, np) !== '-');
+  const pick3 = () => {
+    const m = MOODS.find(x => x[0] === mood), all = m[4].filter(ok);
+    let pool = all.filter(id => !seen.includes(id)); if (pool.length < 3) { seen = []; pool = all; }
+    const score = id => (np >= 2 && fitAt(id, np) === 'b' ? 1 : 0) + Math.random();
+    const r = pool.sort((a, b) => score(b) - score(a)).slice(0, 3); seen.push(...r); return r;
+  };
+  let res = [];
+  const self = {
+    render() {
+      if (step === 0) return view(`${header('On joue à quoi ?')}
+        <div class="stage">
+          <div class="pstep"><i>1 / 2</i><b>Vous êtes d'humeur à…</b></div>
+          <div class="plist">${MOODS.filter(m => m[4].some(ok)).map(m => `<button data-a="mood" data-v="${m[0]}"><span>${m[1]}</span><b>${m[2]}</b><small>${m[3]}</small></button>`).join('')}</div>
+        </div>`);
+      if (step === 1) return view(`${header('On joue à quoi ?')}
+        <div class="stage">
+          <div class="pstep"><i>2 / 2</i><b>Ce soir, vous buvez ?</b></div>
+          <div class="plist two"><button data-a="drk" data-v="1"><span>🍻</span><b>Oui, avec alcool</b><small>Les perdants boivent des gorgées</small></button>
+          <button data-a="drk" data-v="0"><span>🧃</span><b>Non, sans alcool</b><small>Des gages à la place</small></button></div>
+        </div>`);
+      view(`${header('On joue à quoi ?')}
+        <div class="stage">
+          <div class="pstep"><b>Essayez ça 👇</b></div>
+          <div class="presults">${res.map((id, i) => { const g = G[id];
+            return `<button class="pres" style="--g:${g.g}" data-a="game" data-id="${id}"><span class="ge">${g.e}</span><span class="t"><b>${g.name}</b><small>${g.d}</small></span><i>${i === 0 ? 'Top' : '›'}</i></button>`; }).join('')}</div>
+          ${res.length ? '' : '<p class="hint">Aucun jeu ne correspond… ajoutez des joueurs !</p>'}
+          <div class="row"><button class="btn" data-a="restart">↩️ Recommencer</button><button class="btn primary" data-a="more">🔄 Autres idées</button></div>
+        </div>`);
+    },
+    on(a, el) {
+      if (a === 'mood') { mood = el.dataset.v; buzz(10); if (mood === 'boire') { S.drinks = true; save(); res = pick3(); step = 2; } else step = 1; self.render(); }
+      if (a === 'drk') { S.drinks = el.dataset.v === '1'; save(); res = pick3(); step = 2; buzz(10); self.render(); }
+      if (a === 'more') { res = pick3(); buzz(10); self.render(); }
+      if (a === 'restart') { step = 0; seen = []; self.render(); }
+      if (a === 'game') openGame(el.dataset.id);
+    }
+  };
+  return self;
+};
+
+/* ---------- Premier lancement ---------- */
+makers.bienvenue = () => {
+  let step = 0;
+  store.set('onboarded', true);
+  const self = {
+    render() {
+      const dots = `<div class="obdots">${[0, 1, 2].map(i => `<i class="${i === step ? 'on' : ''}"></i>`).join('')}</div>`;
+      if (step === 0) return view(`<div class="stage onboard">
+          ${dots}
+          <div class="obhero">🥂</div>
+          <h1>Bienvenue !</h1>
+          <p class="hint">Des dizaines de jeux pour vos soirées. Gratuit, sans pub, sans compte.<br><b>Qui joue ce soir ?</b></p>
+          ${S.players.length ? `<div class="pchips" style="justify-content:center">${S.players.map(p => `<span class="pchip"><span class="ava" style="display:grid;place-items:center">${avatar(p)}</span><span>${esc(p)}</span></span>`).join('')}</div>` : ''}
+          <form class="add-row" id="obf" autocomplete="off"><input id="obname" maxlength="18" placeholder="Prénom" enterkeyhint="done" /><button class="btn primary" type="submit">＋</button></form>
+          <button class="btn primary big block" data-a="obnext">${S.players.length ? 'Suivant ›' : 'Passer cette étape'}</button>
+        </div>`, () => {
+          document.getElementById('obf').addEventListener('submit', e => {
+            e.preventDefault(); const v = document.getElementById('obname').value.trim().replace(/\s+/g, ' ');
+            if (!v || S.players.some(p => p.toLowerCase() === v.toLowerCase())) return;
+            S.players.push(v); save(); self.render(); document.getElementById('obname').focus();
+          });
+        });
+      if (step === 1) return view(`<div class="stage onboard">
+          ${dots}
+          <div class="obhero">🍻</div>
+          <h1>Vous buvez ?</h1>
+          <p class="hint">Avec alcool, les perdants boivent des gorgées. Sans alcool, ils font des gages. Ça se change à tout moment dans ⚙️.</p>
+          <div class="plist two"><button data-a="obdrk" data-v="1"><span>🍻</span><b>Avec alcool</b></button><button data-a="obdrk" data-v="0"><span>🧃</span><b>Sans alcool</b></button></div>
+        </div>`);
+      view(`<div class="stage onboard">
+          ${dots}
+          <div class="obhero">🎉</div>
+          <h1>C'est parti !</h1>
+          <div class="obtips">
+            <p><span>✨</span><b>On joue à quoi ?</b> L'appli vous propose des jeux selon votre humeur.</p>
+            <p><span>🎲</span><b>Soirée auto</b> enchaîne les jeux au hasard avec un classement.</p>
+            <p><span>📡</span><b>En ligne</b> : chacun joue sur son téléphone.</p>
+            <p><span>🍻</span>Pendant un jeu, le bouton en bas à droite compte les gorgées.</p>
+          </div>
+          <button class="btn primary big block" data-a="obdone">Voir les jeux</button>
+        </div>`);
+    },
+    on(a, el) {
+      if (a === 'obnext') { step = 1; self.render(); }
+      if (a === 'obdrk') { S.drinks = el.dataset.v === '1'; save(); step = 2; buzz(10); self.render(); }
+      if (a === 'obdone') goHome();
+    }
+  };
+  return self;
+};
+
 window.APERO = { D, S, store, save, avatar, openGame, minPlayers, fitAt, esc, rnd, pick, shuffle, deck, view, header, toast, buzz, beep, gages, later, every, clearTimers,
   makers, openPage, VERSION, joinCode: null, G, rotation, fill, scoreboard, theme, themed, askSensors };
 
@@ -1506,6 +1614,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cards) setTimeout(() => importCards(cards[1]), 300);
   if (join && makers.online) { APERO.joinCode = join[1].toUpperCase(); openPage('online'); }
   else if (makers[startHash] && (!G[startHash] || G[startHash].free || S.players.length >= minPlayers(startHash))) (G[startHash] ? openGame : openPage)(startHash);
+  else if (!store.get('onboarded', false) && !S.players.length) openPage('bienvenue');
 });
 
 /* ================= Mises à jour ================= */
