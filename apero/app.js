@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 44;
+const VERSION = 45;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -20,9 +20,10 @@ const S = {
   drinks: store.get('drinks', true),
   avatars: store.get('avatars', {}),
   theme: store.get('theme', null),
+  star: store.get('star', null),
   custom: store.get('custom', { verite: [], action: [], jamais: [], qui: [], preferes: [] })
 };
-const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); store.set('avatars', S.avatars); store.set('theme', S.theme); };
+const save = () => { store.set('players', S.players); store.set('spicy', S.spicy); store.set('spicyLvl', S.spicyLvl); store.set('sound', S.sound); store.set('vibrate', S.vibrate); store.set('drinks', S.drinks); store.set('custom', S.custom); store.set('avatars', S.avatars); store.set('theme', S.theme); store.set('star', S.star); };
 
 /* ================= Utilitaires ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -38,6 +39,12 @@ const hashOf = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 
 const rand = n => { try { const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] % n; } catch { return rnd(n); } };
 const shuffleR = arr => { const x = arr.slice(); for (let i = x.length - 1; i > 0; i--) { const j = rand(i + 1); [x[i], x[j]] = [x[j], x[i]]; } return x; };
 function deck(items) {
+  if (items.split && items.split[0].length && items.split[1].length) {
+    const a = deck(items.split[0]), b = deck(items.split[1]);
+    // part du pack : sa proportion réelle ×2,5 (max 1 sur 2), pour qu'il se voie sans s'épuiser trop vite
+    const p = Math.min(.5, 2.5 * items.split[0].length / items.length);
+    return { size: items.length, next: () => (Math.random() < p ? a : b).next() };
+  }
   const key = 'seen:' + hashOf(items.length + JSON.stringify(items.slice(0, 3)));
   const id = c => hashOf(JSON.stringify(c));
   const ids = new Set(items.map(id));
@@ -69,30 +76,47 @@ const theme = () => themeOK(S.theme) ? THEMES[S.theme] : null;
 const themed = id => { const t = theme(); return !!t && (id === 'aov' ? !!(t.cards.verite && t.cards.action) : !!t.cards[id]); };
 function pool(key) {
   const src = D[key], tc = theme() && theme().cards[key];
-  // pack à thème : ses cartes REMPLACENT les cartes normales ; mode épicé : idem avec les cartes épicées
   // niveau 2 « Sans filtre » = ses cartes + celles du niveau 1
   const normal = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2.concat(src.hot || []) : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
-  // les packs « mix » ajoutent leurs cartes aux cartes normales (plus de variété) ; Famille reste à part
-  const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft).concat(theme().mix ? normal : []) : normal;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
-  // sans doublons (un pack et les cartes normales peuvent contenir la même phrase)
-  const seenK = new Set();
-  return base.concat(mine).filter(c => { const k = JSON.stringify(c); if (seenK.has(k)) return false; seenK.add(k); return true; });
+  const seenK = new Set(), uniq = arr => arr.filter(c => { const k = JSON.stringify(c); if (seenK.has(k)) return false; seenK.add(k); return true; });
+  if (!tc) return uniq(normal.concat(mine));
+  const own = uniq(S.spicy && tc.hot ? tc.hot : tc.soft);
+  // Famille : seulement ses cartes. Les autres packs : ses cartes + les normales,
+  // mais une carte sur deux environ vient du pack (sinon elles seraient noyées dans la masse)
+  if (!theme().mix) return own.concat(uniq(mine));
+  const rest = uniq(normal.concat(mine)), all = own.concat(rest);
+  all.split = [own, rest];
+  return all;
 }
 const others = cur => S.players.filter(p => p !== cur);
 /* Remplit une carte : {p} = un autre joueur (jamais deux fois le même sur une carte),
    {s} = une durée au hasard, {n} = un nombre au hasard (3 à 5) : la même carte change à chaque fois */
 function fill(text, cur) {
   const used = new Set();
-  return esc(text).replace(/\{p\}/g, () => {
+  return starText(esc(text), true).replace(/\{p\}/g, () => {
     let o = others(cur).filter(x => !used.has(x)); if (!o.length) o = others(cur);
     const p = o.length ? pick(o) : null; if (p) used.add(p);
     return '<u>' + esc(p || 'quelqu’un') + '</u>';
   }).replace(/\{s\}/g, () => pick([10, 15, 20, 30]) + ' secondes').replace(/\{n\}/g, () => String(3 + rnd(3)));
 }
 const sip = (n, alt) => S.drinks ? `${n} gorgée${n > 1 ? 's' : ''} 🍻` : alt;
-const gages = () => { const t = theme(), tg = t && (S.spicy && t.cards.gagesHot || t.cards.gages); const g = tg ? tg : S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return S.drinks ? g : g.filter(x => !/gorgée/i.test(x)); };
+/* Personne fêtée (anniversaire, EVG / EVJF) : son prénom remplace « la star du jour », « le / la futur·e marié·e »… */
+const ROLES = {
+  anniv: { q: 'Qui fête son anniversaire ?', e: '🎂', ban: n => `C'est l'anniversaire de ${n} ! 🎉`,
+    rep: [['La star du jour', 1], ['la star du jour', 1]] },
+  evg: { q: 'Qui se marie bientôt ?', e: '💍', ban: n => `On enterre la vie de célibataire de ${n} ! 🥂`,
+    rep: [['du / de la futur·e marié·e', 'de '], ['Du / de la futur·e marié·e', 'De '], ['au / à la futur·e marié·e', 'à '], ['Au / à la futur·e marié·e', 'À '],
+      ['le / la futur·e marié·e', 1], ['Le / la futur·e marié·e', 1], ['Futur·e marié·e', 1], ['futur·e marié·e', 1]] }
+};
+const star = () => { const r = ROLES[S.theme]; return r && theme() && S.star && S.players.includes(S.star) ? S.star : null; };
+function starText(t, html) {
+  const n = star(); if (!n) return t;
+  const nm = html ? `<b>${esc(n)}</b>` : n;
+  return ROLES[S.theme].rep.reduce((s, [from, pre]) => s.split(from).join((pre === 1 ? '' : pre) + nm), t);
+}
+const gages = () => { const t = theme(), tg = t && (S.spicy && t.cards.gagesHot || t.cards.gages); const g = tg ? tg : S.spicy ? (S.spicyLvl === 2 && D.gagesHot2 ? D.gagesHot2 : D.gagesHot || D.gages) : D.gages; return (S.drinks ? g : g.filter(x => !/gorgée/i.test(x))).map(x => starText(x)); };
 
 function buzz(p) { if (!S.vibrate) return; try { navigator.vibrate && navigator.vibrate(p); } catch {} }
 function toast(msg) {
@@ -286,14 +310,28 @@ function setting(a, el, rerender) {
     if (!S.spicy && !confirm('🌶️ Mode épicé : questions et actions trash et sexy, réservées aux adultes.\n\nTout le monde ici a 18 ans ou plus et est partant ?\n(Chacun peut toujours refuser une carte avec le Joker.)')) return true;
     S.spicy = !S.spicy; save(); applyTheme(); rerender(); toast(S.spicy ? 'Mode épicé activé 🌶️🔥' : 'Retour au mode normal 🥂'); return true;
   }
+  if (a === 'star') { S.star = el.dataset.v; save(); rerender(); buzz(15); toast(S.theme === 'anniv' ? `🎂 Joyeux anniversaire ${S.star} !` : `💍 Place à ${S.star} !`); return true; }
+  if (a === 'unstar') { S.star = null; save(); rerender(); return true; }
   if (a === 'theme') {
     const k = el.dataset.v || null, t = THEMES[k];
+    if (k !== S.theme) S.star = null;
     S.theme = k;
     if (t && t.noDrinks && S.drinks) { S.drinks = false; toast(`${t.e} Pack ${t.name} : alcool désactivé`); }
     else toast(t ? `${t.e} Pack ${t.name} activé` : 'Cartes classiques 🥂');
     save(); applyTheme(); rerender(); buzz(15); return true;
   }
   return false;
+}
+
+/* Bannière du pack actif (accueil) + choix de la personne fêtée */
+const BANNERS = { noel: '🎄 Joyeux Noël ! Les cartes de Noël sont mélangées au jeu.', couple: '💞 Soirée en amoureux : cartes spéciales couple.', famille: '👨‍👩‍👧 Soirée en famille : cartes tout public, sans alcool.' };
+function packBanner() {
+  const th = theme(); if (!th) return '';
+  const r = ROLES[S.theme], n = star();
+  const pickStar = r && S.players.length ? `<div class="starpick">${S.players.map(p => `<button class="${p === n ? 'on' : ''}" data-a="star" data-v="${esc(p)}">${avatar(p)} ${esc(p)}</button>`).join('')}</div>` : '';
+  if (r) return `<div class="packban">${n ? `<b>${esc(r.ban(n))}</b><small>Son prénom apparaît dans les cartes. <button class="linkbtn sm" data-a="unstar">Changer</button></small>`
+    : `<b>${r.e} ${r.q}</b><small>Son prénom remplacera « ${S.theme === 'anniv' ? 'la star du jour' : 'le / la futur·e marié·e'} » dans les cartes.</small>${pickStar || '<small>Ajoute d’abord les prénoms 👇</small>'}`}</div>`;
+  return BANNERS[S.theme] ? `<div class="packban"><b>${BANNERS[S.theme]}</b></div>` : '';
 }
 
 const home = {
@@ -314,6 +352,7 @@ const home = {
       </div>
       <button class="modes" data-a="page" data-id="reglages">${modes.map(m => `<span>${m}</span>`).join('')}<em>Modifier</em></button>
 
+      ${packBanner()}
       <div class="pcard">
         <div class="pcard-h"><b>👥 Qui joue ce soir ?</b><small>${np ? `${np} joueur${np > 1 ? 's' : ''} · touche un emoji pour le changer` : 'Ajoute les prénoms : les jeux désignent qui joue'}</small></div>
         ${np ? `<div class="pchips">${chips}</div>` : ''}
@@ -1515,7 +1554,24 @@ function avatar(p) {
 function applyTheme() {
   document.documentElement.classList.toggle('spicy', !!S.spicy);
   document.documentElement.classList.toggle('lvl2', !!S.spicy && S.spicyLvl === 2);
-  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? (S.spicyLvl === 2 ? '#0c0208' : '#1a0606') : '#120d1f';
+  const pk = theme() ? S.theme : '';
+  document.documentElement.dataset.pack = pk;
+  const PACKBG = { noel: '#0b1a12', anniv: '#1a0f24', evg: '#15131c', couple: '#1a0a14', famille: '#0e1a2b' };
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? (S.spicyLvl === 2 ? '#0c0208' : '#1a0606') : PACKBG[pk] || '#120d1f';
+  // petits décors animés : neige, confettis, cœurs…
+  const FX = { noel: ['❄', '❅', '❆', '•'], anniv: ['🎈', '🎉', '✨', '■', '●'], evg: ['✨', '🥂', '💍'], couple: ['💗', '💕', '❤'], famille: ['🎈', '⭐', '☀️'] };
+  let fx = document.getElementById('fx');
+  if (!FX[pk]) { if (fx) fx.remove(); return; }
+  if (fx && fx.dataset.pk === pk) return;
+  if (!fx) { fx = document.createElement('div'); fx.id = 'fx'; fx.setAttribute('aria-hidden', 'true'); document.body.prepend(fx); }
+  fx.dataset.pk = pk;
+  const COL = ['#ff4fa3', '#ffd23f', '#3aa0ff', '#3ddc97', '#ff8a3d', '#b98cff'];
+  const n = pk === 'noel' ? 34 : 18;
+  fx.innerHTML = Array.from({ length: n }, (_, i) => {
+    const ch = FX[pk][i % FX[pk].length], conf = ch === '■' || ch === '●';
+    const st = `left:${Math.random() * 100}%;animation-duration:${(pk === 'noel' ? 7 : 11) + Math.random() * 9}s;animation-delay:-${Math.random() * 20}s;font-size:${(pk === 'noel' ? 8 : 12) + Math.random() * (pk === 'noel' ? 14 : 12)}px;opacity:${.35 + Math.random() * .5};${conf ? `color:${COL[i % COL.length]};` : ''}`;
+    return `<i style="${st}">${ch}</i>`;
+  }).join('');
 }
 applyTheme();
 
@@ -1540,6 +1596,7 @@ makers.reglages = () => {
             <h2><span>Pack de cartes</span></h2>
             <div class="packs">${[['', '🥂', 'Classique', 'Les cartes de base'], ...Object.entries(THEMES).filter(([k]) => themeOK(k)).map(([k, t]) => [k, t.e, t.name, t.d])].map(([k, e, nm, d]) =>
               `<button class="${(th ? S.theme : '') === k ? 'on' : ''}" data-a="theme" data-v="${k}"><span>${e}</span><b>${esc(nm)}</b><small>${esc(d)}</small></button>`).join('')}</div>
+            ${ROLES[S.theme] && th ? `<div style="margin-top:10px">${packBanner()}</div>` : ''}
           </div>
           <div class="section">
             <button class="rowlink" data-a="page" data-id="cartes"><span>✍️</span><b>Mes cartes perso</b><i>›</i></button>

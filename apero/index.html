@@ -887,28 +887,70 @@ body:has(.arena) .sipfab{display:none;}
 .sbar button{background:rgba(255,255,255,.95);color:#2a1840;font-weight:800;border-radius:12px;padding:8px 12px;font-size:.88rem;}
 .bcat.resume{outline:3px solid #fff;outline-offset:-3px;}
 .sbar ~ .arena{height:calc(100dvh - var(--safe-t) - var(--safe-b) - 170px);}
+/* ---------- v45 : thèmes visuels des packs ---------- */
+#app{position:relative;z-index:1;}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+#fx i{position:absolute;top:-8vh;font-style:normal;color:#fff;animation:fxfall linear infinite;will-change:transform;}
+@keyframes fxfall{0%{transform:translate3d(0,-10vh,0) rotate(0)}50%{transform:translate3d(18px,50vh,0) rotate(180deg)}100%{transform:translate3d(-12px,112vh,0) rotate(360deg)}}
+html[data-pack="couple"] #fx i,html[data-pack="anniv"] #fx i,html[data-pack="famille"] #fx i,html[data-pack="evg"] #fx i{animation-name:fxrise;top:auto;bottom:-8vh;}
+@keyframes fxrise{0%{transform:translate3d(0,10vh,0)}50%{transform:translate3d(-16px,-50vh,0)}100%{transform:translate3d(14px,-115vh,0)}}
+html[data-pack="anniv"] #fx i:nth-child(odd){animation-name:fxfall;top:-8vh;bottom:auto;}
+@media (prefers-reduced-motion:reduce){#fx{display:none}}
+
+html[data-pack="noel"]:not(.spicy){--bg:#0b1a12;--bg-2:#10261a;--panel:#163222;--panel-2:#1e432e;--line:rgba(255,255,255,.1);--text:#f4fff6;--muted:#a9c9b3;--accent:#e63946;--accent-2:#f4c430;}
+html[data-pack="noel"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(230,57,70,.30),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(46,204,113,.22),transparent 60%);}
+html[data-pack="noel"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#e63946,#b5121b);}
+html[data-pack="noel"] .hbar .logo{background:linear-gradient(135deg,#e63946,#1f8a4c);}
+html[data-pack="noel"]:not(.spicy) .pcard,html[data-pack="noel"]:not(.spicy) .section{border-color:rgba(244,196,48,.25);}
+
+html[data-pack="anniv"]:not(.spicy){--bg:#1a0f24;--bg-2:#241433;--panel:#2e1940;--panel-2:#3b2152;--line:rgba(255,210,63,.14);--muted:#cdb3dc;--accent:#ff4fa3;--accent-2:#ffd23f;}
+html[data-pack="anniv"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,79,163,.30),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(255,210,63,.20),transparent 60%);}
+html[data-pack="anniv"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#ff4fa3,#ff9f1c);}
+html[data-pack="anniv"] .hbar .logo{background:linear-gradient(135deg,#ff4fa3,#ffd23f);}
+
+html[data-pack="evg"]:not(.spicy){--bg:#15131c;--bg-2:#1d1a27;--panel:#272333;--panel-2:#332e42;--line:rgba(212,175,55,.2);--muted:#c2b9a3;--accent:#d4af37;--accent-2:#fff3c4;}
+html[data-pack="evg"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(212,175,55,.25),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(255,255,255,.08),transparent 60%);}
+html[data-pack="evg"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#e8c55a,#a8841f);color:#1a1408;}
+html[data-pack="evg"] .hbar .logo{background:linear-gradient(135deg,#fff3c4,#d4af37);}
+
+html[data-pack="couple"]:not(.spicy){--bg:#1a0a14;--bg-2:#240e1c;--panel:#301327;--panel-2:#3f1934;--line:rgba(255,143,171,.16);--muted:#d9a9c0;--accent:#ff3d7f;--accent-2:#ff8fab;}
+html[data-pack="couple"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,61,127,.30),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(255,143,171,.18),transparent 60%);}
+html[data-pack="couple"] .hbar .logo{background:linear-gradient(135deg,#ff3d7f,#ff8fab);}
+
+html[data-pack="famille"]:not(.spicy){--bg:#0e1a2b;--bg-2:#13243b;--panel:#1a3150;--panel-2:#22405f;--line:rgba(76,201,240,.16);--muted:#a9c4dc;--accent:#ffb703;--accent-2:#4cc9f0;}
+html[data-pack="famille"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,183,3,.22),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(76,201,240,.22),transparent 60%);}
+html[data-pack="famille"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#ffb703,#fb8500);}
+html[data-pack="famille"] .hbar .logo{background:linear-gradient(135deg,#ffb703,#4cc9f0);}
+
+.packban{background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 28%,var(--panel)),color-mix(in srgb,var(--accent-2) 18%,var(--panel)));border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:20px;padding:14px 16px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px;}
+.packban b{font-size:1.1rem;font-weight:800;}
+.packban small{color:var(--muted);font-size:.82rem;}
+.starpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.starpick button{padding:8px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:.9rem;}
+.starpick button.on{background:var(--accent);color:#fff;border-color:transparent;}
+.linkbtn.sm{padding:0 4px;font-size:.82rem;margin:0;}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=44"></script>
-<script src="data-epice.js?v=44"></script>
-<script src="data-enigmes.js?v=44"></script>
-<script src="data-themes.js?v=44"></script>
-<script src="data-plus.js?v=44"></script>
-<script src="data-normal.js?v=44"></script>
-<script src="data-normal2.js?v=44"></script>
-<script src="data-plus2.js?v=44"></script>
-<script src="app.js?v=44"></script>
-<script src="games-boire.js?v=44"></script>
-<script src="soiree.js?v=44"></script>
-<script src="arcade.js?v=44"></script>
-<script src="online.js?v=44"></script>
-<script src="online-social.js?v=44"></script>
-<script src="online-vote.js?v=44"></script>
-<script src="online-cards.js?v=44"></script>
-<script src="online-board.js?v=44"></script>
-<script src="online-live.js?v=44"></script>
+<script src="data.js?v=45"></script>
+<script src="data-epice.js?v=45"></script>
+<script src="data-enigmes.js?v=45"></script>
+<script src="data-themes.js?v=45"></script>
+<script src="data-plus.js?v=45"></script>
+<script src="data-normal.js?v=45"></script>
+<script src="data-normal2.js?v=45"></script>
+<script src="data-plus2.js?v=45"></script>
+<script src="app.js?v=45"></script>
+<script src="games-boire.js?v=45"></script>
+<script src="soiree.js?v=45"></script>
+<script src="arcade.js?v=45"></script>
+<script src="online.js?v=45"></script>
+<script src="online-social.js?v=45"></script>
+<script src="online-vote.js?v=45"></script>
+<script src="online-cards.js?v=45"></script>
+<script src="online-board.js?v=45"></script>
+<script src="online-live.js?v=45"></script>
 </body>
 </html>
