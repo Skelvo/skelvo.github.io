@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 38;
+const VERSION = 39;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -243,11 +243,11 @@ window.addEventListener('popstate', e => { const st = e.state; if (st && st.p &&
 /* ================= Accueil ================= */
 /* Catégories de l'accueil */
 const CATS = [
-  ['ambiance', '🎉', 'Ambiance', ['aov', 'jamais', 'qui', 'preferes', 'juge', 'connais', 'imposteur', 'mime', 'bombe', 'roue', 'doigt']],
-  ['boire', '🍻', 'À boire', ['roi', 'pyramide', 'bus']],
-  ['tete', '🧠', 'Réflexion', ['synchro', 'enigmes', 'yams']],
-  ['reflexes', '⚡', 'Réflexes', ['duel', 'main', 'secoue']],
-  ['arcade', '🕹️', 'Arcade', []]
+  ['ambiance', '🎉', 'Ambiance', 'Questions, défis, mimes', 'linear-gradient(150deg,#ff5c8a,#b0306e)', ['aov', 'jamais', 'qui', 'preferes', 'juge', 'connais', 'imposteur', 'mime', 'bombe', 'roue', 'doigt']],
+  ['boire', '🍻', 'À boire', 'Cartes et règles à boire', 'linear-gradient(150deg,#f7b733,#e0702a)', ['roi', 'pyramide', 'bus']],
+  ['tete', '🧠', 'Réflexion', 'Énigmes, mots, dés', 'linear-gradient(150deg,#4facfe,#6a3093)', ['synchro', 'enigmes', 'yams']],
+  ['reflexes', '⚡', 'Réflexes', 'Le plus rapide gagne', 'linear-gradient(150deg,#ffd23f,#ee6c1f)', ['duel', 'main', 'secoue']],
+  ['arcade', '🕹️', 'Arcade', 'Jeux d’adresse et duels', 'linear-gradient(150deg,#7b5cff,#d63af9)', []]
 ];
 /* « On joue à quoi ? » : envies → jeux */
 const MOODS = [
@@ -257,7 +257,9 @@ const MOODS = [
   ['bouger', '⚡', 'Réflexes et adresse', 'Le plus rapide gagne', ['duel', 'main', 'secoue', 'tour', 'sprint', 'lancer', 'hockey', 'ping', 'tir', 'briques', 'esquive', 'serpent']],
   ['boire', '🍻', 'Faire boire', 'Cartes et règles à boire', ['roi', 'pyramide', 'bus', 'jamais', 'doigt', 'roue']]
 ];
-const catOf = id => G[id].arcade ? 'arcade' : (CATS.find(c => c[3].includes(id)) || CATS[0])[0];
+const catOf = id => G[id].arcade ? 'arcade' : (CATS.find(c => c[5].includes(id)) || CATS[0])[0];
+const visibleG = id => S.spicy ? !!G[id].spicy : true;
+const playableG = id => S.players.length >= 2 ? fitAt(id, S.players.length) !== '-' : !!G[id].free;
 
 /* Réglages partagés entre l'accueil et la page Réglages */
 function setting(a, el, rerender) {
@@ -289,16 +291,8 @@ const home = {
     const np = S.players.length, th = theme();
     const playable = id => np < 2 || fitAt(id, np) !== '-';
     const visible = id => S.spicy ? G[id].spicy : true;
-    const cats = CATS.filter(c => Object.keys(G).some(id => visible(id) && catOf(id) === c[0]));
-    if (home.cat !== 'tous' && !cats.some(c => c[0] === home.cat)) home.cat = 'tous';
-    let list = Object.keys(G).filter(id => visible(id) && (home.cat === 'tous' || catOf(id) === home.cat));
-    if (th) list.sort((a, b) => themed(b) - themed(a));
-    const ok = list.filter(playable), later = list.filter(id => !playable(id));
     const fv = favs().filter(id => G[id] && visible(id));
-    const recent = [...fv, ...store.get('recent', []).filter(id => !fv.includes(id))].filter(id => G[id] && visible(id) && playable(id)).slice(0, 8);
-    const card = (id, off) => { const g = G[id];
-      return `<button class="gcard${off ? ' off' : ''}" style="--g:${g.g}" data-a="game" data-id="${id}">
-        <span class="ge">${g.e}</span><b>${g.name}</b><small>${off ? `Dès ${minPlayers(id)} joueurs` : g.d}</small>${th && themed(id) ? `<i class="gtag">${th.e}</i>` : ''}</button>`; };
+    const recent = [...fv, ...store.get('recent', []).filter(id => !fv.includes(id))].filter(id => G[id] && visible(id) && playableG(id)).slice(0, 8);
     const modes = [S.spicy ? (S.spicyLvl === 2 ? '😈 Sans filtre' : '🌶️ Épicé') : '', th ? `${th.e} ${th.name}` : '', S.drinks ? '🍻 Avec alcool' : '🧃 Sans alcool'].filter(Boolean);
     const chips = S.players.map((p, i) => `<span class="pchip"><button class="ava" data-a="ava" data-i="${i}" aria-label="Changer l’emoji de ${esc(p)}">${avatar(p)}</button><span>${esc(p)}</span><button class="x" data-a="del" data-i="${i}" aria-label="Retirer ${esc(p)}">✕</button></span>`).join('');
     view(`
@@ -310,7 +304,7 @@ const home = {
       <button class="modes" data-a="page" data-id="reglages">${modes.map(m => `<span>${m}</span>`).join('')}<em>Modifier</em></button>
 
       <div class="pcard">
-        <div class="pcard-h"><b>👥 Qui joue ?</b><small>${np ? `${np} joueur${np > 1 ? 's' : ''} · touche un emoji pour le changer` : 'Ajoute les prénoms : les jeux désignent qui joue'}</small></div>
+        <div class="pcard-h"><b>👥 Qui joue ce soir ?</b><small>${np ? `${np} joueur${np > 1 ? 's' : ''} · touche un emoji pour le changer` : 'Ajoute les prénoms : les jeux désignent qui joue'}</small></div>
         ${np ? `<div class="pchips">${chips}</div>` : ''}
         <form class="add-row" id="addf" autocomplete="off">
           <input id="pname" maxlength="18" placeholder="Prénom" enterkeyhint="done" />
@@ -318,17 +312,21 @@ const home = {
         </form>
       </div>
 
-      <button class="qpick" data-a="page" data-id="picker"><span>✨</span><span class="qt"><b>On joue à quoi ?</b><small>2 questions, 3 idées de jeux</small></span><i>›</i></button>
-      <div class="quick">
-        <button class="qtile" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>Soirée auto</b><small>L'appli choisit les jeux</small></button>
-        <button class="qtile" style="--g:linear-gradient(150deg,#3aa0ff,#7b5cff)" data-a="page" data-id="online"><span>📡</span><b>En ligne</b><small>Chacun son téléphone</small></button>
+      ${recent.length && np >= 2 ? `<p class="steplbl">⭐ Vos jeux</p><div class="rrow">${recent.map(id => `<button class="rcard" style="--g:${G[id].g}" data-a="game" data-id="${id}">${fv.includes(id) ? '<i>⭐</i>' : ''}<span>${G[id].e}</span><b>${G[id].name}</b></button>`).join('')}</div>` : ''}
+
+      <p class="steplbl">${np >= 2 ? `🎮 Choisis un type de jeu · ${np} joueurs` : '🎮 Les jeux'}</p>
+      ${np < 2 ? `<div class="lockmsg">👆 Ajoute d'abord ${np ? 'au moins un autre prénom' : 'les prénoms de tout le monde'} : l'appli te montre ensuite les jeux possibles avec ce nombre de joueurs.</div>` : ''}
+      ${S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux avec des cartes trash.</p>' : ''}
+      <div class="bigcats ${np < 2 ? 'locked' : ''}">
+        <button class="bcat wide" style="--g:linear-gradient(120deg,#ff5c8a,#7b5cff)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="picker"><span>✨</span><b>On joue à quoi ?</b><small>Tu réponds à 2 questions, l'appli choisit</small></button>
+        ${CATS.map(([k, e, nm, d, gr]) => { const n = Object.keys(G).filter(id => visibleG(id) && catOf(id) === k && playableG(id)).length;
+          if (!Object.keys(G).some(id => visibleG(id) && catOf(id) === k)) return '';
+          return `<button class="bcat ${np >= 2 && !n ? 'empty' : ''}" style="--g:${gr}" data-a="${np >= 2 ? 'cat' : 'need2'}" data-v="${k}"><span>${e}</span><b>${nm}</b><small>${np >= 2 ? (n ? `${n} jeu${n > 1 ? 'x' : ''}` : 'Pas à ce nombre') : d}</small></button>`; }).join('')}
+        <button class="bcat" style="--g:linear-gradient(150deg,#ffb84d,#ff5c8a)" data-a="${np >= 2 ? 'page' : 'need2'}" data-id="soiree"><span>🎲</span><b>Soirée auto</b><small>L'appli enchaîne les jeux</small></button>
       </div>
 
-      <div class="cats">${[['tous', '✨', 'Tout'], ...cats].map(([k, e, nm]) => `<button class="${home.cat === k ? 'on' : ''}" data-a="cat" data-v="${k}">${e} ${nm}</button>`).join('')}</div>
-      ${S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux avec des cartes trash.</p>' : ''}
-      ${recent.length && home.cat === 'tous' ? `<p class="glater" style="margin-top:4px">${fv.length ? '⭐ Favoris et récents' : '🕘 Récemment'}</p><div class="rrow">${recent.map(id => `<button class="rcard" style="--g:${G[id].g}" data-a="game" data-id="${id}">${fv.includes(id) ? '<i>⭐</i>' : ''}<span>${G[id].e}</span><b>${G[id].name}</b></button>`).join('')}</div><p class="glater">Tous les jeux</p>` : ''}
-      <div class="ggrid">${ok.map(id => card(id)).join('')}</div>
-      ${later.length ? `<p class="glater">Avec plus de joueurs</p><div class="ggrid">${later.map(id => card(id, true)).join('')}</div>` : ''}
+      <p class="steplbl">📱 Chacun sur son téléphone</p>
+      <button class="qpick" data-a="page" data-id="online"><span>📡</span><span class="qt"><b>Jouer en ligne</b><small>Poker, Loups-garous, Quiz… chacun joue sur son propre téléphone</small></span><i>›</i></button>
 
       <div class="links">
         <button class="btn" data-a="page" data-id="stats">📊 Stats</button>
@@ -352,8 +350,8 @@ const home = {
       S.avatars[p] = AVATARS[(i + 1) % AVATARS.length]; save(); home.render(); buzz(10); return;
     }
     if (a === 'del') { S.players.splice(+el.dataset.i, 1); save(); home.render(); }
-    if (a === 'cat') { home.cat = el.dataset.v; home.render(); buzz(8); return; }
-    if (a === 'need2') { toast('Ajoute au moins 2 joueurs 🙂'); document.getElementById('pname')?.focus(); return; }
+    if (a === 'cat') { home.cat = el.dataset.v; buzz(8); return openPage('jeux'); }
+    if (a === 'need2') { toast('Ajoute d’abord les prénoms (2 minimum) 👆'); const i = document.getElementById('pname'); if (i) { i.focus(); i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } return; }
     if (setting(a, el, () => home.render())) return;
     if (a === 'game') openGame(el.dataset.id);
     if (a === 'page') openPage(el.dataset.id);
@@ -1546,6 +1544,26 @@ makers.reglages = () => {
     }
   };
   return self;
+};
+
+/* ---------- Liste des jeux d'une catégorie ---------- */
+makers.jeux = () => {
+  const c = CATS.find(x => x[0] === home.cat) || CATS[0], np = S.players.length, th = theme();
+  const all = Object.keys(G).filter(id => visibleG(id) && catOf(id) === c[0]);
+  const ok = all.filter(playableG).sort((a, b) => (th ? themed(b) - themed(a) : 0) || (fitAt(b, np) === 'b') - (fitAt(a, np) === 'b'));
+  const no = all.filter(id => !playableG(id));
+  return {
+    render() {
+      view(`${header(`${c[1]} ${c[2]}`)}
+        <div class="stage">
+          <p class="hint" style="margin:0">${ok.length} jeu${ok.length > 1 ? 'x' : ''} possible${ok.length > 1 ? 's' : ''} à ${np} joueurs</p>
+          <div class="glist">${ok.map(id => { const g = G[id];
+            return `<button class="gitem" style="--g:${g.g}" data-a="game" data-id="${id}"><span class="ge">${g.e}</span><span class="t"><b>${g.name}</b><small>${g.d}</small></span>${fitAt(id, np) === 'b' ? '<i>⭐ Idéal</i>' : ''}${th && themed(id) ? `<i>${th.e}</i>` : ''}</button>`; }).join('')}</div>
+          ${no.length ? `<p class="glater">Pas possible à ${np}</p><p class="hint" style="margin:0;text-align:left">${no.map(id => `${G[id].e} ${G[id].name} <small>(${fitAt(id, np) === '-' && np > 2 && minPlayers(id) <= np ? 'moins de joueurs' : `dès ${minPlayers(id)}`})</small>`).join(' · ')}</p>` : ''}
+        </div>`);
+    },
+    on(a, el) { if (a === 'game') openGame(el.dataset.id); }
+  };
 };
 
 /* ---------- On joue à quoi ? ---------- */

@@ -857,24 +857,48 @@ body:has(.arena) .sipfab{display:none;}
 .codecells span{aspect-ratio:3/4;border-radius:16px;background:var(--panel);border:2px solid var(--line);display:grid;place-items:center;font-size:2.4rem;font-weight:800;}
 .codecells:focus-within span.cur{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 25%,transparent);}
 .pchip.offline{opacity:.5;}
+/* ---------- v39 : grandes cases ---------- */
+.steplbl{margin:18px 2px 10px;font-size:.95rem;font-weight:800;}
+.lockmsg{background:color-mix(in srgb,var(--accent) 14%,var(--panel));border:1px dashed color-mix(in srgb,var(--accent) 55%,transparent);border-radius:16px;padding:12px 14px;font-size:.9rem;line-height:1.4;margin-bottom:10px;}
+.bigcats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.bcat{background:var(--g);color:#fff;border-radius:22px;padding:16px;min-height:120px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;box-shadow:0 10px 24px rgba(0,0,0,.28);}
+.bcat span{font-size:2.4rem;line-height:1;margin-bottom:auto;}
+.bcat b{font-size:1.15rem;font-weight:800;margin-top:12px;}
+.bcat small{font-size:.8rem;opacity:.92;font-weight:600;}
+.bcat.wide{grid-column:1/-1;min-height:0;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:14px;align-items:center;}
+.bcat.wide span{grid-row:1/3;margin:0;}
+.bcat.wide b{margin:0;}
+.bcat:active{transform:scale(.97);}
+.bcat.empty{opacity:.45;filter:grayscale(.6);}
+.bigcats.locked .bcat{opacity:.4;filter:grayscale(.7);}
+.glist{display:flex;flex-direction:column;gap:10px;}
+.gitem{display:flex;align-items:center;gap:14px;padding:12px;border-radius:20px;background:var(--panel);border:1px solid var(--line);text-align:left;position:relative;}
+.gitem .ge{width:58px;height:58px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:2rem;background:var(--g);box-shadow:0 6px 14px rgba(0,0,0,.3);}
+.gitem .t{flex:1;display:flex;flex-direction:column;min-width:0;}
+.gitem b{font-size:1.08rem;font-weight:800;}
+.gitem small{color:var(--muted);font-size:.82rem;line-height:1.3;}
+.gitem i{font-style:normal;font-size:.7rem;font-weight:800;padding:4px 8px;border-radius:999px;background:rgba(255,215,106,.15);color:#ffd76a;flex:none;}
+.gitem:active{transform:scale(.98);}
+.tvexp{background:var(--panel);border-radius:16px;padding:14px;text-align:left;}
+.tvexp p{margin:6px 0 0;color:var(--muted);font-size:.88rem;line-height:1.45;}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=38"></script>
-<script src="data-epice.js?v=38"></script>
-<script src="data-enigmes.js?v=38"></script>
-<script src="data-themes.js?v=38"></script>
-<script src="app.js?v=38"></script>
-<script src="games-boire.js?v=38"></script>
-<script src="soiree.js?v=38"></script>
-<script src="arcade.js?v=38"></script>
-<script src="online.js?v=38"></script>
-<script src="online-social.js?v=38"></script>
-<script src="online-vote.js?v=38"></script>
-<script src="online-cards.js?v=38"></script>
-<script src="online-board.js?v=38"></script>
-<script src="online-live.js?v=38"></script>
+<script src="data.js?v=39"></script>
+<script src="data-epice.js?v=39"></script>
+<script src="data-enigmes.js?v=39"></script>
+<script src="data-themes.js?v=39"></script>
+<script src="app.js?v=39"></script>
+<script src="games-boire.js?v=39"></script>
+<script src="soiree.js?v=39"></script>
+<script src="arcade.js?v=39"></script>
+<script src="online.js?v=39"></script>
+<script src="online-social.js?v=39"></script>
+<script src="online-vote.js?v=39"></script>
+<script src="online-cards.js?v=39"></script>
+<script src="online-board.js?v=39"></script>
+<script src="online-live.js?v=39"></script>
 </body>
 </html>
