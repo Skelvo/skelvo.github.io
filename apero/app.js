@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 41;
+const VERSION = 42;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -70,8 +70,9 @@ const themed = id => { const t = theme(); return !!t && (id === 'aov' ? !!(t.car
 function pool(key) {
   const src = D[key], tc = theme() && theme().cards[key];
   // pack à thème : ses cartes REMPLACENT les cartes normales ; mode épicé : idem avec les cartes épicées
-  const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft)
-    : S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
+  const normal = S.spicy ? (S.spicyLvl === 2 && src.hot2 ? src.hot2 : src.hot && src.hot.length ? src.hot : src.soft) : src.soft;
+  // les packs « mix » ajoutent leurs cartes aux cartes normales (plus de variété) ; Famille reste à part
+  const base = tc ? (S.spicy && tc.hot ? tc.hot : tc.soft).concat(theme().mix ? normal : []) : normal;
   const mine = (S.custom[key] || []).map(t => key === 'preferes' ? t.split(/\s+\/\s+|\s+ou\s+/i).slice(0, 2) : t)
     .filter(t => key !== 'preferes' || (t.length === 2 && t[0] && t[1]));
   return base.concat(mine);

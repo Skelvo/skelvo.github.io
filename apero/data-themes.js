@@ -7,6 +7,7 @@ window.THEMES = {
   /* =============================== ANNIVERSAIRE =============================== */
   anniv: {
     name: 'Anniversaire', e: '🎂', d: 'Tout tourne autour de la star du jour',
+    mix: true,
     note: '🎂 Pack Anniversaire : la « star du jour », c’est la personne qu’on fête.',
     cards: {
       verite: {
@@ -174,6 +175,7 @@ window.THEMES = {
   /* ================================ EVG / EVJF ================================ */
   evg: {
     name: 'EVG / EVJF', e: '💍', d: 'Spécial futur·e marié·e',
+    mix: true,
     note: '💍 Pack EVG / EVJF : « le / la futur·e marié·e » désigne la personne qu’on enterre !',
     cards: {
       verite: {
@@ -331,6 +333,7 @@ window.THEMES = {
   /* ================================== NOËL ================================== */
   noel: {
     name: 'Noël', e: '🎄', d: 'Fêtes de fin d’année, famille et cadeaux',
+    mix: true,
     cards: {
       verite: {
         soft: [
@@ -479,6 +482,7 @@ window.THEMES = {
   /* ================================= COUPLE ================================= */
   couple: {
     name: 'Couple', e: '💞', d: 'Rien que vous deux · doux ou épicé',
+    mix: true,
     note: '💞 Pack Couple : fait pour jouer à deux. Active le mode épicé pour la version 18+.',
     fit: { aov: 'bboo', jamais: 'bboo', preferes: 'bboo', qui: 'b---' },
     cards: {
@@ -523,7 +527,17 @@ window.THEMES = {
           "Quel est le moment de la journée où tu as le plus envie de moi ?",
           "Décris le scénario de la nuit parfaite avec moi.",
           "Il y a une chose que tu aimerais que je fasse plus souvent au lit ?",
-          "Quel souvenir coquin de nous deux te revient souvent en tête ?"
+          "Quel souvenir coquin de nous deux te revient souvent en tête ?",
+          "Qu'est-ce que je fais qui te fait perdre tous tes moyens ?",
+          "Quel est l'endroit le plus risqué où tu as eu envie de moi ?",
+          "As-tu déjà pensé à moi en te faisant plaisir ? Raconte.",
+          "Quelle est la chose que tu n'oses pas me demander au lit ?",
+          "Quel souvenir de nous deux te donne encore chaud ?",
+          "Quelle partie de ton corps tu aimerais que je découvre plus ?",
+          "Tu préfères quand je suis tendre ou quand je suis sauvage ?",
+          "Quel est le meilleur préliminaire que je t'aie fait ?",
+          "Si on avait 10 minutes seuls maintenant, tu ferais quoi ?",
+          "Quelle tenue de moi te rend fou / folle ?"
         ]
       },
       action: {
@@ -557,7 +571,17 @@ window.THEMES = {
           "Décris en détail la prochaine chose que tu veux qu'on fasse au lit.",
           "Retire un de tes vêtements, à mon choix.",
           "Embrasse-moi sans utiliser les mains pendant 20 secondes.",
-          "Mordille-moi l'oreille en me disant un compliment."
+          "Mordille-moi l'oreille en me disant un compliment.",
+          "Embrasse-moi le long de la mâchoire jusqu'à l'oreille.",
+          "Fais-moi un massage du dos de 1 minute, sous le t-shirt.",
+          "Choisis un glaçon (ou ton verre frais) et fais-le glisser dans mon cou.",
+          "Chuchote-moi ce que tu me ferais si on était seuls dans une cabine d'essayage.",
+          "Embrasse-moi pendant 30 secondes sans t'arrêter.",
+          "Enlève-moi un vêtement avec les dents.",
+          "Fais-moi deviner un mot coquin en l'écrivant du doigt sur mon dos.",
+          "Caresse-moi les cheveux et la nuque pendant 1 minute en silence.",
+          "Montre-moi avec tes mains comment tu aimes être touché·e.",
+          "Fais-moi une danse lente et sensuelle de 30 secondes."
         ]
       },
       jamais: {
@@ -573,7 +597,13 @@ window.THEMES = {
           "Je n'ai jamais acheté un cadeau pour toi à la dernière minute.",
           "Je n'ai jamais regardé un épisode de notre série sans toi.",
           "Je n'ai jamais eu peur de te perdre.",
-          "Je n'ai jamais menti sur le prix de quelque chose."
+          "Je n'ai jamais menti sur le prix de quelque chose.",
+          "Je n'ai jamais imaginé notre maison idéale.",
+          "Je n'ai jamais choisi un prénom pour un futur enfant.",
+          "Je n'ai jamais fait semblant d'aimer un de tes amis.",
+          "Je n'ai jamais gardé un souvenir de notre premier rendez-vous.",
+          "Je n'ai jamais été jaloux / jalouse d'un de tes ex.",
+          "Je n'ai jamais eu envie de te faire une demande (ou une redemande) en mariage."
         ],
         hot: [
           "Je n'ai jamais pensé à toi de façon coquine au travail.",
@@ -585,7 +615,15 @@ window.THEMES = {
           "Je n'ai jamais eu envie qu'on fasse l'amour dans un lieu public.",
           "Je n'ai jamais repensé à notre première fois en journée.",
           "Je n'ai jamais pris une photo coquine pour toi sans l'envoyer.",
-          "Je n'ai jamais eu envie d'essayer un jouet avec toi."
+          "Je n'ai jamais eu envie d'essayer un jouet avec toi.",
+          "Je n'ai jamais eu envie de toi pendant qu'on se disputait.",
+          "Je n'ai jamais simulé pour finir plus vite.",
+          "Je n'ai jamais pensé à quelqu'un d'autre pendant un câlin.",
+          "Je n'ai jamais relu nos messages coquins.",
+          "Je n'ai jamais eu envie de te réveiller la nuit pour ça.",
+          "Je n'ai jamais imaginé qu'on nous surprenne.",
+          "Je n'ai jamais acheté de la lingerie ou un sous-vêtement en pensant à toi.",
+          "Je n'ai jamais eu envie qu'on essaie un jouet."
         ]
       },
       qui: {
@@ -601,7 +639,13 @@ window.THEMES = {
           "être en retard ?",
           "voler la couette la nuit ?",
           "craquer en premier pour un dessert ?",
-          "dépenser le plus pour une bêtise ?"
+          "dépenser le plus pour une bêtise ?",
+          "pleurer au mariage d'un ami ?",
+          "planifier un voyage sur un coup de tête ?",
+          "oublier les clés ?",
+          "se perdre en voiture sans vouloir demander ?",
+          "manger le dernier carré de chocolat en cachette ?",
+          "adopter un animal sans prévenir ?"
         ],
         hot: [
           "faire le premier pas ce soir ?",
@@ -611,7 +655,15 @@ window.THEMES = {
           "envoyer un message coquin en pleine journée ?",
           "être le plus bruyant ou la plus bruyante ?",
           "vouloir le faire dans un endroit risqué ?",
-          "tenir le plus longtemps sans faire l'amour ?"
+          "tenir le plus longtemps sans faire l'amour ?",
+          "proposer un jeu de rôle ?",
+          "craquer pour un câlin en pleine journée ?",
+          "oser une photo coquine ?",
+          "dire le mot le plus cru ce soir ?",
+          "réveiller l'autre pour un câlin coquin ?",
+          "vouloir le faire dans un endroit où on peut être vus ?",
+          "garder le contrôle le plus longtemps ?",
+          "avoir le fantasme le plus fou ?"
         ]
       },
       preferes: {
@@ -625,7 +677,22 @@ window.THEMES = {
           ["Que je cuisine pour toi tous les jours", "Que je te masse tous les soirs"],
           ["Un chien", "Un chat"],
           ["Vivre en ville", "Vivre à la campagne"],
-          ["Se dire tout", "Garder un petit jardin secret"]
+          ["Se dire tout", "Garder un petit jardin secret"],
+          ["Partir en voyage demain sans rien préparer", "Préparer pendant 6 mois le voyage parfait"],
+          ["Un dimanche entier au lit", "Un dimanche entier dehors"],
+          ["Cuisiner ensemble", "Se faire livrer"],
+          ["Que je chante faux tous les matins", "Que je ronfle toutes les nuits"],
+          ["Lire mes messages", "Que je lise les tiens"],
+          ["Revivre notre premier baiser", "Revivre notre première dispute… pour la gagner"],
+          ["Un tatouage assorti", "Un surnom ridicule en public"],
+          ["Vivre un an à l'étranger ensemble", "Ne jamais déménager"],
+          ["Un week-end surprise organisé par moi", "Organiser toi-même le week-end parfait"],
+          ["Savoir tout ce que je pense", "Que je sache tout ce que tu penses"],
+          ["Une soirée jeux vidéo", "Une soirée film d'horreur"],
+          ["Une dispute par semaine mais vite réglée", "Une seule grosse dispute par an"],
+          ["Que je te réveille avec un café", "Que je te laisse dormir jusqu'à midi"],
+          ["Danser un slow en pleine rue", "Chanter ensemble au karaoké"],
+          ["Avoir un enfant de plus que prévu", "Un animal de plus que prévu"]
         ],
         hot: [
           ["Une nuit lente et romantique", "Un moment rapide et sauvage"],
@@ -637,7 +704,27 @@ window.THEMES = {
           ["Dans la douche", "Sur le canapé"],
           ["Que je te dise tout ce que je fais", "Que je ne dise rien du tout"],
           ["Une nuit à l'hôtel", "Une nuit en pleine nature"],
-          ["Lingerie", "Rien du tout"]
+          ["Lingerie", "Rien du tout"],
+          ["Que je t'attache", "M'attacher"],
+          ["Un strip-tease de ma part", "Un strip-tease de ta part"],
+          ["Faire l'amour dans la cuisine", "Faire l'amour dans la voiture"],
+          ["Une nuit sans dormir", "Un réveil très coquin"],
+          ["Les mots doux", "Les mots crus"],
+          ["Un jeu de rôle", "Un défi chronométré"],
+          ["Que je te déshabille lentement", "Que j'arrache tes vêtements"],
+          ["Des glaçons", "De l'huile de massage"],
+          ["Le faire devant un miroir", "Le faire dans le noir complet"],
+          ["Un sextoy à deux", "Un massage les yeux bandés"],
+          ["Une semaine sans rien puis une nuit folle", "Un peu chaque jour"],
+          ["Que je te fasse languir 10 minutes", "Que j'aille droit au but"],
+          ["Le faire sous la douche", "Le faire dans un lit d'hôtel"],
+          ["Que je murmure ce que je vais te faire", "Que je le fasse sans prévenir"],
+          ["Que je porte tes vêtements", "Que je ne porte que des talons / un nœud papillon"],
+          ["Réaliser mon fantasme ce soir", "Réaliser le tien ce soir"],
+          ["Que je décide de tout ce soir", "Que tu décides de tout ce soir"],
+          ["Une vidéo rien que pour nous", "Des photos rien que pour nous"],
+          ["Le faire en silence total", "Ne pas se retenir du tout"],
+          ["Un week-end entier au lit", "Une escapade coquine en pleine nature"]
         ]
       },
       gages: [
