@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 37;
+const VERSION = 38;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */

@@ -530,7 +530,7 @@ A.online = { games: GAMES, register: (id, def) => { GAMES[id] = def; }, norm, cl
 
 /* ================= Écran « En ligne » ================= */
 A.makers.online = function () {
-  let ui = { screen: 'menu', err: '', tv: false, code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
+  let ui = { screen: A.joinCode ? 'join' : 'menu', err: '', tv: false, ocat: 'tous', qr: false, code: A.joinCode || '', name: A.store.get('onlineName', '') || A.S.players[0] || '' };
   A.joinCode = null;
   let peer = null, conn = null, isHost = false, state = null, sel = new Set(), lastHand = '';
   // Côté hôte
@@ -679,7 +679,7 @@ A.makers.online = function () {
     if (t === 'browser-incompatible') return 'Ce navigateur ne gère pas le mode en ligne. Essaie Safari ou Chrome à jour.';
     return 'Connexion impossible (' + (t || 'erreur') + '). Réessaie.';
   }
-  function fail(msg) { self.leave(); ui.screen = 'menu'; ui.err = msg; render(); }
+  function fail(msg) { self.leave(); ui.screen = ui.joining ? 'join' : 'menu'; ui.err = msg; render(); }
 
   function setState(s) {
     const prev = state; state = s;
@@ -696,21 +696,36 @@ A.makers.online = function () {
   /* ---------- Affichage ---------- */
   function render() {
     const H = A.header;
+    const nameField = `<div class="label">Ton prénom</div>
+        <div class="add-row"><input id="oname" maxlength="18" placeholder="Prénom" value="${esc(ui.name)}" autocomplete="off" /></div>`;
+    const bindName = () => { const n = document.getElementById('oname'); if (n) n.addEventListener('input', () => { ui.name = n.value; }); };
     if (ui.screen === 'menu') return A.view(`${H('Jouer en ligne')}
       <div class="stage">
-        <p class="hint" style="text-align:left">Chacun joue sur <b>son propre téléphone</b>. Un joueur crée la partie, les autres la rejoignent avec le code. Il faut internet sur chaque téléphone (le même wifi, c’est encore mieux).</p>
-        <div class="label">Ton prénom</div>
-        <div class="add-row"><input id="oname" maxlength="18" placeholder="Prénom" value="${esc(ui.name)}" autocomplete="off" /></div>
+        <p class="hint">📱 Chacun joue sur <b>son téléphone</b>. Un seul crée la partie, les autres la rejoignent.</p>
+        ${nameField}
         ${ui.err ? `<p class="errbox">${esc(ui.err)}</p>` : ''}
-        <button class="btn primary big block" data-a="create">✨ Créer une partie</button>
-        <div class="or-sep"><span>ou rejoindre</span></div>
-        <div class="add-row"><input id="ocode" class="codein" maxlength="4" placeholder="CODE" value="${esc(ui.code)}" autocomplete="off" autocapitalize="characters" /><button class="btn" data-a="join">Rejoindre</button></div>
-        <button class="btn block tvbtn" data-a="tvjoin">📺 Afficher sur la TV ou un ordi <small>(écran spectateur, sans jouer)</small></button>
+        <div class="obig">
+          <button data-a="create" style="--g:linear-gradient(150deg,#ff5c8a,#ff9f1c)"><span>✨</span><b>Créer une partie</b><small>Tu choisis les jeux, les autres te rejoignent</small></button>
+          <button data-a="tojoin" style="--g:linear-gradient(150deg,#3aa0ff,#7b5cff)"><span>🔑</span><b>Rejoindre</b><small>Avec le code ou le QR code d'un ami</small></button>
+        </div>
+        <button class="linkbtn" data-a="totv">📺 Afficher une partie sur la TV ou un ordi</button>
+      </div>`, bindName);
+    if (ui.screen === 'join') return A.view(`${H(ui.tv ? 'Écran TV' : 'Rejoindre')}
+      <div class="stage">
+        ${ui.tv ? '<p class="hint">📺 Cet écran affichera la partie en grand, sans jouer.</p>' : nameField}
+        <div class="label" style="text-align:center">Code de la partie</div>
+        <label class="codecells"><input id="ocode" maxlength="4" value="${esc(ui.code)}" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" />
+          ${[0, 1, 2, 3].map(i => `<span class="${i === Math.min(ui.code.length, 3) ? 'cur' : ''}">${esc(ui.code[i] || '')}</span>`).join('')}</label>
+        <p class="hint" style="font-size:.85rem">Le code est affiché sur le téléphone de celui qui a créé la partie. Tu peux aussi scanner son QR code avec l'appareil photo.</p>
+        ${ui.err ? `<p class="errbox">${esc(ui.err)}</p>` : ''}
+        <button class="btn primary big block" data-a="${ui.tv ? 'tvjoin' : 'join'}">${ui.tv ? '📺 Afficher la partie' : 'Rejoindre la partie'}</button>
       </div>`, () => {
-        const n = document.getElementById('oname'), c = document.getElementById('ocode');
-        n.addEventListener('input', () => { ui.name = n.value; });
-        c.addEventListener('input', () => { ui.code = c.value = c.value.toUpperCase(); });
-        c.addEventListener('keydown', e => { if (e.key === 'Enter') on('join'); });
+        bindName();
+        const c = document.getElementById('ocode'), cells = [...document.querySelectorAll('.codecells span')];
+        const paint = () => cells.forEach((sp, i) => { sp.textContent = ui.code[i] || ''; sp.className = i === Math.min(ui.code.length, 3) ? 'cur' : ''; });
+        c.addEventListener('input', () => { ui.code = c.value = c.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); paint(); if (ui.code.length === 4 && (ui.tv || (ui.name || '').trim())) { c.blur(); on(ui.tv ? 'tvjoin' : 'join'); } });
+        c.addEventListener('keydown', e => { if (e.key === 'Enter') on(ui.tv ? 'tvjoin' : 'join'); });
+        if (!ui.code && (ui.tv || ui.name)) setTimeout(() => c.focus(), 50);
       });
     if (ui.screen === 'connecting') return A.view(`${H('Jouer en ligne')}
       <div class="stage" style="justify-content:center;text-align:center"><div class="spinner"></div><p class="hint">${esc(ui.msg)}</p></div>`);
@@ -751,28 +766,25 @@ A.makers.online = function () {
         <div class="codecard">
           <span>Code de la partie</span>
           <b>${esc(state.code)}</b>
-          <div class="qr" id="qr"></div>
-          <small class="qrhint">Scanne avec l'appareil photo pour rejoindre</small>
-          <button class="btn" data-a="share">📤 Inviter</button>
+          ${ui.qr ? `<div class="qr" id="qr"></div><small class="qrhint">Scanne avec l'appareil photo pour rejoindre</small>` : ''}
+          <div class="row" style="width:100%"><button class="btn" data-a="share">📤 Inviter</button><button class="btn" data-a="oqr">${ui.qr ? 'Masquer le QR' : '📷 QR code'}</button></div>
         </div>
-        ${amHost() ? `<p class="hint tvhint">📺 ${state.tvs ? `<b>Écran TV connecté${state.tvs > 1 ? ` (${state.tvs})` : ''}</b> : la partie s'affiche en grand.` : `Envie d'afficher la partie en grand ? Ouvre <b>skelvo.fr/apero</b> sur la TV ou un ordi › Jouer en ligne › tape <b>${esc(state.code)}</b> › 📺 Afficher sur la TV.`}</p>` : ''}
-        <div class="label">Joueurs connectés · ${online}</div>
-        <div class="chips" style="margin-top:0">${state.players.map(p => `<span class="chip ${p.online ? '' : 'offline'}" style="padding-right:14px"><i class="dot"></i>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}${p.name === state.me ? ' (toi)' : ''}</span>`).join('')}</div>
-        ${amHost() ? `
-          <div class="label">Choisis un jeu</div>
-          ${A.S.spicy ? '<p class="spicynote">🌶️ Mode épicé activé : seuls les jeux épicés sont proposés.</p>' : ''}
-          ${Object.entries(CATS).map(([cat, title]) => {
-            const list = Object.entries(GAMES).filter(([, g]) => (g.cat || 'ambiance') === cat && (!A.S.spicy || g.spicy))
-              .sort((a, b) => ((online >= b[1].min && online <= b[1].max) - (online >= a[1].min && online <= a[1].max)));
-            if (!list.length) return '';
-            return `<h3 class="cat">${title}</h3><div class="ogames">${list.map(([id, g]) => {
-              const ok = online >= g.min && online <= g.max;
-              return `<button class="game ${ok ? '' : 'off'}" style="--g:${g.g}" data-a="start" data-g="${id}">
-                <span class="e">${g.e}</span><b>${g.name}</b><span>${ok ? g.d : g.min === g.max ? `À ${g.min} joueurs` : `De ${g.min} à ${g.max} joueurs`}</span></button>`;
-            }).join('')}</div>`;
-          }).join('')}`
+        <div class="label">Joueurs connectés · ${online}${amHost() && state.tvs ? ` · 📺 TV connectée` : ''}</div>
+        <div class="pchips">${state.players.map(p => `<span class="pchip ${p.online ? '' : 'offline'}" style="padding-right:12px"><span class="ava" style="display:grid;place-items:center">${p.online ? A.avatar(p.name) : '💤'}</span><span>${esc(p.name)}${p.name === state.host ? ' 👑' : ''}${p.name === state.me ? ' (toi)' : ''}</span></span>`).join('')}</div>
+        ${amHost() ? (() => {
+          const cats = Object.entries(CATS).filter(([cat]) => Object.values(GAMES).some(g => (g.cat || 'ambiance') === cat && (!A.S.spicy || g.spicy)));
+          if (ui.ocat !== 'tous' && !cats.some(([c]) => c === ui.ocat)) ui.ocat = 'tous';
+          const list = Object.entries(GAMES).filter(([, g]) => (ui.ocat === 'tous' || (g.cat || 'ambiance') === ui.ocat) && (!A.S.spicy || g.spicy))
+            .sort((a, b) => ((online >= b[1].min && online <= b[1].max) - (online >= a[1].min && online <= a[1].max)));
+          return `<div class="label">Choisis un jeu</div>
+          ${A.S.spicy ? '<p class="mnote">🌶️ Mode épicé : seulement les jeux épicés.</p>' : ''}
+          <div class="cats">${[['tous', '✨ Tout'], ...cats].map(([k, t]) => `<button class="${ui.ocat === k ? 'on' : ''}" data-a="ocat" data-v="${k}">${t}</button>`).join('')}</div>
+          <div class="ggrid">${list.map(([id, g]) => { const ok = online >= g.min && online <= g.max;
+            return `<button class="gcard ${ok ? '' : 'off'}" style="--g:${g.g}" data-a="start" data-g="${id}"><span class="ge">${g.e}</span><b>${g.name}</b><small>${ok ? g.d : g.min === g.max ? `À ${g.min} joueurs` : `De ${g.min} à ${g.max} joueurs`}</small></button>`; }).join('')}</div>
+          ${state.tvs ? '' : `<p class="hint tvhint">📺 Pour afficher la partie en grand : ouvre skelvo.fr/apero sur la TV › Jouer en ligne › « Afficher une partie sur la TV » › code <b>${esc(state.code)}</b>.</p>`}`;
+        })()
           : `<div class="waiting"><div class="spinner small"></div>En attente que ${esc(state.host)} lance un jeu…</div>`}
-      </div>`, () => drawQR(location.origin + location.pathname + '#join=' + state.code));
+      </div>`, () => { if (ui.qr) drawQR(location.origin + location.pathname + '#join=' + state.code); });
   }
 
   /* QR code d'invitation (bibliothèque chargée à la demande) */
@@ -1315,9 +1327,13 @@ A.makers.online = function () {
   }
   function on(a, el) {
     if (state && state.g && GAMES[state.g.id] && GAMES[state.g.id].on && GAMES[state.g.id].on(a, el, ctx()) !== false) return;
-    if (a === 'tvjoin') { ui.tv = true; ui.err = ''; ui.code = (document.getElementById('ocode')?.value || ui.code); return joinRoom(); }
+    if (a === 'tojoin') { ui.name = (document.getElementById('oname')?.value || ui.name); ui.tv = false; ui.err = ''; ui.screen = 'join'; return render(); }
+    if (a === 'totv') { ui.tv = true; ui.err = ''; ui.screen = 'join'; return render(); }
+    if (a === 'oqr') { ui.qr = !ui.qr; return render(); }
+    if (a === 'ocat') { ui.ocat = el.dataset.v; return render(); }
+    if (a === 'tvjoin') { ui.tv = true; ui.joining = true; ui.err = ''; ui.code = (document.getElementById('ocode')?.value || ui.code); return joinRoom(); }
     if (a === 'create' || a === 'join') {
-      ui.tv = false;
+      ui.tv = false; ui.joining = a === 'join';
       ui.name = (document.getElementById('oname')?.value || ui.name).trim().replace(/\s+/g, ' ');
       if (!ui.name) { ui.err = 'Entre ton prénom d’abord'; return render(); }
       A.store.set('onlineName', ui.name); ui.err = '';
