@@ -74,7 +74,7 @@ let SA = { round: 0, last: [], pending: null, cur: null };
 A.soiree = { round: () => SA.round, game: () => SA.pending };
 A.makers.soiree = function () {
   const n = A.S.players.length;
-  const pool = () => Object.keys(A.G).filter(id => (!A.S.spicy || A.G[id].spicy) && A.fitAt(id, n) !== '-' && n >= A.minPlayers(id));
+  const pool = () => Object.keys(A.G).filter(id => !A.G[id].noAuto && (!A.S.spicy || A.G[id].spicy) && A.fitAt(id, n) !== '-' && n >= A.minPlayers(id));
   function spin(self) {
     const all = pool(); if (!all.length) return toast('Aucun jeu disponible pour ce nombre de joueurs');
     const choices = all.filter(id => !SA.last.includes(id));

@@ -3,7 +3,7 @@
 
 const D = window.DATA;
 const THEMES = window.THEMES || {};
-const VERSION = 45;
+const VERSION = 46;
 const $app = document.getElementById('app');
 
 /* ================= Stockage ================= */
@@ -185,6 +185,7 @@ const G = {
   main:     { name: 'Main sûre', e: '🫳', d: 'Ne fais pas trembler le téléphone', g: 'linear-gradient(150deg,#5ee7c5,#1d7f9a)', fit: 'bbbb', free: true, isNew: true },
   enigmes:  { name: 'Énigmes', e: '🧩', d: 'Devinettes et casse-têtes en équipe', g: 'linear-gradient(150deg,#4facfe,#6a3093)', fit: 'bbbb', free: true, isNew: true },
   yams:     { name: 'Le Yams', e: '🎲', d: '5 dés, 3 lancers, une grille', g: 'linear-gradient(150deg,#e94560,#533483)', fit: 'bbbo', isNew: true },
+  santa:    { noAuto: true, rules: 'Pour l’échange de cadeaux : chacun découvre en secret à qui il offre un cadeau (personne ne tombe sur soi-même). On choisit un budget, puis on se passe le téléphone un par un. Le tirage est gardé sur le téléphone jusqu’au jour J, et on peut le révéler à la fin.', name: 'Père Noël secret', e: '🎅', d: 'Tirage secret : qui offre un cadeau à qui ?', g: 'linear-gradient(150deg,#e63946,#1f8a4c)', fit: '-bbb', isNew: true },
   secoue:   { name: 'Secoue-le', e: '🫨', d: 'Le plus fort en 5 secondes', g: 'linear-gradient(150deg,#ff6b6b,#a1239c)', fit: 'bbbb', free: true, isNew: true }
 };
 const clampN = n => Math.min(5, Math.max(2, n));
@@ -278,7 +279,7 @@ window.addEventListener('popstate', e => { const st = e.state; if (st && st.p &&
 /* ================= Accueil ================= */
 /* Catégories de l'accueil */
 const CATS = [
-  ['ambiance', '🎉', 'Ambiance', 'Questions, défis, mimes', 'linear-gradient(150deg,#ff5c8a,#b0306e)', ['aov', 'jamais', 'qui', 'preferes', 'juge', 'connais', 'imposteur', 'mime', 'bombe', 'roue', 'doigt']],
+  ['ambiance', '🎉', 'Ambiance', 'Questions, défis, mimes', 'linear-gradient(150deg,#ff5c8a,#b0306e)', ['aov', 'jamais', 'qui', 'preferes', 'juge', 'connais', 'imposteur', 'mime', 'bombe', 'roue', 'doigt', 'santa']],
   ['boire', '🍻', 'À boire', 'Cartes et règles à boire', 'linear-gradient(150deg,#f7b733,#e0702a)', ['roi', 'pyramide', 'bus']],
   ['tete', '🧠', 'Réflexion', 'Énigmes, mots, dés', 'linear-gradient(150deg,#4facfe,#6a3093)', ['synchro', 'enigmes', 'yams']],
   ['reflexes', '⚡', 'Réflexes', 'Le plus rapide gagne', 'linear-gradient(150deg,#ffd23f,#ee6c1f)', ['duel', 'main', 'secoue']],
@@ -312,6 +313,7 @@ function setting(a, el, rerender) {
   }
   if (a === 'star') { S.star = el.dataset.v; save(); rerender(); buzz(15); toast(S.theme === 'anniv' ? `🎂 Joyeux anniversaire ${S.star} !` : `💍 Place à ${S.star} !`); return true; }
   if (a === 'unstar') { S.star = null; save(); rerender(); return true; }
+  if (a === 'theme') { const nk = el.dataset.v || null; if (nk && nk !== S.theme && THEMES[nk]) setTimeout(() => packIntro(nk), 60); }
   if (a === 'theme') {
     const k = el.dataset.v || null, t = THEMES[k];
     if (k !== S.theme) S.star = null;
@@ -324,7 +326,7 @@ function setting(a, el, rerender) {
 }
 
 /* Bannière du pack actif (accueil) + choix de la personne fêtée */
-const BANNERS = { noel: '🎄 Joyeux Noël ! Les cartes de Noël sont mélangées au jeu.', couple: '💞 Soirée en amoureux : cartes spéciales couple.', famille: '👨‍👩‍👧 Soirée en famille : cartes tout public, sans alcool.' };
+const BANNERS = { halloween: '🎃 Joyeux Halloween ! Frissons garantis.', nouvelan: '🎆 Bonne année ! Bilan, résolutions et bisous de minuit.', valentin: '💘 Joyeuse Saint-Valentin, en couple ou célibataire !', vacances: '🏖️ Bonnes vacances ! Soleil, voyages et souvenirs.', noel: '🎄 Joyeux Noël ! Les cartes de Noël sont mélangées au jeu. Envie d’un Père Noël secret ? Il est dans 🎉 Ambiance.', couple: '💞 Soirée en amoureux : cartes spéciales couple.', famille: '👨‍👩‍👧 Soirée en famille : cartes tout public, sans alcool.' };
 function packBanner() {
   const th = theme(); if (!th) return '';
   const r = ROLES[S.theme], n = star();
@@ -332,6 +334,20 @@ function packBanner() {
   if (r) return `<div class="packban">${n ? `<b>${esc(r.ban(n))}</b><small>Son prénom apparaît dans les cartes. <button class="linkbtn sm" data-a="unstar">Changer</button></small>`
     : `<b>${r.e} ${r.q}</b><small>Son prénom remplacera « ${S.theme === 'anniv' ? 'la star du jour' : 'le / la futur·e marié·e'} » dans les cartes.</small>${pickStar || '<small>Ajoute d’abord les prénoms 👇</small>'}`}</div>`;
   return BANNERS[S.theme] ? `<div class="packban"><b>${BANNERS[S.theme]}</b></div>` : '';
+}
+
+/* Écran d'arrivée festif quand on active un pack */
+function packIntro(k) {
+  const t = THEMES[k]; if (!t) return;
+  document.querySelector('.packintro')?.remove();
+  const w = document.createElement('div'); w.className = 'packintro';
+  const COL = ['#ff4fa3', '#ffd23f', '#3aa0ff', '#3ddc97', '#ff8a3d', '#b98cff', '#fff'];
+  const parts = Array.from({ length: 28 }, (_, i) => { const ang = i / 28 * Math.PI * 2, d = 120 + Math.random() * 120;
+    return `<i style="--x:${Math.cos(ang) * d}px;--y:${Math.sin(ang) * d}px;background:${COL[i % COL.length]};animation-delay:${Math.random() * .15}s"></i>`; }).join('');
+  w.innerHTML = `<div class="pibox"><div class="piburst">${parts}</div><div class="pie">${t.e}</div><b>Pack ${esc(t.name)}</b><small>${esc(t.d)}</small><span class="pitap">Touche pour continuer</span></div>`;
+  const close = () => { w.classList.add('out'); setTimeout(() => w.remove(), 250); };
+  w.addEventListener('click', close); setTimeout(close, 2800);
+  document.body.appendChild(w); beep(880, .08, 'sine'); setTimeout(() => beep(1320, .12, 'sine'), 120); buzz([30, 40, 60]);
 }
 
 const home = {
@@ -422,7 +438,7 @@ const rulesBody = () => `
             <h3>🎲 Soirée auto et 📊 stats</h3><p>Soirée auto tire un jeu adapté à votre nombre. Après chaque manche, on indique le gagnant : le classement de la soirée se remplit. Le bouton 🍻 en haut de chaque jeu compte les gorgées (ou pénalités) pendant n'importe quel jeu, et tout se retrouve dans 📊 Soirée. Touchez l'emoji d'un joueur pour le changer.</p>
             <h3>🕹️ Arcade</h3><p>Des jeux d'adresse sur un seul téléphone. <b>Chacun son tour</b> (La Tour, Le Sprint, Le Serpent, Casse-briques, Esquive, Le Lancer) : chaque joueur fait sa partie, le meilleur score gagne la manche, le / la dernier·e boit 2 gorgées (ou fait un gage). Le record de tous les temps est gardé. <b>Duels</b> (Air hockey, Ping, Tir rapide) : téléphone posé à plat entre deux joueurs, chacun joue de son côté. Le perdant boit 3 gorgées, et avec plus de 2 joueurs, le gagnant reste.</p>
             <h3>📺 Écran TV</h3><p>Facultatif. Pendant une partie en ligne, ouvrez <b>skelvo.fr/apero/tv</b> sur une TV connectée, une tablette ou un ordi, puis tapez le code de la partie. L'écran montre la partie en grand pour tout le monde, sans jouer et sans jamais dévoiler les cartes, dés, mots ou rôles secrets. Chaque joueur garde son téléphone.</p>
-            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool) : le pack ajoute ses cartes à celles d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et des gages (le pack Famille, lui, les remplace pour rester tout public). Les jeux concernés sont affichés en haut de l'accueil.</p>
+            <h3>🎉 Packs à thème</h3><p>Anniversaire, EVG / EVJF, Noël, Nouvel An, Halloween, Saint-Valentin, Vacances, Couple (à deux, doux ou épicé) et Famille (tout public, sans alcool). Chaque pack change les couleurs et le décor de l'appli. Pour l'anniversaire et l'EVG / EVJF, choisissez la personne fêtée sur l'accueil : son prénom apparaît dans les cartes. Le pack le pack ajoute ses cartes à celles d'Action ou Vérité, Je n'ai jamais, Qui pourrait…, Tu préfères, Le Juge et des gages (le pack Famille, lui, les remplace pour rester tout public). Les jeux concernés sont affichés en haut de l'accueil.</p>
             <h3>🎭 Action ou Vérité</h3><p>Le joueur désigné choisit Action ou Vérité. Il refuse ? Il prend le Joker (gorgées ou gage).</p>
             <h3>🙊 Je n'ai jamais</h3><p>On lit la carte à voix haute. Ceux qui l'ont déjà fait boivent (ou perdent un point). Les révélations sont encouragées.</p>
             <h3>🧑‍⚖️ Le Juge <small>3-4 joueurs</small></h3><p>À chaque manche, un joueur est le juge. Les autres relèvent le défi à tour de rôle, et le juge désigne le meilleur, qui marque un point. Le juge change à chaque manche. Premier au score visé : champion !</p>
@@ -1556,10 +1572,10 @@ function applyTheme() {
   document.documentElement.classList.toggle('lvl2', !!S.spicy && S.spicyLvl === 2);
   const pk = theme() ? S.theme : '';
   document.documentElement.dataset.pack = pk;
-  const PACKBG = { noel: '#0b1a12', anniv: '#1a0f24', evg: '#15131c', couple: '#1a0a14', famille: '#0e1a2b' };
+  const PACKBG = { halloween: '#140b1c', nouvelan: '#0a0f24', valentin: '#1c0710', vacances: '#06222b', noel: '#0b1a12', anniv: '#1a0f24', evg: '#15131c', couple: '#1a0a14', famille: '#0e1a2b' };
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = S.spicy ? (S.spicyLvl === 2 ? '#0c0208' : '#1a0606') : PACKBG[pk] || '#120d1f';
   // petits décors animés : neige, confettis, cœurs…
-  const FX = { noel: ['❄', '❅', '❆', '•'], anniv: ['🎈', '🎉', '✨', '■', '●'], evg: ['✨', '🥂', '💍'], couple: ['💗', '💕', '❤'], famille: ['🎈', '⭐', '☀️'] };
+  const FX = { halloween: ['🦇', '👻', '🎃', '🕸️', '•'], nouvelan: ['✨', '🎆', '🥂', '★', '•'], valentin: ['💘', '💗', '❤', '💌'], vacances: ['🌴', '☀️', '🐚', '🫧'], noel: ['❄', '❅', '❆', '•'], anniv: ['🎈', '🎉', '✨', '■', '●'], evg: ['✨', '🥂', '💍'], couple: ['💗', '💕', '❤'], famille: ['🎈', '⭐', '☀️'] };
   let fx = document.getElementById('fx');
   if (!FX[pk]) { if (fx) fx.remove(); return; }
   if (fx && fx.dataset.pk === pk) return;
@@ -1634,11 +1650,78 @@ makers.jeux = () => {
   };
 };
 
+/* ---------- Père Noël secret ---------- */
+makers.santa = () => {
+  const IDEAS = ['un mug personnalisé', 'un jeu de société', 'une bougie qui sent bon', 'un livre qui l’a marqué', 'des chaussettes improbables', 'un objet fait main', 'une plante', 'un bon pour un resto à deux', 'un puzzle', 'des chocolats de luxe', 'un carnet et un joli stylo', 'un pull de Noël moche', 'une photo encadrée de vous', 'un cocktail kit', 'une expérience (escape game, karting…)', 'un objet lié à sa passion', 'une enceinte de douche', 'un accessoire rigolo pour sa maison'];
+  let st = store.get('santa', null), shown = false, budget = st ? st.budget : 20;
+  const names = S.players.slice();
+  const valid = st && st.names && st.names.length === names.length && st.names.every(n => names.includes(n));
+  if (!valid) st = null;
+  const draw = () => { let r; do r = shuffle(names); while (r.some((x, i) => x === names[i])); const pairs = {}; names.forEach((n, i) => pairs[n] = r[i]); return pairs; };
+  const save2 = () => store.set('santa', st);
+  const self = {
+    render() {
+      if (!st) return view(`${header('Père Noël secret')}
+        <div class="stage">
+          <div class="obhero" style="text-align:center">🎅</div>
+          <p class="hint">Chacun va découvrir <b>en secret</b> à qui il offre un cadeau. Personne ne tombe sur soi-même. On se passe le téléphone, un par un.</p>
+          <div class="label">Budget du cadeau</div>
+          <div class="seg">${[10, 20, 30, 50, 0].map(v => `<button class="${budget === v ? 'on' : ''}" data-a="sbud" data-v="${v}">${v ? v + ' €' : 'Libre'}</button>`).join('')}</div>
+          <div class="label">Participants · ${names.length}</div>
+          <div class="pchips">${names.map(p => `<span class="pchip" style="padding-right:12px"><span class="ava" style="display:grid;place-items:center">${avatar(p)}</span><span>${esc(p)}</span></span>`).join('')}</div>
+          <button class="btn primary big block" data-a="sdraw">🎁 Lancer le tirage au sort</button>
+        </div>`);
+      const left = names.filter(n => !st.done.includes(n));
+      if (!left.length) return view(`${header('Père Noël secret')}
+        <div class="stage">
+          <div class="obhero" style="text-align:center">🎄</div>
+          <div class="turn">C'est bon !<strong>Tout le monde a son tirage 🎅</strong></div>
+          <p class="hint">Budget : <b>${st.budget ? st.budget + ' €' : 'libre'}</b>. Gardez le secret jusqu'à l'échange des cadeaux !</p>
+          <div class="pchips" style="justify-content:center">${names.map(p => `<button class="pchip" data-a="sagain" data-v="${esc(p)}" style="padding-right:12px"><span class="ava" style="display:grid;place-items:center">${avatar(p)}</span><span>${esc(p)} · revoir</span></button>`).join('')}</div>
+          <div class="row"><button class="btn" data-a="sreveal">🎉 Tout révéler</button><button class="btn" data-a="sreset">🔄 Nouveau tirage</button></div>
+        </div>`);
+      const who = st.cur || left[0];
+      if (!shown) return view(`${header('Père Noël secret')}
+        <div class="stage" style="text-align:center">
+          <p class="hint">${st.done.length} / ${names.length} ont vu leur tirage</p>
+          <div class="obhero">📱</div>
+          <div class="turn">Passe le téléphone à<strong>${avatar(who)} ${esc(who)}</strong></div>
+          <p class="hint">Les autres, on regarde ailleurs 🙈</p>
+          <button class="btn primary big block" data-a="sshow">Je suis ${esc(who)}, je regarde</button>
+        </div>`);
+      const to = st.pairs[who];
+      view(`${header('Père Noël secret')}
+        <div class="stage" style="text-align:center">
+          <div class="card" style="--g:linear-gradient(160deg,#e63946,#1f8a4c)">
+            <div class="tag">${esc(who)}, tu offres un cadeau à…</div>
+            <div class="secret" style="font-size:2.6rem">${avatar(to)} ${esc(to)}</div>
+            <div class="sub">Budget : ${st.budget ? st.budget + ' €' : 'libre'} · Idée : ${esc(pick(IDEAS))}</div>
+          </div>
+          <button class="btn primary big block" data-a="shide">C'est retenu, je cache 🤫</button>
+        </div>`);
+    },
+    on(a, el) {
+      if (a === 'sbud') { budget = +el.dataset.v; self.render(); }
+      if (a === 'sdraw') { st = { names, pairs: draw(), budget, done: [] }; save2(); buzz([40, 30, 80]); beep(1100, .1, 'sine'); self.render(); }
+      if (a === 'sshow') { shown = true; buzz(20); self.render(); }
+      if (a === 'shide') { const who = st.cur || names.filter(n => !st.done.includes(n))[0]; if (!st.done.includes(who)) st.done.push(who); st.cur = null; shown = false; save2(); self.render(); }
+      if (a === 'sagain') { st.cur = el.dataset.v; st.done = st.done.filter(x => x !== st.cur); shown = false; save2(); self.render(); }
+      if (a === 'sreveal' && confirm('Révéler tous les tirages à tout le monde ?')) {
+        view(`${header('Père Noël secret')}<div class="stage"><div class="turn">Les Pères Noël secrets<strong>🎅 Révélation</strong></div>
+          <div class="scores">${names.map(n => `<div class="score"><span>${avatar(n)} ${esc(n)}</span><span>🎁 → ${avatar(st.pairs[n])} ${esc(st.pairs[n])}</span></div>`).join('')}</div>
+          <button class="btn primary big block" data-a="sreset">🔄 Nouveau tirage</button></div>`);
+      }
+      if (a === 'sreset' && confirm('Refaire un nouveau tirage ? L’ancien sera perdu.')) { st = null; store.set('santa', null); shown = false; self.render(); }
+    }
+  };
+  return self;
+};
+
 /* ---------- On joue à quoi ? ---------- */
 makers.picker = () => {
   let step = 0, mood = null, seen = [];
   const np = S.players.length;
-  const ok = id => G[id] && (!S.spicy || G[id].spicy) && (np < 2 ? true : fitAt(id, np) !== '-');
+  const ok = id => G[id] && !G[id].noAuto && (!S.spicy || G[id].spicy) && (np < 2 ? true : fitAt(id, np) !== '-');
   const pick3 = () => {
     const m = MOODS.find(x => x[0] === mood), all = m[4].filter(ok);
     let pool = all.filter(id => !seen.includes(id)); if (pool.length < 3) { seen = []; pool = all; }

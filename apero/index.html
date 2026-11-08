@@ -929,28 +929,58 @@ html[data-pack="famille"] .hbar .logo{background:linear-gradient(135deg,#ffb703,
 .starpick button{padding:8px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:.9rem;}
 .starpick button.on{background:var(--accent);color:#fff;border-color:transparent;}
 .linkbtn.sm{padding:0 4px;font-size:.82rem;margin:0;}
+/* ---------- v46 : nouveaux packs + écran d'arrivée ---------- */
+html[data-pack="nouvelan"] #fx i,html[data-pack="valentin"] #fx i,html[data-pack="vacances"] #fx i{animation-name:fxrise;top:auto;bottom:-8vh;}
+html[data-pack="halloween"]:not(.spicy){--bg:#140b1c;--bg-2:#1c1027;--panel:#271536;--panel-2:#331c45;--line:rgba(255,140,40,.16);--muted:#c7a9d6;--accent:#ff7b1c;--accent-2:#a259ff;}
+html[data-pack="halloween"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,123,28,.28),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(162,89,255,.28),transparent 60%);}
+html[data-pack="halloween"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#ff7b1c,#c2410c);}
+html[data-pack="halloween"] .hbar .logo{background:linear-gradient(135deg,#ff7b1c,#6d28d9);}
+html[data-pack="nouvelan"]:not(.spicy){--bg:#0a0f24;--bg-2:#0f1633;--panel:#172046;--panel-2:#1f2a5a;--line:rgba(244,196,48,.18);--muted:#aab4d9;--accent:#f4c430;--accent-2:#7aa2ff;}
+html[data-pack="nouvelan"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(244,196,48,.25),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(122,162,255,.25),transparent 60%);}
+html[data-pack="nouvelan"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#f4c430,#c98b00);color:#1a1408;}
+html[data-pack="nouvelan"] .hbar .logo{background:linear-gradient(135deg,#f4c430,#3b5bdb);}
+html[data-pack="valentin"]:not(.spicy){--bg:#1c0710;--bg-2:#280a17;--panel:#350e20;--panel-2:#46132b;--line:rgba(255,77,109,.18);--muted:#e0a7b8;--accent:#ff2e63;--accent-2:#ffb3c6;}
+html[data-pack="valentin"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,46,99,.32),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(255,179,198,.18),transparent 60%);}
+html[data-pack="valentin"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#ff2e63,#c9184a);}
+html[data-pack="valentin"] .hbar .logo{background:linear-gradient(135deg,#ff2e63,#ffb3c6);}
+html[data-pack="vacances"]:not(.spicy){--bg:#06222b;--bg-2:#0a2e39;--panel:#0f3c4a;--panel-2:#154c5d;--line:rgba(255,209,102,.18);--muted:#9fcfd6;--accent:#ff9f43;--accent-2:#2ec4b6;}
+html[data-pack="vacances"]:not(.spicy) body{background-image:radial-gradient(55rem 40rem at 110% -10%,rgba(255,209,102,.30),transparent 60%),radial-gradient(50rem 40rem at -20% 110%,rgba(46,196,182,.28),transparent 60%);}
+html[data-pack="vacances"]:not(.spicy) .btn.primary{background:linear-gradient(135deg,#ff9f43,#ee5a24);}
+html[data-pack="vacances"] .hbar .logo{background:linear-gradient(135deg,#ffd166,#2ec4b6);}
+.packintro{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fadein .2s ease both;}
+.packintro.out{opacity:0;transition:opacity .25s;}
+.pibox{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:20px;}
+.pie{font-size:6rem;line-height:1;animation:pibounce .7s cubic-bezier(.2,.9,.3,1.5) both;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5));}
+.pibox b{font-size:2rem;font-weight:800;letter-spacing:-.02em;animation:pop .5s .15s both;}
+.pibox small{color:rgba(255,255,255,.85);font-size:1rem;animation:pop .5s .25s both;}
+.pitap{margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.55);}
+.piburst{position:absolute;left:50%;top:70px;width:0;height:0;}
+.piburst i{position:absolute;width:10px;height:10px;border-radius:2px;opacity:0;animation:piburst 1.1s cubic-bezier(.1,.8,.3,1) forwards;}
+@keyframes piburst{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(320deg) scale(1);opacity:0}}
+@keyframes pibounce{0%{transform:scale(.2) rotate(-20deg);opacity:0}100%{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=45"></script>
-<script src="data-epice.js?v=45"></script>
-<script src="data-enigmes.js?v=45"></script>
-<script src="data-themes.js?v=45"></script>
-<script src="data-plus.js?v=45"></script>
-<script src="data-normal.js?v=45"></script>
-<script src="data-normal2.js?v=45"></script>
-<script src="data-plus2.js?v=45"></script>
-<script src="app.js?v=45"></script>
-<script src="games-boire.js?v=45"></script>
-<script src="soiree.js?v=45"></script>
-<script src="arcade.js?v=45"></script>
-<script src="online.js?v=45"></script>
-<script src="online-social.js?v=45"></script>
-<script src="online-vote.js?v=45"></script>
-<script src="online-cards.js?v=45"></script>
-<script src="online-board.js?v=45"></script>
-<script src="online-live.js?v=45"></script>
+<script src="data.js?v=46"></script>
+<script src="data-epice.js?v=46"></script>
+<script src="data-enigmes.js?v=46"></script>
+<script src="data-themes.js?v=46"></script>
+<script src="data-plus.js?v=46"></script>
+<script src="data-normal.js?v=46"></script>
+<script src="data-normal2.js?v=46"></script>
+<script src="data-plus2.js?v=46"></script>
+<script src="data-packs2.js?v=46"></script>
+<script src="app.js?v=46"></script>
+<script src="games-boire.js?v=46"></script>
+<script src="soiree.js?v=46"></script>
+<script src="arcade.js?v=46"></script>
+<script src="online.js?v=46"></script>
+<script src="online-social.js?v=46"></script>
+<script src="online-vote.js?v=46"></script>
+<script src="online-cards.js?v=46"></script>
+<script src="online-board.js?v=46"></script>
+<script src="online-live.js?v=46"></script>
 </body>
 </html>

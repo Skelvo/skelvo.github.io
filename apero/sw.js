@@ -1,7 +1,7 @@
 /* Hors-ligne : on garde l'appli en cache, et on la met à jour en arrière-plan. */
 /* À chaque mise à jour : augmenter ce numéro, les ?v= ici et dans index.html, VERSION dans app.js et version.json. */
-const CACHE = 'apero-v45';
-const FILES = ['./', 'index.html', 'app.js?v=45', 'games-boire.js?v=45', 'soiree.js?v=45', 'arcade.js?v=45', 'data.js?v=45', 'data-epice.js?v=45', 'data-enigmes.js?v=45', 'data-themes.js?v=45', 'data-plus.js?v=45', 'data-normal.js?v=45', 'data-normal2.js?v=45', 'data-plus2.js?v=45', 'online.js?v=45', 'online-social.js?v=45', 'online-vote.js?v=45', 'online-cards.js?v=45', 'online-board.js?v=45', 'online-live.js?v=45', 'vendor/peerjs-1.5.4.min.js', 'vendor/qrcode-1.4.4.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'apero-v46';
+const FILES = ['./', 'index.html', 'app.js?v=46', 'games-boire.js?v=46', 'soiree.js?v=46', 'arcade.js?v=46', 'data.js?v=46', 'data-epice.js?v=46', 'data-enigmes.js?v=46', 'data-themes.js?v=46', 'data-plus.js?v=46', 'data-normal.js?v=46', 'data-normal2.js?v=46', 'data-plus2.js?v=46', 'data-packs2.js?v=46', 'online.js?v=46', 'online-social.js?v=46', 'online-vote.js?v=46', 'online-cards.js?v=46', 'online-board.js?v=46', 'online-live.js?v=46', 'vendor/peerjs-1.5.4.min.js', 'vendor/qrcode-1.4.4.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
