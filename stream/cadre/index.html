@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cadre caméra animé gratuit — Skelvo Stream</title>
+<meta name="description" content="Crée gratuitement un cadre de webcam animé et personnalisé pour OBS ou Streamlabs. Sans compte, sans filigrane." />
+<link rel="canonical" href="https://skelvo.fr/stream/cadre/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=1">
+<style>
+  /* Miniatures des styles */
+  .sw{ background: var(--bg); position: relative; }
+  .sw-solid{ border: 3px solid var(--accent); }
+  .sw-neon{ border: 3px solid #4be1c3; box-shadow: 0 0 10px #4be1c3, inset 0 0 6px #4be1c3; }
+  .sw-gradient{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, conic-gradient(#9b5cff, #4be1c3, #ff5c8a, #9b5cff) border-box; }
+  .sw-flow{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, linear-gradient(115deg, #9b5cff, #4be1c3, #ff5c8a) border-box; }
+  .sw-rainbow{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, conic-gradient(#ff3b3b, #ffe600, #3dff6e, #22d3ff, #d14bff, #ff3b3b) border-box; }
+  .sw-pulse{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, linear-gradient(135deg, #ff5c8a, #9b5cff) border-box; box-shadow: 0 0 0 3px rgba(255,92,138,.25); }
+  .sw-dash{ border: 3px dashed #4be1c3; }
+  .sw-corners{ background:
+      linear-gradient(#9b5cff,#9b5cff) 0 0/12px 3px, linear-gradient(#9b5cff,#9b5cff) 0 0/3px 10px,
+      linear-gradient(#4be1c3,#4be1c3) 100% 0/12px 3px, linear-gradient(#4be1c3,#4be1c3) 100% 0/3px 10px,
+      linear-gradient(#9b5cff,#9b5cff) 100% 100%/12px 3px, linear-gradient(#9b5cff,#9b5cff) 100% 100%/3px 10px,
+      linear-gradient(#4be1c3,#4be1c3) 0 100%/12px 3px, linear-gradient(#4be1c3,#4be1c3) 0 100%/3px 10px, var(--bg);
+    background-repeat: no-repeat; }
+
+  /* Scène d'aperçu : on dessine à la vraie taille de la source OBS, puis on réduit */
+  .stage{ background: #08070d; }
+  .canvas{ position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  .canvas iframe{ width: 100%; height: 100%; }
+  .cam{ position: absolute; overflow: hidden; background: #222; }
+  .cam video{ width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam .fake{ position: absolute; inset: 0; background: radial-gradient(80% 90% at 50% 20%, #3a3556, #15131f); }
+  .cam .fake svg{ position: absolute; left: 50%; bottom: 0; width: 58%; transform: translateX(-50%); opacity: .9; }
+  .cam.has-video .fake{ display: none; }
+
+  .size-row{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .size-row input{ width: 92px; }
+  .mask-actions{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav">
+      <a href="./" aria-current="page" data-i18n="nav.frame">Cadre caméra</a>
+      <a href="../tchat/" data-i18n="nav.chat">Tchat</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="frame.title">Cadre caméra animé</h1>
+    <p data-i18n="frame.lead">Règle ton cadre, regarde le résultat en direct, puis copie le lien dans OBS ou Streamlabs. C'est gratuit, sans compte et sans filigrane.</p>
+  </div>
+
+  <div class="editor">
+    <!-- ---------- Réglages ---------- -->
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend data-i18n="frame.style">Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="st-gradient" value="gradient" checked><label for="st-gradient"><span class="sw sw-gradient"></span><span data-i18n="style.gradient">Dégradé tournant</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-neon" value="neon"><label for="st-neon"><span class="sw sw-neon"></span><span data-i18n="style.neon">Néon</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-flow" value="flow"><label for="st-flow"><span class="sw sw-flow"></span><span data-i18n="style.flow">Vague</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-rainbow" value="rainbow"><label for="st-rainbow"><span class="sw sw-rainbow"></span><span data-i18n="style.rainbow">Arc-en-ciel</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-pulse" value="pulse"><label for="st-pulse"><span class="sw sw-pulse"></span><span data-i18n="style.pulse">Battement</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-dash" value="dash"><label for="st-dash"><span class="sw sw-dash"></span><span data-i18n="style.dash">Pointillés</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-corners" value="corners"><label for="st-corners"><span class="sw sw-corners"></span><span data-i18n="style.corners">Coins</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-solid" value="solid"><label for="st-solid"><span class="sw sw-solid"></span><span data-i18n="style.solid">Uni</span></label></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="frame.colors">Couleurs</legend>
+        <div class="presets" id="presets" style="margin-bottom:14px"></div>
+        <div class="colors">
+          <label class="color"><input type="color" name="c1" value="#9b5cff"><span data-i18n="color.1">Couleur 1</span></label>
+          <label class="color"><input type="color" name="c2" value="#4be1c3"><span data-i18n="color.2">Couleur 2</span></label>
+          <label class="color"><input type="color" name="c3" value="#ff5c8a"><span data-i18n="color.3">Couleur 3</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="frame.shape">Forme</legend>
+        <div class="field">
+          <select name="shape" aria-label="Forme">
+            <option value="rect" data-i18n="shape.rect">Rectangle</option>
+            <option value="circle" data-i18n="shape.circle">Rond</option>
+          </select>
+        </div>
+        <label class="field"><span><span data-i18n="frame.width">Épaisseur</span><output for="f-w" data-unit=" px"></output></span><input type="range" id="f-w" name="w" min="2" max="40" value="8"></label>
+        <label class="field" id="row-r"><span><span data-i18n="frame.radius">Arrondi des coins</span><output for="f-r" data-unit=" px"></output></span><input type="range" id="f-r" name="r" min="0" max="160" value="24"></label>
+        <label class="field" id="row-cl"><span><span data-i18n="frame.cornerlen">Longueur des coins</span><output for="f-cl" data-unit=" %"></output></span><input type="range" id="f-cl" name="cl" min="8" max="50" value="22"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="frame.anim">Lueur et animation</legend>
+        <label class="field"><span><span data-i18n="frame.glow">Lueur</span><output for="f-glow" data-unit=" px"></output></span><input type="range" id="f-glow" name="glow" min="0" max="60" value="18"></label>
+        <label class="field"><span><span data-i18n="frame.speed">Durée d'un cycle</span><output for="f-speed" data-unit=" s"></output></span><input type="range" id="f-speed" name="speed" min="0" max="20" step="0.5" value="4"><small data-i18n="frame.speed.hint">0 = pas d'animation. Plus le chiffre est grand, plus c'est lent.</small></label>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="frame.label">Étiquette</legend>
+        <label class="field"><span data-i18n="frame.label.text">Texte (ton pseudo, par exemple)</span><input type="text" name="label" maxlength="40" placeholder="Ton pseudo" data-i18n-ph="frame.label.ph"></label>
+        <label class="field"><span data-i18n="frame.label.pos">Position</span>
+          <select name="lpos">
+            <option value="bl" data-i18n="pos.bl">En bas à gauche</option>
+            <option value="bc" data-i18n="pos.bc">En bas au centre</option>
+            <option value="br" data-i18n="pos.br">En bas à droite</option>
+            <option value="tl" data-i18n="pos.tl">En haut à gauche</option>
+            <option value="tc" data-i18n="pos.tc">En haut au centre</option>
+            <option value="tr" data-i18n="pos.tr">En haut à droite</option>
+          </select>
+        </label>
+        <label class="field"><span><span data-i18n="frame.label.size">Taille du texte</span><output for="f-ls" data-unit=" px"></output></span><input type="range" id="f-ls" name="ls" min="12" max="60" value="22"></label>
+      </fieldset>
+
+      <fieldset>
+        <button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button>
+      </fieldset>
+    </form>
+
+    <!-- ---------- Aperçu + lien ---------- -->
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="ratio" role="group" aria-label="Format">
+            <button type="button" data-w="1280" data-h="720" aria-pressed="true">16:9</button>
+            <button type="button" data-w="960" data-h="720">4:3</button>
+            <button type="button" data-w="720" data-h="720">1:1</button>
+            <button type="button" data-w="720" data-h="1280">9:16</button>
+          </div>
+          <button type="button" class="btn ghost small" id="webcam" data-i18n="webcam.on">Tester avec ma webcam</button>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="canvas" id="canvas">
+              <div class="cam" id="cam">
+                <div class="fake">
+                  <svg viewBox="0 0 100 80" aria-hidden="true"><circle cx="50" cy="30" r="17" fill="#6d6690"/><path d="M14 80c2-20 17-31 36-31s34 11 36 31z" fill="#6d6690"/></svg>
+                </div>
+                <video id="video" playsinline muted></video>
+              </div>
+              <iframe id="preview" title="Aperçu du cadre"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">1280 × 720</b>.</span></li>
+          <li><span data-i18n="frame.step3">Place la source <b>au-dessus de ta caméra</b> dans la liste, puis ajuste-la pour que la caméra soit bien à l'intérieur du cadre.</span></li>
+        </ol>
+        <div class="tip">
+          <span data-i18n="frame.mask.tip">Pour que les coins de ta caméra ne dépassent pas du cadre (arrondi ou rond), télécharge le masque ci-dessous. Ensuite, dans OBS : clic droit sur ta caméra → <b>Filtres</b> → <b>+</b> → <b>Masque d'image/mélange</b>, et choisis ce fichier.</span>
+          <div class="mask-actions">
+            <button type="button" class="btn ghost small" id="mask" data-i18n="frame.mask.dl">Télécharger le masque (PNG)</button>
+            <a class="btn ghost small" id="open" target="_blank" rel="noopener" data-i18n="open">Ouvrir dans un onglet</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=1"></script>
+<script>
+(function(){
+  'use strict';
+
+  var form = document.getElementById('settings');
+  var iframe = document.getElementById('preview');
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('canvas');
+  var cam = document.getElementById('cam');
+  var video = document.getElementById('video');
+
+  // ---------- Palettes prêtes à l'emploi ----------
+  var PRESETS = [
+    { n: 'Violet',     c: ['9b5cff', '4be1c3', 'ff5c8a'] },
+    { n: 'Cyber',      c: ['00f0ff', 'ff00e5', '7a00ff'] },
+    { n: 'Feu',        c: ['ff3d00', 'ffb300', 'ff006a'] },
+    { n: 'Glace',      c: ['8be9ff', 'ffffff', '4f7bff'] },
+    { n: 'Toxique',    c: ['39ff14', 'c6ff00', '00ffa3'] },
+    { n: 'Bonbon',     c: ['ff8fd8', 'ffd36e', '9fe7ff'] },
+    { n: 'Or',         c: ['ffd700', 'fff1b0', 'c58b00'] },
+    { n: 'Sang',       c: ['ff1744', '7a0010', 'ff6b6b'] }
+  ];
+  var presetsEl = document.getElementById('presets');
+  PRESETS.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'preset';
+    b.innerHTML = '<i style="background:linear-gradient(135deg,#' + p.c[0] + ',#' + p.c[1] + ',#' + p.c[2] + ')"></i>' + p.n;
+    b.addEventListener('click', function(){ ed.set({ c1: p.c[0], c2: p.c[1], c3: p.c[2] }); });
+    presetsEl.appendChild(b);
+  });
+
+  // ---------- Taille de la source (format) ----------
+  var size = SK.store.get('sk-cadre-size') || { w: 1280, h: 720 };
+  var ratioBtns = document.querySelectorAll('#ratio button');
+  function setSize(w, h){
+    size = { w: w, h: h };
+    SK.store.set('sk-cadre-size', size);
+    ratioBtns.forEach(function(b){ b.setAttribute('aria-pressed', String(+b.dataset.w === w && +b.dataset.h === h)); });
+    stage.style.aspectRatio = w + ' / ' + h;
+    // En vertical, on évite un aperçu gigantesque
+    stage.style.maxWidth = h > w ? '380px' : '';
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    document.getElementById('size-txt').textContent = w + ' × ' + h;
+    fit(); placeCam();
+  }
+  ratioBtns.forEach(function(b){ b.addEventListener('click', function(){ setSize(+b.dataset.w, +b.dataset.h); }); });
+
+  function fit(){ canvas.style.transform = 'scale(' + (stage.clientWidth / size.w) + ')'; }
+  new ResizeObserver(fit).observe(stage);
+
+  // Même calcul de marge que l'overlay, pour placer la caméra pile dans le cadre
+  function geometry(p){
+    var w = +p.w, glow = +p.glow, ls = +p.ls;
+    var pad = Math.ceil(Math.max(glow * 1.6, p.label ? ls * 0.9 : 0, 2));
+    var inset = pad + w / 2;
+    if (p.shape === 'circle'){
+      var d = Math.min(size.w, size.h) - inset * 2;
+      return { x: (size.w - d) / 2, y: (size.h - d) / 2, w: d, h: d, r: d / 2 };
+    }
+    return { x: inset, y: inset, w: size.w - inset * 2, h: size.h - inset * 2, r: Math.max(0, +p.r - w / 2) };
+  }
+  function placeCam(){
+    var g = geometry(ed.get());
+    cam.style.left = g.x + 'px'; cam.style.top = g.y + 'px';
+    cam.style.width = g.w + 'px'; cam.style.height = g.h + 'px';
+    cam.style.borderRadius = g.r + 'px';
+  }
+
+  // ---------- Masque PNG pour OBS ----------
+  document.getElementById('mask').addEventListener('click', function(){
+    var p = ed.get(), g = geometry(p);
+    var c = document.createElement('canvas');
+    c.width = size.w; c.height = size.h;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(g.x, g.y, g.w, g.h, Math.min(g.r, g.w / 2, g.h / 2));
+    else ctx.rect(g.x, g.y, g.w, g.h);
+    ctx.fill();
+    var a = document.createElement('a');
+    a.download = 'masque-camera-' + size.w + 'x' + size.h + '.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  });
+
+  // ---------- Webcam (reste dans le navigateur, rien n'est envoyé) ----------
+  var stream = null;
+  var camBtn = document.getElementById('webcam');
+  camBtn.addEventListener('click', function(){
+    if (stream){
+      stream.getTracks().forEach(function(t){ t.stop(); }); stream = null;
+      cam.classList.remove('has-video'); camBtn.textContent = SK.t('webcam.on', 'Tester avec ma webcam');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ SK.toast(SK.t('webcam.none', 'Webcam indisponible sur ce navigateur')); return; }
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(s){
+      stream = s; video.srcObject = s; video.play();
+      cam.classList.add('has-video'); camBtn.textContent = SK.t('webcam.off', 'Couper la webcam');
+    }, function(){ SK.toast(SK.t('webcam.denied', 'Accès à la webcam refusé')); });
+  });
+
+  // ---------- Éditeur ----------
+  var rowR = document.getElementById('row-r'), rowCl = document.getElementById('row-cl');
+  var latest = null;
+  var ed = SK.editor({
+    form: form,
+    overlay: 'overlay.html',
+    storageKey: 'sk-cadre',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    openBtn: document.getElementById('open'),
+    onChange: function(p, url){
+      latest = p;
+      rowR.hidden = p.shape === 'circle';
+      rowCl.hidden = p.style !== 'corners';
+      if (!iframe.src) iframe.src = url; else SK.sendToPreview(iframe, p);
+      placeCam();
+    }
+  });
+  iframe.addEventListener('load', function(){ if (latest) SK.sendToPreview(iframe, latest); });
+
+  setSize(size.w, size.h);
+})();
+</script>
+</body>
+</html>
