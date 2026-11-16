@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Le Duo — Lounge &amp; Food — Bayonne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171717;
+    --ink-dim:#6b6b6b;
+    --marble-bg:#f2f1ef;
+    --marble-vein:#d8d6d3;
+    --chrome:#9a9a9a;
+    --chrome-dark:#5c5c5c;
+    --black:#0a0a0a;
+    --white:#ffffff;
+    --accent-pink:#b81a68;
+    --ember:#8c3a26;  /* braise, cohérent avec le glow déjà utilisé ailleurs */
+    --line: rgba(10,10,10,0.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--marble-bg);
+    background-image:
+      repeating-linear-gradient(115deg, transparent 0 40px, rgba(0,0,0,0.02) 40px 41px, transparent 41px 90px);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    font-weight:300;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Jost', sans-serif;
+    font-weight:400;
+    letter-spacing:0.06em;
+    margin:0;
+    text-transform:uppercase;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+
+  .top-strip{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px 24px;
+    padding:14px 6vw;
+    font-size:0.75rem;
+    color:var(--ink-dim);
+    border-bottom:1px solid var(--line);
+  }
+  .top-strip span{white-space:nowrap;}
+
+  /* ---- hero ---- */
+  .hero{
+    padding:clamp(48px, 9vh, 100px) 6vw clamp(40px, 8vh, 90px);
+    text-align:center;
+    position:relative;
+    background:
+      linear-gradient(180deg, rgba(242,241,239,0.12) 0%, rgba(242,241,239,0.65) 45%, var(--marble-bg) 78%),
+      url("photos/narguile-fumee.jpg") center 25%/cover;
+  }
+  .logo-frame{
+    display:inline-block;
+    padding:26px 56px;
+    border:1px solid var(--chrome);
+    background:
+      linear-gradient(100deg, rgba(255,255,255,0.6), rgba(0,0,0,0.04) 40%, rgba(255,255,255,0.5) 70%),
+      var(--marble-bg);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
+  }
+  .logo-frame h1{
+    font-size:clamp(2.6rem, 8vw, 4.6rem);
+    letter-spacing:0.18em;
+    color:var(--black);
+  }
+  .hero .subtitle{
+    margin-top:22px;
+    font-family:'Jost', sans-serif;
+    letter-spacing:0.2em;
+    font-size:0.95rem;
+    color:var(--chrome-dark);
+  }
+  .hero p.lede{
+    max-width:46ch;
+    margin:26px auto 0;
+    font-size:1rem;
+    color:var(--ink-dim);
+  }
+  .hero .cta-row{
+    margin-top:32px;
+    display:flex;
+    gap:26px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-block;
+    padding:13px 32px;
+    border:1px solid var(--black);
+    color:var(--black);
+    text-decoration:none;
+    font-family:'Jost', sans-serif;
+    font-size:0.82rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    transition:background .25s ease, color .25s ease;
+  }
+  .btn:hover{ background:var(--black); color:var(--white); }
+  .cta-row .hours{ font-size:0.82rem; color:var(--ink-dim); }
+  .cta-row .hours strong{ color:var(--ink); font-weight:500;}
+
+  /* warning strip like original ("toutes casses...") */
+  .notice{
+    text-align:center;
+    color:#c81e4a;
+    font-size:0.82rem;
+    text-decoration:underline;
+    padding:0 6vw clamp(30px, 6vh, 70px);
+  }
+
+  section{ padding:clamp(40px, 7vh, 80px) 6vw; }
+
+  /* ---- barre discrète du haut (PC uniquement) ----
+     Le site n'a pas de menu fixe : une fois l'accueil dépassé, il faut
+     remonter tout en haut ou descendre jusqu'au pied de page pour
+     naviguer. Cette barre reprend juste ce que la page propose déjà
+     (Ambiance / Carte / Contact, le téléphone) et n'apparaît qu'une fois
+     l'accueil quitté — sur mobile, où l'on défile au pouce, elle serait
+     de trop et reste masquée (voir le @media plus bas). */
+  .sticky-nav{
+    position:fixed; top:0; left:0; right:0; z-index:900;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:24px; padding:14px 6vw;
+    background:rgba(242,241,239,0.94);
+    border-bottom:1px solid var(--line);
+    transform:translateY(-100%);
+    transition:transform .3s ease;
+  }
+  .sticky-nav.show{ transform:translateY(0); }
+  .sticky-nav .brand{
+    font-family:'Jost', sans-serif; letter-spacing:0.18em; font-size:0.95rem;
+    text-transform:uppercase; text-decoration:none; color:var(--black);
+  }
+  .sticky-nav .links{ display:flex; align-items:center; gap:28px; }
+  .sticky-nav .links a{
+    font-family:'Jost', sans-serif; font-size:0.78rem; letter-spacing:0.08em;
+    text-transform:uppercase; text-decoration:none; color:var(--ink-dim);
+    transition:color .2s ease;
+  }
+  .sticky-nav .links a:hover, .sticky-nav .links a:focus-visible{ color:var(--black); }
+  .sticky-nav .phone{ font-size:0.8rem; color:var(--ink-dim); white-space:nowrap; }
+  @media (max-width:780px){ .sticky-nav{ display:none; } }
+  @media (prefers-reduced-motion: reduce){ .sticky-nav{ transition:none; } }
+
+  /* ---- menu burger (mobile uniquement) ----
+     L'équivalent tactile de la barre du haut : sur mobile il n'y a pas de
+     survol pour découvrir une barre qui apparaît au défilement, donc un
+     bouton fixe, toujours accessible, qui ouvre un plein écran avec les
+     3 mêmes destinations que partout ailleurs sur le site. */
+  .mobile-menu-btn{
+    display:none; position:fixed; top:12px; right:4vw; z-index:950;
+    width:44px; height:44px; align-items:center; justify-content:center;
+    background:rgba(242,241,239,0.94); border:1px solid var(--line);
+    padding:0; cursor:pointer;
+  }
+  .mobile-menu-btn .bar{
+    position:relative; display:block; width:20px; height:2px; background:var(--black);
+    transition:background .2s ease;
+  }
+  .mobile-menu-btn .bar::before, .mobile-menu-btn .bar::after{
+    content:''; position:absolute; left:0; width:20px; height:2px; background:var(--black);
+    transition:transform .25s ease, opacity .2s ease;
+  }
+  .mobile-menu-btn .bar::before{ top:-6px; }
+  .mobile-menu-btn .bar::after{ top:6px; }
+  /* Les 3 barres se transforment en croix — pas besoin d'une seconde icône. */
+  .mobile-menu-btn[aria-expanded="true"] .bar{ background:transparent; }
+  .mobile-menu-btn[aria-expanded="true"] .bar::before{ transform:translateY(6px) rotate(45deg); }
+  .mobile-menu-btn[aria-expanded="true"] .bar::after{ transform:translateY(-6px) rotate(-45deg); }
+
+  /* opacity+visibility+transform plutôt que display:none/flex — même
+     technique que .snap-reveal plus bas — pour pouvoir animer l'ouverture
+     et la fermeture ; visibility:hidden retire quand même le menu du tabulateur
+     et des clics quand il est fermé, comme le ferait display:none. */
+  .mobile-menu{
+    position:fixed; inset:0; z-index:940;
+    background:var(--marble-bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transform:translateY(-18px) scale(0.98);
+    transition:opacity .3s ease, transform .3s ease, visibility .3s;
+  }
+  .mobile-menu.show{
+    opacity:1; visibility:visible; pointer-events:auto;
+    transform:translateY(0) scale(1);
+  }
+  .mobile-menu a{
+    font-family:'Jost', sans-serif; font-size:1.4rem; letter-spacing:0.1em;
+    text-transform:uppercase; text-decoration:none; color:var(--black);
+    padding:16px 0;
+    /* Chaque lien apparaît un cran après le précédent — même principe que
+       les .reveal de la galerie plus bas — pour que l'ouverture se lise
+       comme un mouvement et non un bloc de texte qui saute d'un coup. */
+    opacity:0; transform:translateY(10px);
+    transition:opacity .3s ease, transform .3s ease;
+    transition-delay:0s;
+  }
+  .mobile-menu.show a{ opacity:1; transform:translateY(0); }
+  .mobile-menu.show a:nth-child(1){ transition-delay:.05s; }
+  .mobile-menu.show a:nth-child(2){ transition-delay:.1s; }
+  .mobile-menu.show a:nth-child(3){ transition-delay:.15s; }
+  .mobile-menu.show a:nth-child(4){ transition-delay:.2s; }
+  .mobile-menu .phone{
+    margin-top:34px; font-size:0.95rem; letter-spacing:0.04em;
+    color:var(--ink-dim); text-decoration:none;
+  }
+  @media (max-width:780px){ .mobile-menu-btn{ display:flex; } }
+  /* Filet de sécurité : si la fenêtre passe en largeur PC pendant que le
+     menu est ouvert (rotation de tablette, redimensionnement), on ne
+     garde jamais un plein écran orphelin caché derrière la barre PC. */
+  @media (min-width:781px){ .mobile-menu.show{ opacity:0; visibility:hidden; pointer-events:none; } }
+  @media (prefers-reduced-motion: reduce){
+    .mobile-menu-btn .bar, .mobile-menu-btn .bar::before, .mobile-menu-btn .bar::after{ transition:none; }
+    .mobile-menu, .mobile-menu a{ transition:none; transform:none; }
+  }
+
+  /* Chaque grand bloc occupe au moins tout l'écran : l'accueil, l'ambiance
+     et le contact tiennent naturellement sur un seul écran et s'y centrent
+     verticalement. La carte, elle, contient volontairement tout le menu
+     réel du Duo — plus long qu'un écran — donc "au moins" tout l'écran,
+     puis elle continue normalement au défilement plutôt que de couper des
+     plats pour tenir dans un cadre fixe.
+
+     --app-vh (posé en JS, voir plus bas) plutôt que 100vh/100svh : sur
+     mobile, quand la barre d'adresse du navigateur se réduit au
+     défilement, une hauteur suivie en direct fait "sauter" instantanément
+     l'image de fond (cover) qui doit se recadrer — un vrai bug visuel,
+     surtout dans un navigateur intégré (Instagram, etc.) qui gère souvent
+     mal les unités récentes. --app-vh fige la valeur au chargement et ne
+     la recalcule qu'au changement d'orientation, jamais pendant un scroll.
+     var(--app-vh, 1vh) : tant que le JS n'a pas encore tourné (ou sur un
+     très vieux navigateur), 1vh sert de repli identique à 100vh. */
+  header.hero, #ambiance, #carte, .contact-band{
+    min-height:calc(var(--app-vh, 1vh) * 100);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  /* Un enfant direct d'un conteneur flex ne rétrécit pas sous la largeur de
+     son propre contenu par défaut (min-width:auto) — sans ça, les grilles
+     ci-dessous (photos, tarifs, menu) gardaient leur largeur "idéale" et
+     débordaient de l'écran au lieu de se replier normalement. */
+  header.hero > *, #ambiance > *, #carte > *, .contact-band > *{ min-width:0; width:100%; }
+  .section-head{
+    text-align:center;
+    margin-bottom:clamp(30px, 6vh, 70px);
+  }
+  .section-head .num{
+    font-size:0.75rem;
+    letter-spacing:0.15em;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+  }
+  .section-head h2{ font-size:clamp(1.6rem, 4vw, 2.2rem); margin-top:8px; }
+
+  /* ---- ambiance gallery ---- */
+  .gallery{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-template-rows: 260px 260px;
+    gap:8px;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  .gallery > div{ overflow:hidden; background:var(--marble-vein); position:relative; cursor:pointer;}
+  .gallery img{ width:100%; height:100%; object-fit:cover; object-position:center 15%;}
+  .gallery .g1 img{ object-position:center 0%;}
+  .gallery .g1{ grid-row: 1 / 3; }
+  .gallery figcaption{
+    position:absolute; left:10px; bottom:8px;
+    font-size:0.68rem; color:var(--white); background:rgba(10,10,10,0.55);
+    padding:3px 8px; letter-spacing:0.02em;
+  }
+  .photo-note{
+    margin-top:20px;
+    font-size:0.78rem;
+    color:var(--ink-dim);
+    text-align:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .photo-note::before, .photo-note::after{
+    content:''; height:1px; width:36px; background:var(--accent-pink);
+  }
+  .ambiance-video{
+    max-width:1320px; margin:0 auto 16px;
+    background:var(--marble-vein); line-height:0;
+  }
+  .ambiance-video video{
+    display:block; width:100%; height:320px; object-fit:cover;
+    object-position:center 20%; /* mesuré image par image : le mouvement du
+      clip est concentré presque en totalité dans le haut du cadre (mur
+      pailleté) — le bas (bouquet) bouge à peine. On recadre donc sur le
+      haut des chichas (têtes + bulle en cristal) pour garder ce mouvement
+      visible tout en ayant un sujet reconnaissable. */
+    cursor:pointer;
+  }
+  @media (max-width:600px){ .ambiance-video video{ height:260px; } }
+
+  /* ---- lightbox : clic sur une photo de la galerie pour l'agrandir ---- */
+  .lightbox{
+    position:fixed; inset:0; background:rgba(10,10,10,0.92);
+    display:none; align-items:center; justify-content:center;
+    z-index:999; padding:5vh 5vw; cursor:zoom-out;
+  }
+  .lightbox.show{ display:flex; }
+  .lightbox img, .lightbox video{
+    max-width:100%; max-height:100%; object-fit:contain; display:block;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:default;
+  }
+  .lightbox video{ display:none; }
+  .lightbox-close{
+    position:absolute; top:18px; right:26px; color:#fff; font-size:2.2rem; line-height:1;
+    cursor:pointer; font-family:'Jost', sans-serif; font-weight:300;
+  }
+
+  /* ---- category band, like original grey "NOS NARGUILÉS" bar ---- */
+  .cat-band{
+    background:var(--chrome-dark);
+    color:var(--white);
+    text-align:center;
+    padding:16px 20px;
+    font-family:'Jost', sans-serif;
+    letter-spacing:0.22em;
+    font-size:1.1rem;
+    margin:0 0 34px;
+  }
+
+  .narg-tiers{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:14px;
+    max-width:1320px;
+    margin:0 auto clamp(40px, 8vh, 90px);
+  }
+  .narg-tier{
+    text-align:center;
+    padding:26px 18px;
+    border:1px solid var(--tier-color, rgba(10,10,10,0.28));
+    background:rgba(255,255,255,0.5);
+    transition:border-color .2s ease;
+  }
+  /* Une couleur très légère par formule, choisie pour ce qu'elle représente
+     plutôt qu'un classement par prix. Classique (12€) et Premium Quasar
+     (20€) restent neutres. Naturel (15€, Brohood ou Kaloud) prend le
+     graphite pour son matériel de gestion de chauffe. Prestige Quasar
+     (25€, le tarif le plus élevé) garde l'accent braise + la pulsation,
+     en tant que formule la plus complète — elle inclut une boisson
+     offerte en plus du Quasar. */
+  .narg-tier.naturel{ --tier-color:var(--chrome-dark); }
+  .narg-tier .tier-name{ font-family:'Jost', sans-serif; letter-spacing:0.08em; font-size:1.05rem; text-transform:uppercase;}
+  .narg-tier .tier-desc{ font-size:0.76rem; color:var(--ink-dim); display:block; margin-top:6px;}
+  .narg-tier .price{ display:block; margin-top:14px; font-size:1.3rem; color:var(--black); }
+
+  .carte-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:50px 64px;
+    max-width:1320px;
+    margin:0 auto;
+  }
+  .carte-cat-photo{
+    width:100%; height:170px; object-fit:cover; display:block;
+    margin-bottom:18px; cursor:pointer;
+  }
+  .carte-cat h3{
+    font-size:1rem;
+    letter-spacing:0.12em;
+    margin-bottom:16px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--black);
+  }
+  .narg-photo{
+    width:100%; max-width:1320px; height:280px; object-fit:cover;
+    display:block; margin:0 auto 30px; object-position:center 30%; cursor:pointer;
+  }
+  .menu-line{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px dotted var(--line);
+    font-size:0.92rem;
+  }
+  .menu-line .name{ color:var(--ink); }
+  .menu-line .tag{ display:block; font-size:0.75rem; color:var(--ink-dim); margin-top:2px;}
+  .menu-line .price{ color:var(--ink); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .highlight{ color:var(--accent-pink); }
+  .menu-footnotes{
+    margin-top:14px; padding-top:12px; border-top:1px dotted var(--line);
+    font-size:0.72rem; color:var(--ink-dim); font-style:italic; line-height:1.5;
+  }
+  .menu-footnotes p{ margin:4px 0; }
+  .special-block{
+    text-align:center;
+    margin-top:40px;
+    font-size:0.95rem;
+  }
+  .special-block .special-name{ color:var(--accent-pink); }
+
+  /* ---- contact — black band like the original screenshot ---- */
+  .contact-band{
+    background:var(--black);
+    color:var(--white);
+    text-align:center;
+    padding:clamp(48px, 9vh, 100px) 6vw;
+  }
+  .contact-band h2{ color:var(--white); margin-bottom:26px;}
+  .contact-band p{ font-size:1.05rem; margin:6px 0; color:#eaeaea; }
+  .socials{ display:flex; gap:20px; justify-content:center; align-items:center; margin:30px 0; }
+  .socials a, .socials .social-handle{
+    display:block; width:48px; height:48px; border-radius:50%; overflow:hidden;
+    text-decoration:none; transition:transform .2s ease, opacity .2s ease;
+  }
+  .socials img{ width:100%; height:100%; display:block; object-fit:cover; }
+  .socials a:hover, .socials a:focus-visible,
+  .socials .social-handle:hover, .socials .social-handle:focus-visible{ transform:scale(1.1); }
+  /* Snapchat n'a pas d'URL de profil publique fiable : le logo n'est donc
+     pas un lien mais un bouton qui révèle le pseudo à ajouter dans l'app. */
+  .socials .social-handle{
+    padding:0; border:0; background:none; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+  }
+  /* Sans JavaScript, le pseudo reste visible : c'est le script qui ajoute
+     .collapsible puis le referme. Aucun visiteur ne peut donc le perdre. */
+  .snap-reveal{ margin-top:14px; }
+  .snap-reveal.collapsible{
+    max-height:0; opacity:0; visibility:hidden; overflow:hidden; margin-top:0;
+    transition:max-height .35s ease, opacity .3s ease, margin-top .35s ease, visibility .35s;
+  }
+  .snap-reveal.collapsible.open{
+    max-height:140px; opacity:1; visibility:visible; margin-top:14px;
+  }
+  .snap-card{
+    display:inline-flex; align-items:center; gap:14px; flex-wrap:wrap;
+    justify-content:center;
+    border:1px solid #4a4a4a; background:rgba(255,255,255,0.04);
+    padding:10px 16px;
+  }
+  .snap-card .snap-pseudo{
+    font-family:'Jost', sans-serif; font-size:0.9rem; letter-spacing:0.1em;
+    color:var(--white);
+  }
+  .snap-copy{
+    font-family:'Jost', sans-serif; font-size:0.66rem; letter-spacing:0.14em;
+    text-transform:uppercase; color:#a8a8a8;
+    background:none; border:0; padding:0; cursor:pointer;
+    border-bottom:1px solid #6a6a6a;
+    transition:color .2s ease, border-color .2s ease;
+  }
+  .snap-copy:hover, .snap-copy:focus-visible{ color:var(--white); border-color:var(--white); }
+  /* Repère de découverte : le logo Snapchat n'étant pas un lien, rien
+     n'indique qu'il est cliquable — surtout au doigt, sans survol. */
+  .contact-band .snap-hint{ font-size:0.68rem; color:#8a8a8a; margin:12px 0 0; letter-spacing:0.04em; }
+  .snap-feedback{
+    display:block; min-height:1.1em;
+    font-size:0.7rem; color:#a8a8a8; margin-top:8px; letter-spacing:0.04em;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .snap-reveal.collapsible{ transition:none; }
+  }
+  .contact-band .hours-line{ font-family:'Jost', sans-serif; letter-spacing:0.1em; margin-top:20px;}
+  .map-embed{ margin-top:22px; border:1px solid #4a4a4a; line-height:0; }
+  .map-embed iframe{
+    width:100%; height:200px; border:0; display:block;
+    filter:grayscale(1) contrast(1.05) brightness(0.95);
+    transition:filter .25s ease;
+  }
+  .map-embed:hover iframe, .map-embed:focus-within iframe{ filter:none; }
+  .map-placeholder{
+    width:100%; height:200px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+    background:rgba(255,255,255,0.04); padding:20px; text-align:center;
+  }
+  .map-placeholder p{ margin:0; font-size:0.8rem; color:#b8b8b8; }
+  .map-placeholder a, .map-placeholder button{
+    font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--white); background:none; border:1px solid #6a6a6a;
+    padding:8px 16px; cursor:pointer; text-decoration:none; font-family:inherit;
+  }
+
+  /* ---- barres fixes du bas ----
+     Le bandeau cookies et la mention "maquette" sont dans UN SEUL
+     conteneur empilé, plutôt que positionnés chacun de leur côté avec
+     un décalage calculé en JS. Ce calcul se désynchronisait (au
+     chargement des polices, la hauteur du texte change sans déclencher
+     de resize), les deux barres se chevauchaient et les boutons du
+     bandeau cookies se retrouvaient hors de l'écran sur mobile —
+     impossible de le fermer. Ici, l'empilement est garanti par le
+     flux CSS, sans aucune mesure. */
+  .bottom-stack{
+    position:fixed; left:0; right:0; bottom:0; z-index:9998;
+    display:flex; flex-direction:column;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  .cookie-banner{
+    background:var(--black); color:#eaeaea;
+    padding:14px 5vw; display:flex; align-items:center; justify-content:center;
+    gap:14px; flex-wrap:wrap; font-size:0.8rem;
+    box-shadow:0 -4px 20px rgba(0,0,0,0.25);
+    max-height:55vh; overflow-y:auto; /* ne peut jamais dépasser l'écran */
+  }
+  .cookie-banner.hidden{ display:none; }
+  .cookie-banner p{ margin:0; max-width:520px; line-height:1.45; }
+  .cookie-banner .cookie-actions{ display:flex; gap:10px; flex-shrink:0; }
+  .cookie-banner button{
+    font-family:'Jost', sans-serif; font-size:0.75rem; letter-spacing:0.08em;
+    text-transform:uppercase; padding:9px 18px; cursor:pointer; border:1px solid #6a6a6a;
+    background:none; color:#eaeaea; white-space:nowrap;
+  }
+  .cookie-banner button.accept{ background:var(--white); color:var(--black); border-color:var(--white); }
+  @media (max-width:600px){
+    .cookie-banner{ padding:12px 4vw; gap:10px; font-size:0.75rem; }
+    .cookie-banner p{ text-align:center; }
+  }
+
+  footer{
+    padding:clamp(24px, 4vh, 50px) 6vw;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    font-size:0.75rem;
+    color:var(--ink-dim);
+  }
+  footer a, footer button{ color:var(--ink-dim); text-decoration:none; margin-left:16px;}
+  .credit-3d{
+    flex-basis:100%; margin:14px 0 0; font-size:0.68rem; color:var(--chrome);
+  }
+  .credit-3d a{ margin-left:0; text-decoration:underline; color:var(--chrome); }
+  footer a:hover, footer button:hover{ color:var(--black); }
+  /* Bouton (et non lien) car il déclenche une action, pas une navigation —
+     mais calqué visuellement sur les liens voisins. */
+  footer button{
+    background:none; border:none; padding:0; cursor:pointer;
+    font-family:inherit; font-size:inherit; letter-spacing:inherit;
+  }
+
+  @media (max-width: 780px){
+    .carte-grid{ grid-template-columns:1fr; gap:40px; }
+    .gallery{ grid-template-columns:1fr 1fr; grid-template-rows:260px 150px 150px;}
+    .gallery .g1{ grid-row:auto; grid-column: 1 / 3; }
+    .logo-frame{ padding:20px 30px; }
+    /* Le bouton burger est fixe par-dessus le tout début de page : sans
+       cette marge, son carré blanc recouvre le numéro de téléphone du
+       bandeau du haut tant qu'on n'a pas encore défilé. */
+    .top-strip{ padding-right:calc(4vw + 56px); }
+  }
+
+  .maquette-flag{
+    background:var(--chrome-dark); color:#fff;
+    font-size:0.72rem; text-align:center;
+    padding:8px 16px; letter-spacing:0.02em;
+  }
+  .maquette-flag b{ font-weight:500; }
+  body{ padding-bottom:36px; }
+
+  .smoke-layer{
+    position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;
+  }
+  .wisp{
+    position:absolute; bottom:-10%; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%);
+    filter:blur(18px);
+    opacity:0;
+    animation:monter linear infinite;
+  }
+  .wisp:nth-child(1){ left:12%; width:180px; height:180px; animation-duration:14s; animation-delay:0s; }
+  .wisp:nth-child(2){ left:22%; width:120px; height:120px; animation-duration:11s; animation-delay:3s; }
+  .wisp:nth-child(3){ left:34%; width:220px; height:220px; animation-duration:17s; animation-delay:6s; }
+  .wisp:nth-child(4){ left:8%;  width:140px; height:140px; animation-duration:13s; animation-delay:9s; }
+  .wisp:nth-child(5){ left:28%; width:100px; height:100px; animation-duration:10s; animation-delay:1.5s; }
+  @keyframes monter{
+    0%   { transform:translate(0,0) scale(0.6); opacity:0; }
+    12%  { opacity:0.35; }
+    50%  { transform:translate(30px,-220px) scale(1.15); opacity:0.22; }
+    100% { transform:translate(60px,-480px) scale(1.5); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .wisp{ animation:none; opacity:0; }
+  }
+
+  .narg-tier.premium{
+    position:relative;
+    border-color:var(--ember);
+  }
+  .narg-tier.premium::before{
+    content:''; position:absolute; inset:-1px; border-radius:inherit;
+    box-shadow:0 0 0 0 rgba(140,58,38,0.45);
+    animation:braise 2.6s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes braise{
+    0%, 100% { box-shadow:0 0 0 0 rgba(140,58,38,0.35); }
+    50%      { box-shadow:0 0 14px 3px rgba(140,58,38,0.28); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .narg-tier.premium::before{ animation:none; box-shadow:0 0 10px 2px rgba(140,58,38,0.25); }
+  }
+
+  /* ---- apparition au scroll ---- */
+  .reveal{
+    opacity:0; transform:translateY(28px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .gallery > div.reveal:nth-child(1){ transition-delay:0s; }
+  .gallery > div.reveal:nth-child(2){ transition-delay:.08s; }
+  .gallery > div.reveal:nth-child(3){ transition-delay:.16s; }
+  .gallery > div.reveal:nth-child(4){ transition-delay:.24s; }
+  .gallery > div.reveal:nth-child(5){ transition-delay:.32s; }
+  .carte-grid > .reveal:nth-child(2){ transition-delay:.08s; }
+  .carte-grid > .reveal:nth-child(3){ transition-delay:.16s; }
+  .carte-grid > .reveal:nth-child(4){ transition-delay:.24s; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+  }
+
+  /* ---- écran de chargement ---- */
+  /* Écran de chargement en CSS pur, volontairement SANS aucune dépendance
+     au JavaScript pour le masquer. Un bug JS (compatibilité navigateur,
+     erreur ailleurs sur la page...) l'a déjà laissé bloqué indéfiniment
+     une fois — l'animation CSS ci-dessous se joue et se termine toute
+     seule (animation-fill-mode:forwards conserve l'état final), quel
+     que soit l'état du JavaScript sur la page. pointer-events:none dès
+     le départ pour ne jamais bloquer un clic, même pendant les 1.1s
+     d'affichage. */
+  /* ===== FILIGRANE DE DÉMO — À RETIRER dès que le site devient officiel =====
+     Dissuade la copie/capture d'écran pendant la phase de démarchage.
+     position:absolute (pas fixed) : le filigrane défile AVEC la page,
+     comme s'il faisait partie du design, plutôt que de rester collé à
+     l'écran en permanence — plus discret et plus soigné visuellement.
+     Sa hauteur est posée en JS (--doc-height, voir plus bas) pour couvrir
+     toute la longueur réelle de la page, pas seulement un premier écran :
+     sur mobile en particulier, ne couvrir qu'un écran aurait laissé la
+     quasi-totalité de la page (la carte, très longue) sans filigrane.
+     pointer-events:none : ne bloque jamais un clic, quel que soit le
+     z-index. Motif plus dense (tuile 220×140 au lieu de 360×220) pour
+     rester bien visible même sur un écran de téléphone étroit. */
+  .demo-watermark{
+    position:absolute; top:0; left:0; right:0;
+    height:calc(var(--doc-height, 100%));
+    z-index:500;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTQwIj4KICA8dGV4dCB4PSIwIiB5PSI5MiIgdHJhbnNmb3JtPSJyb3RhdGUoLTMwIDExMCA3MCkiIGZvbnQtZmFtaWx5PSJKb3N0LCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjYwMCIgbGV0dGVyLXNwYWNpbmc9IjQiIGZpbGw9IiM3YTdhN2EiIGZpbGwtb3BhY2l0eT0iMC4xNiI+U0tFTFZPPC90ZXh0Pgo8L3N2Zz4=");
+    background-repeat:repeat;
+  }
+  /* ===== FIN FILIGRANE DE DÉMO ===== */
+
+  .preloader{
+    position:fixed; inset:0; z-index:9999;
+    background:var(--marble-bg);
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    animation:preloaderAutoHide 0.6s ease 1.1s forwards;
+  }
+  @keyframes preloaderAutoHide{
+    from{ opacity:1; visibility:visible; }
+    to{ opacity:0; visibility:hidden; }
+  }
+  .preloader-mark{
+    position:relative; z-index:1;
+    font-family:'Jost', sans-serif; letter-spacing:0.35em; font-size:0.95rem;
+    color:var(--black); text-transform:uppercase;
+    animation:preloaderPulse 1.3s ease-in-out infinite;
+  }
+  @keyframes preloaderPulse{ 0%,100%{ opacity:.45; } 50%{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .preloader{ animation-duration:0.01s; } /* disparaît net, sans fondu */
+    .preloader-mark{ animation:none; opacity:.9; }
+  }
+
+  /* Points de couleur pris directement dans les photos des plats (fraise,
+     fleurs, mangue) — pas des couleurs de tendance, du vrai contenu. */
+  .carte-cat h3{ display:flex; align-items:center; gap:9px; }
+  /* Le point n'apparaît que pour les catégories où une vraie photo de plat
+     le justifie. Boissons chaudes et Softs n'en ont pas : plutôt qu'un gris
+     par défaut qui donnerait l'impression d'un oubli, pas de point du tout. */
+  .carte-cat.sucres h3::before, .carte-cat.glace h3::before, .carte-cat.chaudes h3::before, .carte-cat.softs h3::before{
+    content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  }
+  .carte-cat.sucres h3::before{ background:#a1251f; }   /* rouge fraise, crepe.jpg */
+  .carte-cat.glace h3::before{ background:#e8bd4c; }    /* jaune mangue, mochi.jpg */
+  .carte-cat.chaudes h3::before{ background:#8a6a5c; }  /* moka/caramel, cafe.jpg (couche du cappuccino) */
+  .carte-cat.softs h3::before{ background:#c49044; }    /* orange pressée, orange.jpg */
+
+  /* ===== Formulaire de contact — leur vrai site en a un
+     (Prénom / Nom / Email / Message), notre maquette n'avait qu'un
+     bloc d'infos statique. ===== */
+  .contact-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:60px;
+    max-width:1200px; margin:0 auto; text-align:left;
+  }
+  /* Sans ça, un champ de formulaire élargit toute la grille sous sa
+     largeur minimale de contenu par défaut (même bug déjà rencontré sur
+     les démos Garage/Palombière). */
+  .contact-grid > *{ min-width:0; }
+  .contact-form input, .contact-form textarea{ min-width:0; max-width:100%; box-sizing:border-box; }
+  .contact-infos{ text-align:center; }
+  .contact-form .field{ margin-bottom:16px; }
+  .contact-form label{
+    display:block; font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase;
+    color:#b8b8b8; margin-bottom:6px;
+  }
+  .contact-form input, .contact-form textarea{
+    width:100%; padding:12px 14px; font-family:'Work Sans', sans-serif; font-size:0.95rem;
+    background:rgba(255,255,255,0.06); color:var(--white);
+    border:1px solid #4a4a4a; border-radius:0;
+  }
+  .contact-form input:focus, .contact-form textarea:focus{ outline:none; border-color:var(--white); }
+  .contact-form textarea{ min-height:110px; resize:vertical; }
+  .contact-form .field.error input, .contact-form .field.error textarea{ border-color:#e0846f; }
+  .contact-form .field .msg{ display:none; font-size:0.72rem; color:#e0846f; margin-top:5px; }
+  .contact-form .field.error .msg{ display:block; }
+  .contact-form button{
+    width:100%; padding:13px; background:var(--white); color:var(--black); border:none;
+    font-family:'Jost', sans-serif; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase;
+    cursor:pointer; transition:background .2s ease;
+  }
+  .contact-form button:hover{ background:#d8d8d8; }
+  .contact-form button:disabled{ opacity:0.6; cursor:default; }
+  .contact-sent{ display:none; text-align:left; }
+  .contact-sent.show{ display:block; }
+  .contact-sent h3{ color:var(--white); font-size:1.1rem; margin-bottom:10px; }
+  .contact-sent p{ font-size:0.9rem; color:#cfcfcf; }
+  @media (max-width:780px){
+    .contact-grid{ grid-template-columns:1fr; gap:36px; }
+  }
+</style>
+<noscript><style>.reveal{opacity:1!important; transform:none!important;} .preloader{display:none!important;} .sticky-nav{position:static!important; transform:none!important;} .mobile-menu-btn{display:none!important;}</style></noscript>
+</head>
+<body>
+
+  <!-- Filigrane de démo (voir .demo-watermark dans le <style>) : à retirer
+       purement et simplement dès que le site devient officiel. -->
+  <div class="demo-watermark" aria-hidden="true"></div>
+
+  <div class="preloader" id="preloader"><span class="preloader-mark">Le Duo</span></div>
+
+  <div class="top-strip">
+    <span>15/17 Rue des Pontots, 64 100 Bayonne</span>
+    <span>Ouvert 15h – 01h30 · 7j/7</span>
+    <span>07 88 90 92 96</span>
+  </div>
+
+  <nav class="sticky-nav" id="stickyNav" aria-label="Navigation">
+    <a href="#" class="brand">Le Duo</a>
+    <div class="links">
+      <a href="#ambiance">Ambiance</a>
+      <a href="#carte">Carte</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <span class="phone">07 88 90 92 96</span>
+  </nav>
+
+  <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobileMenu">
+    <span class="bar"></span>
+  </button>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#ambiance">Ambiance</a>
+    <a href="#carte">Carte</a>
+    <a href="#contact">Contact</a>
+    <a class="phone" href="tel:0788909296">07 88 90 92 96</a>
+  </div>
+
+  <header class="hero" style="position:relative;">
+    <div class="smoke-layer" aria-hidden="true">
+      <div class="wisp"></div><div class="wisp"></div><div class="wisp"></div>
+      <div class="wisp"></div><div class="wisp"></div>
+    </div>
+    <div style="position:relative; z-index:1;">
+    <div class="logo-frame"><img src="photos/logo.jpg" alt="Le Duo" style="display:block; width:clamp(220px, 32vw, 420px); height:auto; mix-blend-mode:multiply;"></div>
+    <div class="subtitle">Lounge &amp; Food</div>
+    <p class="lede">Narguilé, boissons chaudes et douceurs faites maison, au cœur de Bayonne — ouvert jusqu'à tard dans la nuit.</p>
+    <div class="cta-row">
+      <a href="#carte" class="btn">Voir la carte</a>
+      <div class="hours">Aujourd'hui : <strong>15h – 01h30</strong></div>
+    </div>
+  </div>
+  </header>
+
+  <p class="notice">Toutes casses ou dégradation vous sera facturée</p>
+
+  <section id="ambiance" style="background-image:url('photos/cerisier-fond.png'); background-position:top left; background-repeat:no-repeat; background-size:620px auto;">
+    <div class="section-head reveal">
+      <span class="num">L'ambiance</span>
+      <h2>Le lieu</h2>
+    </div>
+    <div class="ambiance-video reveal">
+      <video poster="photos/ambiance-video-poster.jpg" muted loop playsinline preload="metadata"
+             role="button" tabindex="0" aria-label="Agrandir la vidéo de l'ambiance">
+        <source src="photos/ambiance-video.webm" type="video/webm">
+        <source src="photos/ambiance-video.mp4" type="video/mp4">
+      </video>
+    </div>
+    <p class="photo-note video-note">Ambiance filmée sur place.</p>
+    <div class="gallery">
+      <div class="g1 reveal"><img loading="lazy" src="photos/salle-neon-complet.jpg" alt="L'enseigne LE DUO et le salon"></div>
+      <div class="reveal"><img loading="lazy" src="photos/narguile-fumee.jpg" alt="Narguilé Quasar"></div>
+      <div class="reveal"><img loading="lazy" src="photos/cafe.jpg" alt="Cafés et boissons chaudes"></div>
+      <div class="reveal"><img loading="lazy" src="photos/crepe.jpg" alt="Crêpe maison"></div>
+      <div class="reveal"><img loading="lazy" src="photos/mochi.jpg" alt="Nos douceurs glacées"></div>
+    </div>
+    <p class="photo-note">Photos réelles du lieu (Instagram @le_duo64).</p>
+  </section>
+
+  <section id="carte">
+    <div class="cat-band">Nos Narguilés</div>
+    <img class="narg-photo reveal" src="photos/narguile-quasar.jpg" alt="Narguilé Quasar sur table en marbre">
+    <div class="narg-tiers reveal">
+      <div class="narg-tier"><span class="tier-name">Classique</span><span class="price">12 €</span></div>
+      <div class="narg-tier naturel"><span class="tier-name">Naturel</span><span class="tier-desc">Brohood ou Kaloud</span><span class="price">15 €</span></div>
+      <div class="narg-tier"><span class="tier-name">Premium Quasar</span><span class="price">20 €</span></div>
+      <div class="narg-tier premium"><span class="tier-name">Prestige Quasar</span><span class="tier-desc">+ une boisson au choix offerte</span><span class="price">25 €</span></div>
+    </div>
+
+    <div class="section-head reveal">
+      <span class="num">La carte</span>
+      <h2>Drinks &amp; Food</h2>
+    </div>
+
+    <div class="carte-grid">
+      <div class="carte-cat chaudes reveal">
+        <img class="carte-cat-photo" loading="lazy" src="photos/cafe-latte.jpg" alt="Latte et cerisiers">
+        <h3>Boissons chaudes</h3>
+        <div class="menu-line"><span class="name">Expresso « Café Ximun » *</span><span class="price">1,50 €</span></div>
+        <div class="menu-line"><span class="name">Café allongé</span><span class="price">2 €</span></div>
+        <div class="menu-line"><span class="name">Cappuccino</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Caramel macchiato<span class="tag">chaud ou froid</span></span><span class="price">4 €</span></div>
+        <div class="menu-line"><span class="name">Chocolat chaud « Monbana » **</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Chocolat chaud viennois</span><span class="price">3,50 €</span></div>
+        <div class="menu-line"><span class="name">Thé à la menthe<span class="tag">1 pers. / 3 pers. : 7 €</span></span><span class="price">3,50 €</span></div>
+        <div class="menu-line"><span class="name">Thé infusion « Kusmi Tea » ***</span><span class="price">3 €</span></div>
+        <div class="menu-footnotes">
+          <p>* Café 100% Arabica gourmand et harmonieux, notes de fruits secs et à un corps intense et chocolaté.</p>
+          <p>** Chocolatier Monbana depuis 1964.</p>
+          <p>*** Grande maison de thé depuis 1867.</p>
+        </div>
+      </div>
+
+      <div class="carte-cat softs reveal">
+        <img class="carte-cat-photo" loading="lazy" src="photos/orange.jpg" alt="Jus d'orange pressé">
+        <h3>Nos Softs</h3>
+        <div class="menu-line"><span class="name">Coca, Coca Cherry</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Coca Zéro</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Ice Tea, Oasis</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Limonade</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Mogu Mogu</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Redbull</span><span class="price">3,50 €</span></div>
+        <div class="menu-line"><span class="name">Eau</span><span class="price">2 €</span></div>
+        <div class="menu-line"><span class="name">Perrier</span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Sirop</span><span class="price">2 €</span></div>
+        <div class="menu-line"><span class="name">Jus pago</span><span class="price">3 €</span></div>
+      </div>
+
+      <div class="carte-cat sucres reveal">
+        <img class="carte-cat-photo" loading="lazy" src="photos/crepe-menu.jpg" alt="Crêpe aux fraises">
+        <h3>Nos Sucrés</h3>
+        <div class="menu-line"><span class="name">Crêpe au sucre</span><span class="price">3,50 €</span></div>
+        <div class="menu-line"><span class="name">Crêpe au caramel chantilly</span><span class="price">4 €</span></div>
+        <div class="menu-line"><span class="name">Crêpe au miel chantilly</span><span class="price">4 €</span></div>
+        <div class="menu-line"><span class="name">Crêpe au nutella chantilly</span><span class="price">4 €</span></div>
+        <div class="menu-line"><span class="name">Crêpe au nutella banane chantilly</span><span class="price">5 €</span></div>
+        <div class="menu-line"><span class="name">Supp. chantilly</span><span class="price">0,50 €</span></div>
+        <div class="menu-line"><span class="name">Supp. 1 boule de glace</span><span class="price">1 €</span></div>
+        <div class="menu-line"><span class="name">Supp. nutella</span><span class="price">0,50 €</span></div>
+        <div class="menu-line"><span class="name">Supp. banane</span><span class="price">1 €</span></div>
+        <div class="menu-line"><span class="name">Gaufre au sucre</span><span class="price">3,50 €</span></div>
+        <div class="menu-line"><span class="name">Gaufre au nutella chantilly</span><span class="price">4 €</span></div>
+        <div class="menu-line"><span class="name">Fondant au chocolat</span><span class="price">4,50 €</span></div>
+        <div class="menu-footnotes">
+          <p>* Nos crêpes sont faites maison.</p>
+        </div>
+      </div>
+
+      <div class="carte-cat glace reveal">
+        <img class="carte-cat-photo" loading="lazy" src="photos/mochi-menu.jpg" alt="Mochis glacés et fleurs comestibles">
+        <h3>Glacé</h3>
+        <div class="menu-line"><span class="name">Boules de glace x2<span class="tag">Mangue, citron vert, straciatella, vanille, noisette, caramel</span></span><span class="price">3 €</span></div>
+        <div class="menu-line"><span class="name">Mochi glacé x2</span><span class="price">3,50 €</span></div>
+      </div>
+    </div>
+
+    <div class="special-block">
+      Le smoothie du moment : <span class="special-name">Maracuja, Ananas, Banane, Yaourt</span> — 5 €
+    </div>
+  </section>
+
+  <section class="contact-band" id="contact">
+    <h2>Contactez-nous</h2>
+    <div class="contact-grid reveal">
+      <div class="contact-infos">
+        <p>15/17 Rue des Pontots</p>
+        <p>64 100 Bayonne.</p>
+        <div class="socials">
+          <a href="https://instagram.com/le_duo64" target="_blank" rel="noopener noreferrer" aria-label="Instagram — @le_duo64"><img src="photos/icon-instagram.png" alt="Instagram" loading="lazy"></a>
+          <button type="button" class="social-handle" id="snapBtn" title="Afficher le pseudo Snapchat" aria-label="Afficher le pseudo Snapchat" aria-expanded="true" aria-controls="snapReveal"><img src="photos/icon-snapchat.png" alt="Snapchat" loading="lazy"></button>
+          <a href="https://www.tiktok.com/@le_duo64" target="_blank" rel="noopener noreferrer" aria-label="TikTok — @le_duo64"><img src="photos/icon-tiktok.png" alt="TikTok" loading="lazy"></a>
+        </div>
+        <p class="snap-hint" id="snapHint" hidden>Cliquez sur le logo Snapchat pour afficher le pseudo.</p>
+        <div class="snap-reveal" id="snapReveal">
+          <div class="snap-card">
+            <span class="snap-pseudo">Snapchat&nbsp;: le-duo64</span>
+            <button type="button" class="snap-copy" id="snapCopy">Copier</button>
+          </div>
+          <span class="snap-feedback" id="snapFeedback" role="status" aria-live="polite"></span>
+        </div>
+        <div class="hours-line">Horaires : 15h – 01h30</div>
+        <!-- Contenu rempli par renderMap() selon le consentement : carte,
+             bloc "refusé", ou invitation à afficher. Volontairement vide
+             ici pour qu'un seul et même code décide de l'affichage. -->
+        <div class="map-embed" id="mapEmbed" data-map-src="https://www.google.com/maps?q=Le+Duo+Lounge+%26+Food%2C+Bayonne&output=embed"></div>
+      </div>
+      <div>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="field" id="f-prenom">
+            <label for="prenom">Prénom</label>
+            <input type="text" id="prenom" autocomplete="given-name">
+            <span class="msg">Merci d'indiquer votre prénom.</span>
+          </div>
+          <div class="field" id="f-nom">
+            <label for="nomFamille">Nom de famille</label>
+            <input type="text" id="nomFamille" autocomplete="family-name">
+            <span class="msg">Merci d'indiquer votre nom.</span>
+          </div>
+          <div class="field" id="f-email">
+            <label for="emailContact">E-mail *</label>
+            <input type="email" id="emailContact" autocomplete="email">
+            <span class="msg">Merci d'indiquer un email valide.</span>
+          </div>
+          <div class="field" id="f-message">
+            <label for="messageContact">Contacter</label>
+            <textarea id="messageContact"></textarea>
+            <span class="msg">Merci d'indiquer votre message.</span>
+          </div>
+          <button type="submit" id="contactSubmit">Envoyer</button>
+        </form>
+        <div class="contact-sent" id="contactSent">
+          <h3 id="sentTitre">Message prêt à partir</h3>
+          <p id="sentTexte"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Le Duo — Bayonne</span>
+    <div>
+      <a href="#ambiance">Ambiance</a><a href="#carte">Carte</a><a href="#contact">Contact</a>
+      <button type="button" id="cookieSettings">Gérer les cookies</button>
+    </div>
+  </footer>
+
+  <div class="bottom-stack">
+    <div class="cookie-banner hidden" id="cookieBanner">
+      <p>Un cookie tiers (Google Maps) est déposé uniquement si vous affichez la carte. Aucun autre suivi.</p>
+      <div class="cookie-actions">
+        <button type="button" id="cookieRefuse">Refuser</button>
+        <button type="button" class="accept" id="cookieAccept">Accepter</button>
+      </div>
+    </div>
+    <div class="maquette-flag"><b>Maquette de démonstration</b> — non affiliée au Duo, réalisée à titre d'exemple</div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox-close" id="lightboxClose" aria-label="Fermer">&times;</span>
+    <img id="lightboxImg" src="" alt="">
+    <video id="lightboxVideo" muted loop playsinline></video>
+  </div>
+
+<script>
+// Hauteur d'écran mobile figée au chargement (voir --app-vh en CSS) : sur
+// mobile, la barre d'adresse du navigateur se réduit au défilement, ce
+// qui change la hauteur réelle de l'écran en direct. Une section calée
+// sur 100vh/100svh suit ce changement en direct et son image de fond
+// (cover) doit alors se recadrer instantanément — un flash de "zoom"
+// brutal au moindre scroll un peu rapide, encore pire dans un navigateur
+// intégré (Instagram, etc.) qui gère souvent mal ces unités récentes.
+// On mesure donc la hauteur une fois, et on ne la recalcule qu'au
+// changement d'orientation (redimensionnement réel), jamais pendant un
+// défilement — placé tout en haut du script pour tourner avant que
+// l'utilisateur ait pu scroller.
+function updateAppVh() {
+  document.documentElement.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px');
+}
+
+// Filigrane de démo (voir .demo-watermark en CSS) : posé en position
+// absolute pour défiler avec la page plutôt que de rester collé à
+// l'écran, il a besoin d'une hauteur explicite couvrant toute la page —
+// sans ça il ne couvrirait que le premier écran.
+function updateDocHeight() {
+  document.documentElement.style.setProperty('--doc-height', document.documentElement.scrollHeight + 'px');
+}
+
+updateAppVh();
+updateDocHeight();
+window.addEventListener('load', updateDocHeight); // au cas où la page aurait grandi (polices, images) après ce premier calcul
+let appResizeTimer = null;
+window.addEventListener('resize', () => {
+  // Le délai laisse le temps à l'animation de la barre d'adresse de se
+  // terminer avant de remesurer — sans ça on retomberait dans le même
+  // problème, juste décalé de quelques millisecondes.
+  clearTimeout(appResizeTimer);
+  appResizeTimer = setTimeout(() => { updateAppVh(); updateDocHeight(); }, 200);
+});
+
+// Écran de chargement : l'affichage/masquage est piloté entièrement en
+// CSS (voir @keyframes preloaderAutoHide) — plus aucune dépendance au
+// JavaScript pour qu'il disparaisse. Un bug JS l'a déjà laissé bloqué
+// indéfiniment une fois (une erreur ailleurs sur la page arrêtait le
+// script avant qu'il ait pu le masquer) ; avec le CSS seul, même une
+// page où TOUT le JS échoue verra quand même l'écran de chargement
+// disparaître tout seul. Ce qui suit ne fait que nettoyer le DOM une
+// fois l'animation terminée — purement cosmétique, sans impact si ça
+// ne s'exécute pas.
+const preloader = document.getElementById('preloader');
+if (preloader) {
+  preloader.addEventListener('animationend', () => preloader.remove());
+}
+
+// Barre discrète du haut (PC) : apparaît une fois l'accueil quitté. Un
+// IntersectionObserver plutôt qu'un écouteur de scroll — même logique que
+// les .reveal plus bas — pour ne rien recalculer à chaque pixel défilé.
+// Masquée par défaut (voir .sticky-nav en CSS) : si l'observer ne se
+// déclenche jamais pour une raison quelconque, elle reste simplement
+// invisible en haut de page plutôt que de gêner la lecture.
+const stickyNav = document.getElementById('stickyNav');
+const heroEl = document.querySelector('header.hero');
+if (stickyNav && heroEl) {
+  if ('IntersectionObserver' in window) {
+    const navObserver = new IntersectionObserver(([entry]) => {
+      stickyNav.classList.toggle('show', !entry.isIntersecting);
+    }, { threshold: 0 });
+    navObserver.observe(heroEl);
+  } else {
+    stickyNav.classList.add('show');
+  }
+}
+
+// Menu burger (mobile) : équivalent tactile de la barre du haut. Toujours
+// accessible dès le chargement (pas de survol sur mobile pour "découvrir"
+// une barre qui apparaîtrait au défilement).
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+if (mobileMenuBtn && mobileMenu) {
+  const fermerMenu = () => {
+    mobileMenu.classList.remove('show');
+    mobileMenuBtn.setAttribute('aria-expanded', 'false');
+  };
+  mobileMenuBtn.addEventListener('click', () => {
+    const ouvert = mobileMenu.classList.toggle('show');
+    mobileMenuBtn.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+  });
+  // Un lien cliqué ferme le menu — le clic déclenche aussi la navigation
+  // vers l'ancre, qui se termine normalement une fois le plein écran retiré.
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', fermerMenu));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerMenu(); });
+}
+
+// Snapchat : pas de lien possible (aucune URL de profil web fiable), donc
+// un clic sur le logo révèle le pseudo à recopier dans l'application. Le
+// bloc est visible par défaut dans le HTML ; c'est ce script qui le rend
+// repliable puis le referme, pour qu'une page sans JS affiche quand même
+// le pseudo.
+const snapBtn = document.getElementById('snapBtn');
+const snapReveal = document.getElementById('snapReveal');
+const snapHint = document.getElementById('snapHint');
+if (snapBtn && snapReveal) {
+  snapReveal.classList.add('collapsible');
+  snapBtn.setAttribute('aria-expanded', 'false');
+  if (snapHint) snapHint.hidden = false;
+  snapBtn.addEventListener('click', () => {
+    const ouvert = snapReveal.classList.toggle('open');
+    snapBtn.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+    snapBtn.setAttribute('title', ouvert ? 'Masquer le pseudo Snapchat' : 'Afficher le pseudo Snapchat');
+    if (snapHint) snapHint.hidden = ouvert;
+  });
+}
+
+const snapCopy = document.getElementById('snapCopy');
+const snapFeedback = document.getElementById('snapFeedback');
+let snapFeedbackTimer = null;
+function snapDire(texte) {
+  if (!snapFeedback) return;
+  snapFeedback.textContent = texte;
+  clearTimeout(snapFeedbackTimer);
+  snapFeedbackTimer = setTimeout(() => { snapFeedback.textContent = ''; }, 3000);
+}
+if (snapCopy) {
+  snapCopy.addEventListener('click', () => {
+    const pseudo = 'le-duo64';
+    // Le presse-papiers n'existe pas partout (vieux navigateurs, pages non
+    // sécurisées) : on le dit honnêtement plutôt que d'annoncer une copie
+    // qui n'a pas eu lieu.
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(pseudo)
+        .then(() => snapDire('Pseudo copié'))
+        .catch(() => snapDire('Copie impossible — sélectionnez le pseudo ci-dessus.'));
+    } else {
+      snapDire('Copie impossible — sélectionnez le pseudo ci-dessus.');
+    }
+  });
+}
+
+// Cookies (RGPD) : le seul cookie tiers du site vient de l'iframe Google
+// Maps. Elle ne se charge donc jamais tant que le visiteur n'a pas
+// explicitement accepté — que ce soit via le bandeau ou directement via
+// le bouton sur la carte elle-même (même action, même mémorisation).
+const mapEmbed = document.getElementById('mapEmbed');
+const cookieBanner = document.getElementById('cookieBanner');
+const MAP_LINK = 'https://www.google.com/maps/search/?api=1&query=Le+Duo+Lounge+%26+Food+Bayonne';
+
+// (L'empilement des deux barres du bas est désormais géré uniquement en
+// CSS, via .bottom-stack — plus aucune position calculée ici.)
+let consent = null;
+try { consent = localStorage.getItem('leduo_cookie_consent'); } catch (e) {}
+
+// La zone carte est TOUJOURS reconstruite à partir de l'état courant,
+// plutôt que modifiée par petites touches. Avant, une fois l'iframe
+// chargée, le bloc "carte refusée" écrivait dans un élément qui n'était
+// plus dans la page (détruit par le chargement de la carte) : passer de
+// "accepté" à "refusé" n'affichait donc rien. Repartir du même point à
+// chaque fois supprime toute cette catégorie de bug, et rend le choix
+// réversible depuis le pied de page.
+function renderMap() {
+  mapEmbed.innerHTML = '';
+  if (consent === 'accepted') {
+    const iframe = document.createElement('iframe');
+    iframe.src = mapEmbed.getAttribute('data-map-src');
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'no-referrer-when-downgrade';
+    iframe.title = 'Localisation du Duo — 15/17 Rue des Pontots, Bayonne';
+    mapEmbed.appendChild(iframe);
+    return;
+  }
+  const box = document.createElement('div');
+  box.className = 'map-placeholder';
+  if (consent === 'refused') {
+    box.innerHTML = '<p>Carte non affichée (cookies refusés).</p>' +
+      '<a href="' + MAP_LINK + '" target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>';
+  } else {
+    box.innerHTML = '<p>La carte utilise des cookies Google Maps.</p>';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Afficher la carte';
+    btn.addEventListener('click', () => setConsent('accepted'));
+    box.appendChild(btn);
+  }
+  mapEmbed.appendChild(box);
+}
+
+let bannerShowTimer = null;
+function setConsent(value) {
+  consent = value;
+  try { localStorage.setItem('leduo_cookie_consent', value); } catch (e) {}
+  clearTimeout(bannerShowTimer); // annule l'apparition programmée du bandeau si le
+                                 // choix a déjà été fait entre-temps (ex. via le
+                                 // bouton "Afficher la carte" cliqué avant les 1.2s)
+  cookieBanner.classList.add('hidden');
+  renderMap();
+}
+
+// Permet de revenir sur son choix à tout moment (le RGPD impose que le
+// consentement puisse être retiré aussi facilement qu'il a été donné).
+function reopenCookieChoice() {
+  consent = null;
+  try { localStorage.removeItem('leduo_cookie_consent'); } catch (e) {}
+  renderMap(); // décharge l'iframe Google si elle était affichée
+  cookieBanner.classList.remove('hidden');
+  cookieBanner.scrollIntoView({ block: 'nearest' });
+}
+
+document.getElementById('cookieAccept').addEventListener('click', () => setConsent('accepted'));
+document.getElementById('cookieRefuse').addEventListener('click', () => setConsent('refused'));
+document.getElementById('cookieSettings').addEventListener('click', reopenCookieChoice);
+
+renderMap();
+if (consent !== 'accepted' && consent !== 'refused') {
+  // 1800ms : l'écran de chargement vit jusqu'à ~1.7s ; en dessous, le
+  // bandeau apparaîtrait masqué derrière lui.
+  bannerShowTimer = setTimeout(() => cookieBanner.classList.remove('hidden'), 1800);
+}
+
+// Apparition au scroll : chaque bloc se révèle une seule fois quand il
+// entre dans l'écran. Ignoré si l'utilisateur préfère moins d'animation
+// (voir la règle CSS @media prefers-reduced-motion associée à .reveal).
+if ('IntersectionObserver' in window) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+} else {
+  document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+}
+
+// Vidéo d'ambiance — effet "Boomerang qu'on réveille" : figée comme une
+// photo au repos, elle ne se met en mouvement que pendant qu'on défile
+// réellement la page, et se fige à nouveau dès que le défilement
+// s'arrête (même logique que le pseudo Snapchat qui ne se révèle qu'au
+// clic : le mouvement est une réponse à une action, pas un fond permanent).
+// Jamais de lecture si le visiteur préfère moins de mouvement — elle
+// reste alors immobile sur son image de garde, quoi qu'il arrive.
+const ambianceVideo = document.querySelector('.ambiance-video video');
+if (ambianceVideo) {
+  const prefersReducedMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReducedMotion && 'IntersectionObserver' in window) {
+    let videoInView = false;
+    let stopTimer = null;
+
+    const videoObserver = new IntersectionObserver(([entry]) => {
+      videoInView = entry.isIntersecting;
+      if (!videoInView) ambianceVideo.pause(); // jamais en mouvement hors écran
+    }, { threshold: 0.25 });
+    videoObserver.observe(ambianceVideo);
+
+    window.addEventListener('scroll', () => {
+      if (!videoInView) return;
+      ambianceVideo.play().catch(() => {}); // lecture auto refusée : reste sur le poster
+      clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => ambianceVideo.pause(), 220);
+    }, { passive: true });
+  }
+}
+
+// Galerie "L'ambiance" : clic sur une photo pour l'agrandir.
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxVideo = document.getElementById('lightboxVideo');
+
+function closeLightbox() {
+  lightbox.classList.remove('show');
+  lightboxVideo.pause();
+  lightboxVideo.removeAttribute('src');   // libère le téléchargement en cours
+  lightboxVideo.innerHTML = '';
+  lightboxVideo.style.display = 'none';
+  lightboxImg.style.display = 'block';
+}
+
+document.querySelectorAll('.gallery img, .narg-photo, .carte-cat-photo').forEach(img => {
+  img.addEventListener('click', () => {
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightboxImg.style.display = 'block';
+    lightboxVideo.style.display = 'none';
+    lightbox.classList.add('show');
+  });
+});
+
+// Vidéo d'ambiance : cliquer dessus l'ouvre en grand, à sa taille réelle,
+// et la lance directement — le format "carte" réduit ne montrait pas
+// assez le mouvement pour qu'on comprenne que c'est une vidéo.
+if (ambianceVideo) {
+  const openAmbianceVideoLightbox = () => {
+    lightboxVideo.innerHTML = ambianceVideo.innerHTML; // mêmes sources (webm + mp4)
+    lightboxImg.style.display = 'none';
+    lightboxVideo.style.display = 'block';
+    lightbox.classList.add('show');
+    lightboxVideo.load();
+    lightboxVideo.play().catch(() => {});
+  };
+  ambianceVideo.addEventListener('click', openAmbianceVideoLightbox);
+  ambianceVideo.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault(); // évite que la barre d'espace ne fasse défiler la page
+      openAmbianceVideoLightbox();
+    }
+  });
+}
+
+lightbox.addEventListener('click', closeLightbox);
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+const CONTACT_EMAIL = 'contact@leduo64.com'; // à confirmer avec le vrai contact du Duo
+
+const contactForm = document.getElementById('contactForm');
+const contactSent = document.getElementById('contactSent');
+const contactSubmit = document.getElementById('contactSubmit');
+
+function setErreur(id, actif){
+  const champ = document.getElementById(id);
+  if(champ) champ.classList.toggle('error', actif);
+}
+function emailValide(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+contactForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nomFamille').value.trim();
+  const email = document.getElementById('emailContact').value.trim();
+  const message = document.getElementById('messageContact').value.trim();
+
+  const okPrenom = prenom.length > 0;
+  const okEmail = emailValide(email);
+  const okMessage = message.length > 0;
+  setErreur('f-prenom', !okPrenom);
+  setErreur('f-email', !okEmail);
+  setErreur('f-message', !okMessage);
+  if(!okPrenom || !okEmail || !okMessage){
+    const premier = contactForm.querySelector('.error input, .error textarea');
+    if(premier) premier.focus();
+    return;
+  }
+
+  contactSubmit.disabled = true;
+  contactSubmit.textContent = 'Envoi...';
+
+  // Pas de backend ici (maquette) : on passe par mailto, et on détecte si
+  // un vrai client mail a pris la main avant d'afficher une confirmation —
+  // même logique que sur les sites livrés, pour ne jamais faire croire
+  // qu'un message est parti s'il ne l'est pas.
+  let passee = false;
+  const noter = () => { passee = true; };
+  window.addEventListener('blur', noter);
+  document.addEventListener('visibilitychange', noter);
+
+  const sujet = encodeURIComponent('Contact depuis le site — ' + prenom + ' ' + nom);
+  const corps = encodeURIComponent('Prénom : ' + prenom + '\nNom : ' + nom + '\nEmail : ' + email + '\n\n' + message);
+  window.location.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + sujet + '&body=' + corps;
+
+  setTimeout(() => {
+    window.removeEventListener('blur', noter);
+    document.removeEventListener('visibilitychange', noter);
+    const abouti = passee || document.hidden;
+    document.getElementById('sentTitre').textContent =
+      abouti ? 'Message prêt à partir' : "Le message n'a pas pu être envoyé";
+    document.getElementById('sentTexte').textContent = abouti
+      ? "Votre client email va s'ouvrir avec votre message déjà rédigé."
+      : "Aucune application mail ne s'est ouverte. Appelez-nous directement au 07 88 90 92 96.";
+    contactForm.style.display = 'none';
+    contactSent.classList.add('show');
+    contactSubmit.disabled = false;
+    contactSubmit.textContent = 'Envoyer';
+  }, 1200);
+});
+</script>
+
+</body>
+</html>

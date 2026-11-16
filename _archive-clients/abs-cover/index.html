@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<!-- Aperçu de démo : photos remplacées par un aplat neutre le temps de finaliser côté client (contrainte technique du pipeline de publication actuel : pas de push binaire). Design, textes et structure sont la version réelle. -->
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes</title>
+<meta name="description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne. Devis par téléphone au 06 31 81 24 21.">
+
+<!-- Favicons — logo ABS-Cover redimensionné via le CDN Wix existant -->
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_32,h_32,q_90,enc_auto/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_16,h_16,q_90,enc_auto/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_180,h_180,q_90,enc_auto/apple-touch-icon.png">
+<link rel="shortcut icon" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_32,h_32,q_90,enc_auto/favicon-32.png">
+
+<!-- Open Graph / partage réseaux sociaux -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ABS-Cover">
+<meta property="og:title" content="ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes">
+<meta property="og:description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.">
+<meta property="og:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==">
+<meta property="og:url" content="https://www.abs-cover.com/">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes">
+<meta name="twitter:description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.">
+<meta name="twitter:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- PWA — installable sur l'écran d'accueil (utile pour les clients réguliers) -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ABS-Cover">
+
+<!-- Données structurées — fiche entreprise exploitable par Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AutomotiveBusiness",
+  "name": "ABS-Cover",
+  "image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+  "url": "https://www.abs-cover.com/",
+  "telephone": "+33631812421",
+  "description": "Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1401 Bis route de Bayonne",
+    "addressLocality": "Benesse-Maremne",
+    "postalCode": "40230",
+    "addressCountry": "FR"
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "08:00",
+      "closes": "14:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/Ab.solution6440",
+    "https://www.instagram.com/ab.solution6440/"
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --black:#0a0a0b; --carbon:#161618; --panel:#1e1e21;
+    --white:#f5f4f2; --grey:#9a9a9d;
+    --line:rgba(245,244,242,0.1);
+    --accent:#e8352b;
+    /* Variantes WCAG AA (4.5:1) du rouge de marque, pour le texte et les
+       fonds pleins où #e8352b seul est trop clair/trop sombre selon le cas. */
+    --accent-text:#f23e34;
+    --accent-solid:#cf2b23;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black); color:var(--white); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--accent); color:var(--white);}
+  img{display:block; max-width:100%;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 5%; background:rgba(10,10,11,0.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:0.03em; color:var(--white); text-transform:uppercase; display:flex; align-items:center; gap:10px;}
+  .logo img{height:34px; width:auto; display:block;}
+  .logo span{color:var(--accent-text);}
+  nav{display:none; gap:6px; align-items:center;}
+  nav a{color:var(--grey); text-decoration:none; font-size:12.5px; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; padding:8px 14px; position:relative; transition:color .2s ease;}
+  nav a::after{content:''; position:absolute; left:14px; right:14px; bottom:2px; height:1px; background:var(--accent); transform:scaleX(0); transition:transform .25s ease; transform-origin:left;}
+  nav a:hover{color:var(--white);}
+  nav a.active{color:var(--white);}
+  nav a.active::after{transform:scaleX(1);}
+  @media(min-width:860px){nav{display:flex;}}
+  .call-btn{font-family:'JetBrains Mono',monospace; font-size:13px; text-decoration:none; color:var(--white); background:var(--accent-solid); padding:10px 18px; font-weight:600; display:inline-flex; align-items:center; gap:8px;}
+  .call-icon{display:none; width:16px; height:16px; flex-shrink:0;}
+
+  /* ===== ROUTE / PARCOURS — rail vertical fixe ===== */
+  .route-rail{
+    position:fixed; left:26px; top:50%; transform:translateY(-50%); z-index:90;
+    display:none; flex-direction:column; align-items:center; gap:0;
+  }
+  @media(min-width:1080px){.route-rail{display:flex;}}
+  .route-track{position:relative; width:2px; height:280px; background:var(--line);}
+  .route-fill{position:absolute; top:0; left:0; width:2px; height:0%; background:var(--accent); transition:height .1s linear;}
+  .route-stop{
+    position:absolute; left:50%; transform:translate(-50%,-50%); width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; z-index:2; cursor:pointer; border:none; background:none; padding:0;
+  }
+  .route-stop .dot{width:9px; height:9px; border-radius:50%; background:var(--carbon); border:1.5px solid var(--grey); transition:all .3s ease;}
+  .route-stop:hover .dot{border-color:var(--white);}
+  .route-stop.active .dot{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 5px rgba(232,53,43,0.18);}
+  .route-label{
+    position:absolute; left:26px; top:50%; transform:translateY(-50%); white-space:nowrap;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--grey); letter-spacing:0.05em;
+    opacity:0; transition:opacity .25s ease;
+  }
+  .route-stop.active .route-label{opacity:1; color:var(--white);}
+  .route-stop:nth-child(1){top:0%;} .route-stop:nth-child(2){top:25%;} .route-stop:nth-child(3){top:50%;} .route-stop:nth-child(4){top:75%;} .route-stop:nth-child(5){top:100%;}
+
+  /* ===== HERO — Ken Burns ===== */
+  .hero{
+    min-height:100vh; position:relative; display:flex; align-items:flex-end; overflow:hidden;
+  }
+  .hero-bg{
+    position:absolute; inset:-4%; z-index:0;
+    background-image:linear-gradient(180deg, rgba(10,10,11,0.15) 0%, rgba(10,10,11,0.55) 60%, rgba(10,10,11,0.98) 100%),
+      url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');
+    background-size:cover; background-position:center 38%;
+    animation:kenburns 26s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  @keyframes kenburns{from{transform:scale(1);} to{transform:scale(1.09);}}
+  .hero-content{position:relative; z-index:3; padding:0 5% 90px; width:100%;}
+  .hero-eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent-text); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:10px;}
+  .hero-eyebrow::before{content:''; width:26px; height:1px; background:var(--accent);}
+  h1{font-family:'Bebas Neue',sans-serif; font-size:clamp(56px,11vw,150px); line-height:0.86; letter-spacing:0.01em; max-width:960px; overflow:hidden;}
+  h1 .line{display:block; overflow:hidden;}
+  h1 .line span{display:block; transform:translateY(110%); animation:riseUp 0.9s cubic-bezier(.16,.8,.3,1) forwards;}
+  h1 .line:nth-child(2) span{animation-delay:0.14s; color:transparent; -webkit-text-stroke:1.5px var(--white);}
+  @keyframes riseUp{to{transform:translateY(0);}}
+  .hero-sub{font-size:17px; color:var(--grey); max-width:480px; margin-top:26px; line-height:1.6; opacity:0; animation:fadeUp .8s cubic-bezier(.16,.8,.3,1) forwards; animation-delay:0.5s;}
+  .hero-actions{display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; opacity:0; animation:fadeUp .8s cubic-bezier(.16,.8,.3,1) forwards; animation-delay:0.68s;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;}}
+  .scroll-hint{position:absolute; bottom:26px; left:5%; z-index:3; display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--grey); text-transform:uppercase; letter-spacing:0.06em;}
+  .scroll-hint::after{content:''; width:1px; height:26px; background:linear-gradient(var(--accent), transparent);}
+
+  .btn{font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; padding:16px 28px; text-decoration:none; display:inline-block; border:1px solid var(--white); color:var(--white); transition:all .2s ease;}
+  .btn.fill{background:var(--accent-solid); border-color:var(--accent-solid); color:var(--white); font-weight:700;}
+  .btn.fill:hover{background:var(--white); border-color:var(--white); color:var(--black);}
+  .btn:not(.fill):hover{background:var(--white); color:var(--black);}
+
+  .strip{background:var(--accent-solid); color:var(--white); overflow:hidden; white-space:nowrap;}
+  .strip-track{display:inline-block; padding:10px 0; animation:scroll 20s linear infinite;}
+  .strip-track span{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; letter-spacing:0.05em; margin:0 24px; text-transform:uppercase;}
+  @keyframes scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+
+  section{padding:110px 5% 110px 5%; scroll-margin-top:64px;}
+  @media(min-width:1080px){section{padding-left:9%;}}
+  .head-row{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom:56px; border-bottom:1px solid var(--line); padding-bottom:26px;}
+  .kicker{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent-text); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; display:flex; align-items:center;}
+  .step-tag{font-size:44px; font-family:'Bebas Neue',sans-serif; color:transparent; -webkit-text-stroke:1px var(--line); margin-right:16px; letter-spacing:0;}
+  .head-row h2{font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,6vw,80px); letter-spacing:0.01em; line-height:0.95;}
+  /* Révélation mot par mot des titres de section — se déclenche en cascade
+     avec le fondu du head-row (voir .reveal / .in-view), pas d'observer
+     supplémentaire nécessaire. */
+  .head-row h2 .word{display:inline-block; overflow:hidden; vertical-align:top;}
+  .head-row h2 .word span{display:inline-block; transform:translateY(110%); transition:transform .7s cubic-bezier(.16,.8,.3,1);}
+  .head-row.in-view h2 .word span{transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .head-row h2 .word span{transform:none; transition:none;}
+  }
+  .head-row .sub{color:var(--grey); max-width:340px; font-size:14px; line-height:1.6;}
+
+  /* SERVICES */
+  .serv-grid{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media(min-width:760px){.serv-grid{grid-template-columns:repeat(4,1fr);}}
+  .serv-card{background:var(--black); position:relative; min-height:280px; display:flex; flex-direction:column; justify-content:flex-end; padding:28px; isolation:isolate; overflow:hidden; width:100%; text-align:left; border:none; cursor:pointer; font-family:inherit;}
+  .serv-card .sbg{position:absolute; inset:0; z-index:-2; background-size:cover; background-position:center; filter:grayscale(1) contrast(1.1) brightness(0.55); transition:filter .5s ease, transform .6s ease;}
+  .serv-card:hover .sbg{filter:grayscale(0) contrast(1.05) brightness(0.6); transform:scale(1.05);}
+  .serv-card::after{content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, rgba(10,10,11,0.1), rgba(10,10,11,0.9));}
+  .serv-num{font-family:'JetBrains Mono',monospace; color:var(--accent-text); font-size:12px;}
+  .serv-name{font-family:'Bebas Neue',sans-serif; font-size:27px; letter-spacing:0.01em; margin-top:8px;}
+  .serv-card p{color:var(--grey); font-size:13.5px; line-height:1.6; margin-top:10px;}
+  .serv-tag{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent-text); text-transform:uppercase; letter-spacing:0.05em; margin-top:14px; display:block;}
+
+  /* GALLERY — tabs + duotone qui se révèle en couleur au survol */
+  .gallery{background:var(--carbon);}
+  .gtabs{display:flex; flex-wrap:wrap; gap:0; margin-bottom:44px; border:1px solid var(--line); width:fit-content;}
+  .gtab{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.04em; padding:13px 20px; background:none; color:var(--grey); border:none; border-right:1px solid var(--line); text-transform:uppercase; cursor:pointer;}
+  .gtab:last-child{border-right:none;}
+  .gtab.active{background:var(--accent-solid); color:var(--white);}
+  .gtab:hover:not(.active){color:var(--white); background:rgba(245,244,242,0.05);}
+  .g-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px; transition:opacity .2s ease;}
+  @media(min-width:700px){.g-grid{grid-template-columns:repeat(4,1fr);}}
+  .g-item{position:relative; aspect-ratio:1; overflow:hidden; background:var(--black); isolation:isolate; cursor:pointer;}
+  .g-item img{width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.15); transition:filter .5s ease, transform .5s ease;}
+  .g-item:hover img{filter:grayscale(0) contrast(1.05); transform:scale(1.06);}
+  .g-item .g-label{position:absolute; bottom:0; left:0; right:0; padding:14px; background:linear-gradient(0deg, rgba(10,10,11,0.92), transparent); font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--white); text-transform:uppercase; letter-spacing:0.03em; transform:translateY(6px); opacity:0.85; transition:transform .3s ease;}
+  .g-item:hover .g-label{transform:translateY(0); opacity:1;}
+
+  /* PPF */
+  .ppf{display:grid; grid-template-columns:1fr; gap:44px;}
+  @media(min-width:900px){.ppf{grid-template-columns:1fr 1fr; align-items:center;}}
+  .ppf-photo{aspect-ratio:3/4; background-size:cover; background-position:center; border:1px solid var(--line);}
+  .cert-row{display:flex; gap:16px; margin-top:30px; flex-wrap:wrap;}
+  .cert{border:1px solid var(--line); padding:14px 18px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); text-transform:uppercase; letter-spacing:0.04em;}
+  .cert b{color:var(--accent-text); display:block; font-size:13px; margin-bottom:4px;}
+
+  /* HISTOIRE */
+  .histoire{display:grid; grid-template-columns:1fr; gap:44px;}
+  @media(min-width:900px){.histoire{grid-template-columns:1fr 1fr; align-items:center;}}
+  .histoire-photo{aspect-ratio:16/10; background-size:cover; background-position:center; border:1px solid var(--line); filter:grayscale(0.3) contrast(1.05);}
+  .histoire p{color:var(--grey); font-size:15.5px; line-height:1.75; margin-bottom:16px;}
+  .histoire p b{color:var(--white);}
+
+  /* STATS */
+  .stats{display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr);}}
+  .stat{padding:34px 5%; border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:'Bebas Neue',sans-serif; font-size:46px; color:var(--accent-text); line-height:1;}
+  .stat .lbl{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); text-transform:uppercase; letter-spacing:0.05em; margin-top:8px;}
+
+  /* CONTACT */
+  .contact-wrap{display:grid; grid-template-columns:1fr; gap:50px;}
+  @media(min-width:900px){.contact-wrap{grid-template-columns:1fr 1fr;}}
+  .contact-block{border-left:2px solid var(--accent); padding-left:24px; margin-bottom:34px;}
+  .contact-block h3{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.01em; margin-bottom:10px;}
+  .contact-block p, .contact-block a{color:var(--grey); font-size:14.5px; line-height:1.8; text-decoration:none;}
+  .contact-block a{color:var(--accent-text);}
+  form{display:flex; flex-direction:column; gap:16px;}
+  label{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--grey); display:block; margin-bottom:6px;}
+  input, select, textarea{width:100%; border:1px solid var(--line); background:var(--panel); padding:14px; font-family:'Inter',sans-serif; font-size:14px; color:var(--white);}
+  input:focus, textarea:focus{outline:1px solid var(--accent);}
+  textarea{resize:vertical; min-height:110px;}
+
+  .wed{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media(min-width:860px){.wed{grid-template-columns:1fr 1fr;}}
+  .wed-card{background:var(--black); padding:38px 32px;}
+  .wed-card img{width:100%; border:1px solid var(--line); margin-top:20px; filter:grayscale(0.15);}
+  .wed-tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent-text); text-transform:uppercase; letter-spacing:0.05em;}
+  .wed-card h3{font-family:'Bebas Neue',sans-serif; font-size:30px; margin:10px 0 14px;}
+  .wed-card p{color:var(--grey); font-size:14.5px; line-height:1.7; margin-bottom:12px;}
+
+  .note{border-left:2px solid var(--accent); padding:16px 20px; margin-top:26px; background:var(--panel); font-size:13px; color:var(--grey); line-height:1.6;}
+  .note b{color:var(--white);}
+
+  .extra-list{display:grid; grid-template-columns:1fr; gap:10px; margin-top:36px;}
+  @media(min-width:700px){.extra-list{grid-template-columns:repeat(3,1fr);}}
+  .extra-item{border:1px solid var(--line); padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--grey); text-transform:uppercase; letter-spacing:0.03em;}
+  .extra-item b{color:var(--white); display:block; font-size:13px; margin-bottom:3px; text-transform:none; font-family:'Inter',sans-serif; font-weight:600;}
+
+  footer{background:var(--black); padding:34px 5%; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); border-top:1px solid var(--line);}
+
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .7s cubic-bezier(.16,.8,.3,1), transform .7s cubic-bezier(.16,.8,.3,1);}
+  .reveal.in-view{opacity:1; transform:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    .hero-bg{animation:none;}
+    h1 .line span, .hero-sub, .hero-actions{animation:none; opacity:1; transform:none;}
+    .reveal{opacity:1; transform:none; transition:none;}
+  }
+
+  /* ===== Adaptation tactile : le survol n'existe pas au doigt, donc pas de duotone caché ===== */
+  @media (pointer: coarse){
+    .g-item img{filter:none;}
+    .g-item .g-label{transform:none; opacity:1;}
+    .serv-card .sbg{filter:grayscale(0) contrast(1.05) brightness(0.55);}
+  }
+
+  /* ===== NAVIGATION MOBILE — hamburger + panneau plein écran ===== */
+  .burger{display:flex; align-items:center; justify-content:center; width:38px; height:38px; background:none; border:1px solid var(--line); color:var(--white); cursor:pointer;}
+  .burger svg{width:16px; height:16px;}
+  @media(min-width:860px){.burger{display:none;}}
+  .header-actions{display:flex; gap:10px; align-items:center; flex-shrink:0;}
+  /* Sous 400px, le numéro en toutes lettres + le logo + le burger ne tiennent
+     plus sur une ligne : le bouton d'appel devient une icône seule (taille
+     fixe, comme le burger) plutôt que de rétrécir le texte jusqu'à l'illisible
+     ou risquer de couper le logo. */
+  @media(max-width:400px){
+    header{padding:14px 4%;}
+    .header-actions{gap:8px;}
+    .call-btn{padding:0; width:38px; height:38px; justify-content:center;}
+    .call-icon{display:block;}
+    .call-text{display:none;}
+    .logo{font-size:18px;}
+    .logo img{height:26px;}
+    .burger{flex-shrink:0;}
+  }
+
+  .mobile-panel{
+    position:fixed; inset:0; z-index:200; background:var(--black);
+    display:flex; flex-direction:column; padding:90px 8% 40px;
+    transform:translateX(100%); transition:transform .35s cubic-bezier(.16,.8,.3,1);
+  }
+  .mobile-panel.open{transform:translateX(0);}
+  .mobile-panel a{
+    font-family:'Bebas Neue',sans-serif; font-size:34px; color:var(--white); text-decoration:none;
+    padding:16px 0; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px;
+  }
+  .mobile-panel a .n{font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--accent-text);}
+  .mobile-panel a.active{color:var(--accent-text);}
+  .mobile-close{position:absolute; top:18px; right:5%; width:38px; height:38px; background:none; border:1px solid var(--line); color:var(--white); font-size:20px; cursor:pointer;}
+  .mobile-panel .call-btn{margin-top:auto; text-align:center;}
+  @media(min-width:860px){.mobile-panel{display:none;}}
+
+  /* ===== NAVIGATION MOBILE — barre d'onglets fixe en bas ===== */
+  .tabbar{
+    display:flex; position:fixed; bottom:0; left:0; right:0; z-index:95;
+    background:rgba(10,10,11,0.94); backdrop-filter:blur(10px); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom, 0);
+  }
+  @media(min-width:860px){.tabbar{display:none;}}
+  .tabbar button{
+    flex:1; background:none; border:none; color:var(--grey); padding:11px 4px 9px;
+    display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.02em;
+    position:relative;
+  }
+  .tabbar button .tick{width:4px; height:4px; border-radius:50%; background:transparent; transition:background .2s ease;}
+  .tabbar button.active{color:var(--white);}
+  .tabbar button.active .tick{background:var(--accent);}
+  body{padding-bottom:56px;}
+  @media(min-width:860px){body{padding-bottom:0;}}
+
+  /* ===== LIGHTBOX ===== */
+  .lightbox{
+    position:fixed; inset:0; z-index:300; background:rgba(10,10,11,0.96);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .lightbox.open{opacity:1; pointer-events:auto;}
+  .lightbox img{max-width:min(90vw, 1100px); max-height:76vh; width:auto; height:auto; border:1px solid var(--line); object-fit:contain;}
+  .lightbox-caption{position:absolute; bottom:8%; left:0; right:0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--grey); text-transform:uppercase; letter-spacing:0.04em;}
+  .lightbox-close{position:absolute; top:24px; right:24px; width:44px; height:44px; background:none; border:1px solid var(--line); color:var(--white); font-size:20px; cursor:pointer;}
+  .lightbox-nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; background:rgba(245,244,242,0.06); border:1px solid var(--line); color:var(--white); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .lightbox-nav:hover{background:var(--accent); border-color:var(--accent);}
+  .lightbox-prev{left:16px;} .lightbox-next{right:16px;}
+  @media(max-width:640px){
+    .lightbox-nav{width:40px; height:40px; font-size:18px;}
+    .lightbox-close{width:38px; height:38px; top:14px; right:14px;}
+  }
+
+  /* ===== PRELOADER ===== */
+  body.loading{overflow:hidden; height:100vh;}
+  .preloader{
+    position:fixed; inset:0; z-index:500; background:var(--black);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition:opacity .6s cubic-bezier(.16,.8,.3,1), visibility .6s cubic-bezier(.16,.8,.3,1);
+  }
+  .preloader.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  .preloader-logo{
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,7vw,64px);
+    letter-spacing:0.04em; color:var(--white); text-transform:uppercase; position:relative;
+  }
+  .preloader-logo span{color:var(--accent-text);}
+  .preloader-track{position:relative; width:180px; height:2px; background:var(--line); margin-top:22px; overflow:hidden;}
+  .preloader-bar{position:absolute; top:0; left:0; height:100%; width:0%; background:var(--accent); transition:width .2s ease;}
+  .preloader-pct{margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted-pl,var(--grey)); letter-spacing:0.1em;}
+
+  /* ===== GRAIN — texture de fond subtile sur toute la page ===== */
+  .grain{
+    position:fixed; inset:-100px; z-index:250; pointer-events:none; opacity:0.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ===== CURSEUR PERSONNALISÉ (desktop uniquement) ===== */
+  @media (pointer:fine){
+    a, button, .serv-card, .g-item, .route-stop, .gtab{cursor:none;}
+    .cursor-dot{
+      position:fixed; top:0; left:0; width:6px; height:6px; background:var(--accent);
+      border-radius:50%; pointer-events:none; z-index:400; transform:translate(-50%,-50%);
+      opacity:0; transition:opacity .2s ease;
+    }
+    .cursor-ring{
+      position:fixed; top:0; left:0; width:32px; height:32px; border:1px solid var(--accent);
+      border-radius:50%; pointer-events:none; z-index:400; transform:translate(-50%,-50%);
+      opacity:0; transition:width .25s cubic-bezier(.16,.8,.3,1), height .25s cubic-bezier(.16,.8,.3,1), background .25s ease, opacity .2s ease;
+    }
+    .cursor-ring.hover{width:54px; height:54px; background:rgba(232,53,43,0.1);}
+  }
+  @media (pointer:coarse){
+    .cursor-dot, .cursor-ring{display:none;}
+  }
+
+  /* ===== TILT 3D sur les cartes de service ===== */
+  @media (pointer:fine){
+    .serv-card{transition:transform .15s ease-out; will-change:transform;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .preloader{display:none;}
+    .grain{display:none;}
+    .cursor-dot, .cursor-ring{display:none;}
+    a, button, .serv-card, .g-item, .route-stop, .gtab{cursor:auto;}
+  }
+
+  /* ===== FORMULAIRE — erreurs de validation ===== */
+  .field{margin-bottom:0;}
+  .field-error{
+    display:none; color:var(--accent-text); font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:0.02em; margin-top:6px;
+  }
+  .field.has-error input, .field.has-error select, .field.has-error textarea{
+    border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);
+  }
+  .field.has-error .field-error{display:block;}
+
+  /* ===== FORMULAIRE — confirmation ===== */
+  .form-confirm{
+    display:none; border:1px solid var(--line); background:var(--panel);
+    padding:36px 28px; text-align:left;
+  }
+  .form-confirm.show{display:block;}
+  .form-confirm .fc-icon{
+    width:44px; height:44px; border-radius:50%; background:var(--accent);
+    color:var(--white); display:flex; align-items:center; justify-content:center;
+    font-size:20px; margin-bottom:18px;
+  }
+  .form-confirm h3{font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:0.01em; margin-bottom:10px;}
+  .form-confirm p{color:var(--grey); font-size:14px; line-height:1.7; margin-bottom:8px;}
+  .form-confirm a{color:var(--accent-text);}
+  .form-confirm .btn{margin-top:16px;}
+
+  /* ===== BANDEAU COOKIES ===== */
+  .cookie-banner{
+    position:fixed; left:16px; right:16px; bottom:16px; z-index:350;
+    max-width:640px; margin:0 auto;
+    background:var(--carbon); border:1px solid var(--line);
+    padding:20px 22px; box-shadow:0 12px 40px rgba(0,0,0,0.5);
+    transform:translateY(140%); transition:transform .5s cubic-bezier(.16,.8,.3,1);
+  }
+  .cookie-banner.show{transform:translateY(0);}
+  .cookie-banner p{color:var(--grey); font-size:13px; line-height:1.6; margin-bottom:14px;}
+  .cookie-banner a{color:var(--accent-text); text-decoration:underline;}
+  .cookie-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .cookie-actions button{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.04em; text-transform:uppercase;
+    padding:11px 18px; cursor:pointer; border:1px solid var(--white); background:none; color:var(--white);
+  }
+  .cookie-actions button.accept{background:var(--accent-solid); border-color:var(--accent-solid); font-weight:700;}
+  .cookie-actions button:hover{opacity:0.85;}
+  @media(max-width:860px){.cookie-banner{bottom:64px;}}
+</style>
+</head>
+<body class="loading">
+
+<div class="preloader" id="preloader">
+  <div class="preloader-logo">ABS<span>-</span>COVER</div>
+  <div class="preloader-track"><div class="preloader-bar" id="preloaderBar"></div></div>
+  <div class="preloader-pct" id="preloaderPct">0%</div>
+</div>
+
+<div class="grain"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<div class="cookie-banner" id="cookieBanner">
+  <p>Ce site utilise uniquement des cookies techniques nécessaires à son fonctionnement. Aucun cookie de mesure d'audience ou publicitaire n'est déposé sans votre accord. En savoir plus : <a href="politique-de-confidentialite.html">politique de confidentialité</a>.</p>
+  <div class="cookie-actions">
+    <button class="accept" id="cookieAccept" type="button">Accepter</button>
+    <button id="cookieRefuse" type="button">Refuser</button>
+  </div>
+</div>
+
+<div class="route-rail" id="routeRail">
+  <div class="route-track"><div class="route-fill" id="routeFill"></div></div>
+  <button class="route-stop" data-target="services"><span class="dot"></span><span class="route-label">01 · Services</span></button>
+  <button class="route-stop" data-target="realisations"><span class="dot"></span><span class="route-label">02 · Réalisations</span></button>
+  <button class="route-stop" data-target="mariage"><span class="dot"></span><span class="route-label">03 · Mariage & Événement</span></button>
+  <button class="route-stop" data-target="histoire"><span class="dot"></span><span class="route-label">04 · Histoire</span></button>
+  <button class="route-stop" data-target="contact"><span class="dot"></span><span class="route-label">05 · Contact</span></button>
+</div>
+
+<header>
+  <div class="logo"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_120,h_133,q_90,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover">ABS<span>-</span>COVER</div>
+  <nav>
+    <a href="#services" data-nav="services">01 · Services</a>
+    <a href="#realisations" data-nav="realisations">02 · Réalisations</a>
+    <a href="#mariage" data-nav="mariage">03 · Mariage</a>
+    <a href="#histoire" data-nav="histoire">04 · Histoire</a>
+    <a href="#contact" data-nav="contact">05 · Contact</a>
+  </nav>
+  <div class="header-actions">
+    <a class="call-btn" href="tel:0631812421" aria-label="Appeler ABS-Cover au 06 31 81 24 21">
+      <svg class="call-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span class="call-text">06 31 81 24 21</span>
+    </a>
+    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-panel" id="mobilePanel">
+  <button class="mobile-close" id="mobileClose" aria-label="Fermer le menu">✕</button>
+  <div class="logo" style="margin-bottom:20px;"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_120,h_133,q_90,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover">ABS<span>-</span>COVER</div>
+  <a href="#services" data-nav-mobile="services"><span class="n">01</span> Services</a>
+  <a href="#realisations" data-nav-mobile="realisations"><span class="n">02</span> Réalisations</a>
+  <a href="#mariage" data-nav-mobile="mariage"><span class="n">03</span> Mariage</a>
+  <a href="#histoire" data-nav-mobile="histoire"><span class="n">04</span> Histoire</a>
+  <a href="#contact" data-nav-mobile="contact"><span class="n">05</span> Contact</a>
+  <a class="btn fill call-btn" href="tel:0631812421" style="font-family:'JetBrains Mono',monospace; font-size:15px; padding:16px;">Appeler : 06 31 81 24 21</a>
+</div>
+
+<div class="tabbar" id="tabbar">
+  <button data-target="services"><span class="tick"></span>Services</button>
+  <button data-target="realisations"><span class="tick"></span>Réal.</button>
+  <button data-target="mariage"><span class="tick"></span>Mariage</button>
+  <button data-target="histoire"><span class="tick"></span>Histoire</button>
+  <button data-target="contact"><span class="tick"></span>Contact</button>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Précédent">‹</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Suivant">›</button>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<section class="hero" id="accueil">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Landes · Pays Basque · depuis 2013</div>
+    <h1><span class="line"><span>Sublimez</span></span><span class="line"><span>votre véhicule</span></span></h1>
+    <p class="hero-sub">Vitres teintées, protection carrosserie PPF, covering et impression numérique. Poseur certifié Hexis BodyFence, un travail exigeant pour particuliers et professionnels.</p>
+    <div class="hero-actions">
+      <a class="btn fill" href="tel:0631812421">Appeler pour un devis</a>
+      <a class="btn" href="#services">Voir nos prestations</a>
+    </div>
+  </div>
+  <button class="scroll-hint" id="scrollHint" style="background:none; border:none; cursor:pointer;">Découvrir le parcours</button>
+</section>
+
+<div class="strip">
+  <div class="strip-track">
+    <span>★ VITRES TEINTÉES AUTO & BÂTIMENT</span>
+    <span>★ PROTECTION CARROSSERIE PPF</span>
+    <span>★ COVERING / WRAPPING</span>
+    <span>★ IMPRESSION NUMÉRIQUE TOUS SUPPORTS</span>
+    <span>★ VITRES TEINTÉES AUTO & BÂTIMENT</span>
+    <span>★ PROTECTION CARROSSERIE PPF</span>
+    <span>★ COVERING / WRAPPING</span>
+    <span>★ IMPRESSION NUMÉRIQUE TOUS SUPPORTS</span>
+  </div>
+</div>
+
+<section id="services">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">01</span><div><span class="kicker">Nos prestations</span><h2>Quatre savoir-faire</h2></div></div>
+    <p class="sub">Demande de tarif par téléphone — devis sur rendez-vous pour covering et impression.</p>
+  </div>
+  <div class="serv-grid">
+    <button class="serv-card" data-goto="vitres-auto">
+      <div class="sbg" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+      <span class="serv-num mono">01</span>
+      <div class="serv-name">Vitres teintées</div>
+      <p>Auto & bâtiment. Film céramique haut de gamme, retient 99% des UV et jusqu'à 80% de la chaleur. Garantie 15 ans. Teinte légale à 80% de lumière entrante à l'avant.</p>
+      <span class="serv-tag">Hexis — France · voir les réalisations →</span>
+    </button>
+    <button class="serv-card" data-goto-section="ppf">
+      <div class="sbg" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+      <span class="serv-num mono">02</span>
+      <div class="serv-name">Protection PPF</div>
+      <p>Film transparent autocicatrisant contre les agressions du quotidien. Pose certifiée Hexis BodyFence.</p>
+      <span class="serv-tag">Poseur agréé certifié · en savoir plus →</span>
+    </button>
+    <button class="serv-card" data-goto="covering">
+      <div class="sbg" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+      <span class="serv-num mono">03</span>
+      <div class="serv-name">Covering</div>
+      <p>Total ou partiel, uni ou imprimé, 100% personnalisable. Bi-ton, décoratif, changement complet de teinte.</p>
+      <span class="serv-tag">Sur devis · voir les réalisations →</span>
+    </button>
+    <button class="serv-card" data-goto="impression">
+      <div class="sbg" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+      <span class="serv-num mono">04</span>
+      <div class="serv-name">Impression</div>
+      <p>Roll-up, enseignes, stickers XXL, bâches, papier peint, sol antidérapant — création et pose incluses.</p>
+      <span class="serv-tag">Service création inclus · voir les réalisations →</span>
+    </button>
+  </div>
+
+  <div class="extra-list">
+    <div class="extra-item"><b>Anti vis-à-vis</b>Film occultant</div>
+    <div class="extra-item"><b>Anti-graffitis</b>Film de protection</div>
+    <div class="extra-item"><b>Film sécurité</b>Anti-effraction</div>
+    <div class="extra-item"><b>Décoration / Publicité</b>Sur tous supports</div>
+    <div class="extra-item"><b>Mise en place de film</b>Protecteur UV & chaleur</div>
+    <div class="extra-item"><b>Et bien plus encore</b>Nous consulter</div>
+  </div>
+
+  <div class="note"><b>Covering :</b> pour établir un tarif (partiel ou total), nous avons besoin de la marque, du modèle, de l'année et de l'état général de la carrosserie (peinture abîmée, éclats de vernis, éléments repeints...). Nous nous réservons le droit de refuser certains projets si l'état du véhicule n'est pas apte à recevoir le covering.</div>
+  <div class="note"><b>Impression numérique :</b> devis sur rendez-vous. Les projections et devis sont désormais payants si le projet n'aboutit pas.</div>
+</section>
+
+<section class="gallery" id="realisations">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">02</span><div><span class="kicker">Réalisations</span><h2>Nos derniers travaux</h2></div></div>
+    <p class="sub">Survolez une photo pour la voir en couleur.</p>
+  </div>
+
+  <div class="gtabs" id="gtabs">
+    <button class="gtab active" data-cat="covering">Covering</button>
+    <button class="gtab" data-cat="ppf">PPF</button>
+    <button class="gtab" data-cat="vitres-auto">Vitres auto</button>
+    <button class="gtab" data-cat="vitres-batiment">Vitres bâtiment</button>
+    <button class="gtab" data-cat="impression">Impression</button>
+    <button class="gtab" data-cat="evenements">Événement</button>
+    <button class="gtab" data-cat="mariage">Mariage</button>
+  </div>
+
+  <div class="gallery-panels" id="galleryPanels"></div>
+</section>
+
+<section id="mariage">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">03</span><div><span class="kicker">Mariage & Événementiel</span><h2>Au-delà de l'automobile</h2></div></div>
+  </div>
+  <div class="wed">
+    <div class="wed-card">
+      <span class="wed-tag">Spécial mariage</span>
+      <h3>Tammy & Benjamin</h3>
+      <p>Nous avons eu l'honneur d'accompagner Tammy & Benjamin dans le plus beau jour de leur vie, avec des éléments de décoration 100% personnalisés.</p>
+      <p>Tapis de cérémonie sur mesure, Roll-up de présentation, impressions haute qualité (photo-cadre, menus, plans de table, étiquettes autocollantes, vinyles) et un service création complet — toute la décoration pensée avec les futurs mariés pour s'accorder à leur thème.</p>
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Décoration mariage tapis de cérémonie personnalisé">
+    </div>
+    <div class="wed-card">
+      <span class="wed-tag">Événementiel auto</span>
+      <h3>Notre 1ère édition</h3>
+      <p>En partenariat avec BR Performance Bayonne et Car's Côte Basque, un événement automobile réunissant véhicules d'exception, stands de professionnels (détailing, débosselage sans peinture, montage pneus à domicile) et balade organisée l'après-midi.</p>
+      <p>Animations, jeu concours, café et viennoiseries, food truck et musique pour une journée entre passionnés.</p>
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Événement automobile ABS-Cover">
+    </div>
+  </div>
+</section>
+
+<section id="ppf">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">+</span><div><span class="kicker">Protection carrosserie</span><h2>PPF BodyFence</h2></div></div>
+  </div>
+  <div class="ppf">
+    <div class="ppf-photo" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+    <div>
+      <p style="color:var(--grey); font-size:15.5px; line-height:1.75;">Application d'un film transparent BodyFence — marque française, leader mondial — pour protéger votre carrosserie des agressions du quotidien. Autocicatrisant, protection UV. Tarif variable selon marque, modèle et spécificités du véhicule.</p>
+      <div class="cert-row">
+        <div class="cert"><b>Certifié 2022</b>Hexis BodyFence</div>
+        <div class="cert"><b>Certifié 2023</b>Hexis Flexishield</div>
+        <div class="cert"><b>Films</b>Fabriqués en France</div>
+      </div>
+      <a class="btn fill" style="margin-top:30px; display:inline-block;" href="tel:0631812421">Demander un tarif</a>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="num">2007</div><div class="lbl">Début d'activité</div></div>
+  <div class="stat"><div class="num">2013</div><div class="lbl">Création ABS-Cover</div></div>
+  <div class="stat"><div class="num">15 ANS</div><div class="lbl">Garantie films vitres</div></div>
+  <div class="stat"><div class="num">99%</div><div class="lbl">UV filtrés</div></div>
+</div>
+
+<section id="histoire">
+  <div class="head-row"><div style="display:flex; align-items:baseline;"><span class="step-tag">04</span><div><span class="kicker">L'atelier</span><h2>Histoire</h2></div></div></div>
+  <div class="histoire">
+    <div class="histoire-photo" style="background-image:url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');"></div>
+    <div>
+      <p>Pratiquant ce métier depuis <b>2007</b>, ABS-Cover existe depuis <b>2013</b>.</p>
+      <p>Passionné depuis toujours par l'automobile et soucieux de la qualité, <b>Romain</b> est exigeant envers son travail, et propose un service de qualité supplémentaire.</p>
+      <p>Toujours à la recherche de la perfection, il obtient ses certifications de poseur agréé — certifié chez Hexis pour le BodyFence en 2022 et Flexishield en 2023.</p>
+      <p>Nous proposons à nos clients un suivi personnalisé. Nos prestations conviennent autant aux particuliers qu'aux entreprises (concessionnaires, usines, vitrines magasins...).</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="head-row"><div style="display:flex; align-items:baseline;"><span class="step-tag">05</span><div><span class="kicker">Nous trouver</span><h2>Contact</h2></div></div></div>
+  <div class="contact-wrap">
+    <div>
+      <div class="contact-block">
+        <h3>Adresse</h3>
+        <p>1401 Bis route de Bayonne<br>40230 Benesse-Maremne</p>
+        <p style="margin-top:8px;"><a href="https://www.google.com/maps/search/?api=1&query=1401+Bis+route+de+Bayonne+40230+Benesse-Maremne" target="_blank" rel="noopener noreferrer">Voir sur la carte →</a></p>
+        <p style="margin-top:10px; color:var(--accent-text); font-family:'JetBrains Mono',monospace; font-size:11px;">Nouvelle adresse à partir du 1er septembre</p>
+      </div>
+      <div class="contact-block">
+        <h3>Téléphone</h3>
+        <a href="tel:0631812421">06 31 81 24 21</a>
+        <p style="margin-top:8px;">Préférez un appel téléphonique au formulaire pour les demandes de tarifs.</p>
+      </div>
+      <div class="contact-block">
+        <h3>Horaires</h3>
+        <p>Lundi – Vendredi : 8h00 – 14h00<br>Après-midi uniquement sur rendez-vous</p>
+      </div>
+      <div class="contact-block">
+        <h3>Réseaux</h3>
+        <p><a href="https://www.facebook.com/Ab.solution6440" target="_blank" rel="noopener noreferrer">Facebook</a> · <a href="https://www.instagram.com/ab.solution6440/" target="_blank" rel="noopener noreferrer">Instagram</a> — @ab.solution6440</p>
+      </div>
+    </div>
+    <form id="contactForm" novalidate>
+      <div class="field" id="field-nom">
+        <label for="inputNom">Nom</label>
+        <input type="text" id="inputNom" name="nom" autocomplete="name">
+        <div class="field-error">Merci d'indiquer votre nom.</div>
+      </div>
+      <div class="field" id="field-email">
+        <label for="inputEmail">Email</label>
+        <input type="email" id="inputEmail" name="email" autocomplete="email">
+        <div class="field-error" id="errorEmail">Merci d'indiquer une adresse email valide.</div>
+      </div>
+      <div class="field" id="field-sujet">
+        <label for="inputSujet">Sujet</label>
+        <select id="inputSujet" name="sujet"><option>Vitres teintées</option><option>Protection PPF</option><option>Covering</option><option>Impression numérique</option><option>Autre</option></select>
+      </div>
+      <div class="field" id="field-message">
+        <label for="inputMessage">Message</label>
+        <textarea id="inputMessage" name="message" placeholder="Marque, modèle, année du véhicule..."></textarea>
+        <div class="field-error">Merci de décrire brièvement votre demande.</div>
+      </div>
+      <button class="btn fill" type="submit" id="contactSubmit" style="align-self:flex-start; border:none;">Envoyer</button>
+    </form>
+    <div class="form-confirm" id="formConfirm">
+      <div class="fc-icon">✓</div>
+      <h3>Message prêt à partir</h3>
+      <p>Votre client email va s'ouvrir avec votre demande déjà rédigée — il ne vous reste qu'à cliquer sur envoyer.</p>
+      <p>Si rien ne s'ouvre automatiquement (bloqueur, pas de client mail configuré), appelez-nous directement au <a href="tel:0631812421">06 31 81 24 21</a>.</p>
+      <button class="btn" id="formConfirmReset" type="button">Envoyer un autre message</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo" style="font-size:16px;"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_100,h_111,q_85,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover" style="height:22px;">ABS<span>-</span>COVER</div>
+  <span style="display:flex; gap:14px; flex-wrap:wrap;">
+    <a href="mentions-legales.html" style="color:var(--grey); text-decoration:none;">Mentions légales &amp; CGV</a>
+    <a href="politique-de-confidentialite.html" style="color:var(--grey); text-decoration:none;">Politique de confidentialité</a>
+  </span>
+  <span>06 31 81 24 21 — BENESSE-MAREMNE (40)</span>
+</footer>
+
+<script>
+// ===== Données galerie par catégorie =====
+const galleries = {
+  covering: [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 9"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 10"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 11"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 12"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 13"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 14"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 15"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 16"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 17"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 18"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 19"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 20"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 21"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 22"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 23"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 24"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 25"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 26"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 27"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 28"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 29"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 30"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 31"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 32"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 33"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 34"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 35"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 36"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 37"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 38"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 39"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 40"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 41"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 42"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Covering — photo 43"],
+  ],
+  ppf: [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 9"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 10"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 11"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 12"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 13"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 14"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 15"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 16"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 17"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 18"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 19"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 20"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 21"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 22"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 23"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 24"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Protection PPF — photo 25"],
+  ],
+  "vitres-auto": [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées auto — photo 9"],
+  ],
+  "vitres-batiment": [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 9"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 10"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 11"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Vitres teintées bâtiment — photo 12"],
+  ],
+  impression: [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Impression numérique — photo 9"],
+  ],
+  evenements: [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 6"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 7"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 8"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 9"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 10"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 11"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 12"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 13"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 14"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 15"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 16"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 17"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 18"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 19"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 20"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 21"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 22"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 23"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 24"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 25"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 26"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Événement — photo 27"],
+  ],
+  mariage: [
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 1"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 2"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 3"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 4"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 5"],
+    ["data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "Mariage — photo 6"],
+  ],
+};
+
+// Les 5 galeries sont construites une seule fois au chargement, puis on se
+// contente de montrer/cacher la bonne au clic sur un onglet. Avant, chaque
+// clic vidait et reconstruisait entièrement la grille : les vignettes
+// "rechargeaient" et rejouaient leur animation d'entrée à chaque fois, même
+// en revenant sur un onglet déjà vu l'instant d'avant — d'où l'effet bizarre
+// remonté. Maintenant, l'animation d'entrée (gérée par le système de reveal
+// au scroll, plus bas) ne joue qu'une fois par vignette, la toute première
+// fois qu'elle devient visible.
+const galleryPanels = document.getElementById('galleryPanels');
+const galleryGridsByCat = {};
+
+function buildGalleryGrid(cat){
+  const grid = document.createElement('div');
+  grid.className = 'g-grid';
+  grid.dataset.cat = cat;
+  galleries[cat].forEach(([file, label], i) => {
+    const div = document.createElement('div');
+    div.className = 'g-item';
+    div.innerHTML = `<img src="${file}" alt="${label}" width="500" height="500"><div class="g-label">${label}</div>`;
+    div.addEventListener('click', () => openLightbox(cat, i));
+    grid.appendChild(div);
+  });
+  return grid;
+}
+
+Object.keys(galleries).forEach(cat => {
+  const grid = buildGalleryGrid(cat);
+  if(cat !== 'covering') grid.style.display = 'none';
+  galleryPanels.appendChild(grid);
+  galleryGridsByCat[cat] = grid;
+});
+
+function showGalleryCat(cat){
+  Object.entries(galleryGridsByCat).forEach(([c, grid]) => {
+    grid.style.display = c === cat ? '' : 'none';
+  });
+}
+
+// ===== Lightbox photo (clic sur une vignette = agrandissement) =====
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxCaption = document.getElementById('lightboxCaption');
+let lbCat = null, lbIndex = 0;
+
+function openLightbox(cat, index){
+  lbCat = cat; lbIndex = index;
+  showLightboxImage();
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function showLightboxImage(){
+  const [file, label] = galleries[lbCat][lbIndex];
+  lightboxImg.src = file;
+  lightboxImg.alt = label;
+  lightboxCaption.textContent = `${label} — ${lbIndex + 1}/${galleries[lbCat].length}`;
+}
+function lbNext(){ lbIndex = (lbIndex + 1) % galleries[lbCat].length; showLightboxImage(); }
+function lbPrev(){ lbIndex = (lbIndex - 1 + galleries[lbCat].length) % galleries[lbCat].length; showLightboxImage(); }
+
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.getElementById('lightboxNext').addEventListener('click', lbNext);
+document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
+lightbox.addEventListener('click', e => { if(e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => {
+  if(!lightbox.classList.contains('open')) return;
+  if(e.key === 'Escape') closeLightbox();
+  if(e.key === 'ArrowRight') lbNext();
+  if(e.key === 'ArrowLeft') lbPrev();
+});
+
+document.getElementById('gtabs').addEventListener('click', e => {
+  const btn = e.target.closest('.gtab');
+  if(!btn || btn.classList.contains('active')) return;
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  showGalleryCat(btn.dataset.cat);
+});
+
+// ===== Navigation mobile (hamburger + panneau) =====
+const burgerBtn = document.getElementById('burgerBtn');
+const mobilePanel = document.getElementById('mobilePanel');
+const mobileClose = document.getElementById('mobileClose');
+
+function openPanel(){
+  mobilePanel.classList.add('open');
+  burgerBtn.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+}
+function closePanel(){
+  mobilePanel.classList.remove('open');
+  burgerBtn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+burgerBtn.addEventListener('click', openPanel);
+mobileClose.addEventListener('click', closePanel);
+mobilePanel.querySelectorAll('a').forEach(a => a.addEventListener('click', closePanel));
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
+
+// ===== Clic sur le rail de route (desktop) et la barre d'onglets (mobile) =====
+// Scroll fluide avec notre propre courbe d'easing : le scroll natif du
+// navigateur (scrollIntoView) a une durée et une accélération qui varient
+// d'un moteur à l'autre (Chrome, Safari, Firefox ne rendent pas la même
+// sensation) — ici la durée et la courbe sont fixes, cohérentes partout.
+function easeOutExpo(t){ return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+function smoothScrollTo(targetY, duration){
+  const startY = window.scrollY;
+  const diff = targetY - startY;
+  if(Math.abs(diff) < 1) return;
+  const startTime = performance.now();
+  function step(now){
+    const t = Math.min((now - startTime) / duration, 1);
+    // behavior:'instant' court-circuite le scroll-behavior:smooth du CSS —
+    // sinon le navigateur ré-adoucit chaque appel de cette boucle, ce qui
+    // produit un mouvement mou et imprécis au lieu de suivre notre courbe.
+    window.scrollTo({top: startY + diff * easeOutExpo(t), left: 0, behavior: 'instant'});
+    if(t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    el.scrollIntoView({block:'start'});
+    return;
+  }
+  const headerOffset = 64; // doit rester aligné avec scroll-margin-top des sections
+  const targetY = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+  smoothScrollTo(targetY, 900);
+}
+document.querySelectorAll('.route-stop').forEach(btn => {
+  btn.addEventListener('click', () => scrollToSection(btn.dataset.target));
+});
+document.querySelectorAll('.tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => scrollToSection(btn.dataset.target));
+});
+document.getElementById('scrollHint').addEventListener('click', () => scrollToSection('services'));
+
+// ===== Cartes de service cliquables → galerie filtrée ou section dédiée =====
+function goToGalleryTab(cat){
+  scrollToSection('realisations');
+  const tabBtn = document.querySelector(`.gtab[data-cat="${cat}"]`);
+  if(tabBtn){
+    document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+    tabBtn.classList.add('active');
+    showGalleryCat(cat);
+  }
+}
+document.querySelectorAll('.serv-card[data-goto]').forEach(card => {
+  card.addEventListener('click', () => goToGalleryTab(card.dataset.goto));
+});
+document.querySelectorAll('.serv-card[data-goto-section]').forEach(card => {
+  card.addEventListener('click', () => scrollToSection(card.dataset.gotoSection));
+});
+
+// ===== Titres de section découpés mot par mot pour la révélation en cascade =====
+function splitHeadingWords(h2){
+  const words = h2.textContent.trim().split(/\s+/);
+  h2.innerHTML = words
+    .map((w, i) => `<span class="word"><span style="transition-delay:${(i * 0.05).toFixed(2)}s">${w}</span></span>`)
+    .join(' ');
+}
+document.querySelectorAll('.head-row h2').forEach(splitHeadingWords);
+
+// ===== Reveal au scroll =====
+document.querySelectorAll('.head-row, .serv-card, .g-item, .stat, .histoire-photo, .contact-block, form, .wed-card, .extra-item')
+  .forEach(el => el.classList.add('reveal'));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){ entry.target.classList.add('in-view'); io.unobserve(entry.target); }
+  });
+}, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ===== Nav + rail "route" + barre d'onglets actifs (IntersectionObserver, pas de scroll listener lourd) =====
+const navLinks = document.querySelectorAll('nav a[data-nav]');
+const railStops = document.querySelectorAll('.route-stop');
+const tabbarBtns = document.querySelectorAll('.tabbar button[data-target]');
+const mobileNavLinks = document.querySelectorAll('a[data-nav-mobile]');
+
+// Les liens du header et du panneau mobile passent par le même scroll
+// fluide personnalisé que le rail de route et la tabbar, au lieu de laisser
+// le navigateur gérer le saut d'ancre à sa façon (durée/courbe différentes
+// d'un moteur à l'autre) — un seul mécanisme de scroll, cohérent partout.
+navLinks.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  scrollToSection(a.dataset.nav);
+}));
+mobileNavLinks.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  scrollToSection(a.dataset.navMobile);
+}));
+
+const sectionIds = ['services', 'realisations', 'mariage', 'histoire', 'contact'];
+const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      const id = entry.target.id;
+      navLinks.forEach(l => l.classList.toggle('active', l.dataset.nav === id));
+      railStops.forEach(s => s.classList.toggle('active', s.dataset.target === id));
+      tabbarBtns.forEach(t => t.classList.toggle('active', t.dataset.target === id));
+      mobileNavLinks.forEach(l => l.classList.toggle('active', l.dataset.navMobile === id));
+    }
+  });
+}, {rootMargin:'-45% 0px -50% 0px'});
+sections.forEach(s => navObserver.observe(s));
+
+// ===== Barre de progression du rail (un seul listener, léger, rAF-batched) =====
+const routeFill = document.getElementById('routeFill');
+let ticking = false;
+// scrollHeight force un recalcul de mise en page à chaque lecture : on le met
+// en cache et on ne le rafraîchit qu'au chargement/redimensionnement, jamais
+// à chaque frame de scroll (sinon on entre en concurrence avec les animations
+// de reveal et les IntersectionObserver qui tournent au même moment).
+let cachedScrollable = 1;
+function refreshScrollable(){
+  cachedScrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+}
+function updateProgress(){
+  const pct = Math.min(Math.max(window.scrollY / cachedScrollable, 0), 1) * 100;
+  routeFill.style.height = pct + '%';
+  ticking = false;
+}
+window.addEventListener('scroll', () => {
+  if(!ticking){ requestAnimationFrame(updateProgress); ticking = true; }
+}, {passive:true});
+window.addEventListener('resize', refreshScrollable);
+window.addEventListener('load', refreshScrollable);
+refreshScrollable();
+updateProgress();
+
+// ===== FORMULAIRE — validation + envoi réel (mailto) + confirmation =====
+// Adresse qui reçoit les demandes. À CONFIRMER / REMPLACER si ce n'est pas la bonne.
+const CONTACT_EMAIL = 'contact@abs-cover.com';
+
+const contactForm = document.getElementById('contactForm');
+const formConfirm = document.getElementById('formConfirm');
+const formConfirmReset = document.getElementById('formConfirmReset');
+const contactSubmit = document.getElementById('contactSubmit');
+
+function setFieldError(fieldId, hasError){
+  const field = document.getElementById(fieldId);
+  if(field) field.classList.toggle('has-error', hasError);
+}
+
+function isValidEmail(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+contactForm.addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const nom = document.getElementById('inputNom').value.trim();
+  const email = document.getElementById('inputEmail').value.trim();
+  const sujet = document.getElementById('inputSujet').value;
+  const message = document.getElementById('inputMessage').value.trim();
+
+  const nomValid = nom.length > 0;
+  const emailValid = isValidEmail(email);
+  const messageValid = message.length > 0;
+
+  setFieldError('field-nom', !nomValid);
+  setFieldError('field-email', !emailValid);
+  setFieldError('field-message', !messageValid);
+
+  if(!nomValid || !emailValid || !messageValid){
+    const firstInvalid = contactForm.querySelector('.has-error input, .has-error textarea');
+    if(firstInvalid) firstInvalid.focus();
+    return;
+  }
+
+  // État de chargement : évite le double envoi et donne un retour immédiat,
+  // le temps que le système ouvre l'application mail.
+  contactSubmit.disabled = true;
+  contactSubmit.textContent = 'Envoi...';
+
+  const subjectLine = encodeURIComponent(`Demande de devis — ${sujet} — ${nom}`);
+  const bodyLine = encodeURIComponent(
+    `Nom : ${nom}\nEmail : ${email}\nSujet : ${sujet}\n\nMessage :\n${message}`
+  );
+  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subjectLine}&body=${bodyLine}`;
+
+  setTimeout(() => {
+    contactForm.style.display = 'none';
+    formConfirm.classList.add('show');
+    contactSubmit.disabled = false;
+    contactSubmit.textContent = 'Envoyer';
+  }, 500);
+});
+
+formConfirmReset.addEventListener('click', () => {
+  contactForm.reset();
+  ['field-nom', 'field-email', 'field-message'].forEach(id => setFieldError(id, false));
+  formConfirm.classList.remove('show');
+  contactForm.style.display = '';
+});
+
+// ===== BANDEAU COOKIES — avec refus explicite, mémorisé localement =====
+(function(){
+  const banner = document.getElementById('cookieBanner');
+  const accept = document.getElementById('cookieAccept');
+  const refuse = document.getElementById('cookieRefuse');
+  let choice = null;
+  try { choice = localStorage.getItem('abscover_cookie_choice'); } catch(e){}
+
+  if(!choice){
+    setTimeout(() => banner.classList.add('show'), 800);
+  }
+  function saveChoice(value){
+    try { localStorage.setItem('abscover_cookie_choice', value); } catch(e){}
+    banner.classList.remove('show');
+    if(value === 'accepted') loadAnalyticsIfConsented();
+  }
+  accept.addEventListener('click', () => saveChoice('accepted'));
+  refuse.addEventListener('click', () => saveChoice('refused'));
+
+  // Si le choix a déjà été fait lors d'une visite précédente, on respecte
+  // immédiatement le consentement (pas besoin de réafficher le bandeau).
+  if(choice === 'accepted') loadAnalyticsIfConsented();
+})();
+
+// ===== MESURE D'AUDIENCE — désactivée tant qu'aucun outil n'est configuré =====
+// À FAIRE : créer un compte (Plausible, Fathom ou Matomo — respectueux de la vie
+// privée, souvent dispensés de bandeau cookie ; sinon Google Analytics 4, qui
+// lui exige le consentement ci-dessus) puis décommenter et compléter le script
+// correspondant. Ne charger l'outil que via cette fonction : elle garantit que
+// rien n'est déposé tant que le visiteur n'a pas cliqué sur "Accepter".
+function loadAnalyticsIfConsented(){
+  // Exemple avec Plausible (à adapter avec le vrai nom de domaine) :
+  // const s = document.createElement('script');
+  // s.defer = true;
+  // s.dataset.domain = 'abs-cover.com';
+  // s.src = 'https://plausible.io/js/script.js';
+  // document.head.appendChild(s);
+}
+
+// ===== Respect du confort de l'utilisateur : désactive les effets "gadget" si demandé =====
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ===== PRÉCHARGEUR — fausse progression fluide puis reveal du site =====
+(function(){
+  const preloader = document.getElementById('preloader');
+  const bar = document.getElementById('preloaderBar');
+  const pct = document.getElementById('preloaderPct');
+  if(reduceMotion){
+    preloader.remove();
+    document.body.classList.remove('loading');
+    return;
+  }
+  let progress = 0;
+  const timer = setInterval(() => {
+    progress += Math.random() * 22;
+    if(progress >= 100){
+      progress = 100;
+      clearInterval(timer);
+      setTimeout(() => {
+        preloader.classList.add('hide');
+        document.body.classList.remove('loading');
+        setTimeout(() => preloader.remove(), 700);
+      }, 200);
+    }
+    bar.style.width = progress + '%';
+    pct.textContent = Math.round(progress) + '%';
+  }, 130);
+})();
+
+// ===== CURSEUR PERSONNALISÉ — point qui suit la souris, anneau qui rattrape en douceur =====
+// Deux optimisations volontaires par rapport à une version naïve :
+// 1. Déplacement par `transform` (translate3d) plutôt que `left`/`top` — le
+//    transform est géré par le compositeur/GPU et ne force jamais de recalcul
+//    de mise en page, contrairement à left/top qui coûtent un reflow à
+//    chaque frame.
+// 2. La boucle d'interpolation de l'anneau s'arrête d'elle-même dès qu'elle a
+//    rattrapé la souris, au lieu de tourner indéfiniment (même souris
+//    immobile) et de consommer du temps CPU en continu, y compris pendant un
+//    scroll ou une autre animation.
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  const cursorDot = document.getElementById('cursorDot');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+  let ringX = mouseX, ringY = mouseY;
+  let ringLoopRunning = false;
+
+  window.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    cursorDot.style.opacity = '1';
+    cursorRing.style.opacity = '1';
+    if(!ringLoopRunning){ ringLoopRunning = true; requestAnimationFrame(ringLoop); }
+  }, {passive:true});
+  document.addEventListener('mouseleave', () => {
+    cursorDot.style.opacity = '0';
+    cursorRing.style.opacity = '0';
+  });
+
+  function ringLoop(){
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+    const settled = Math.abs(mouseX - ringX) < 0.05 && Math.abs(mouseY - ringY) < 0.05;
+    if(settled){ ringLoopRunning = false; return; }
+    requestAnimationFrame(ringLoop);
+  }
+
+  document.querySelectorAll('a, button, .serv-card, .g-item, .route-stop, .gtab').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+  });
+}
+
+// ===== TILT 3D — les cartes de service basculent légèrement vers le curseur =====
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.serv-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 6;
+      const rotateX = -((y - rect.height / 2) / (rect.height / 2)) * 6;
+      card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+}
+
+// ===== BOUTONS MAGNÉTIQUES — les CTA suivent légèrement le curseur =====
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.btn').forEach(btn => {
+    const strength = 0.35, max = 10;
+    // Pendant le suivi : transform sans transition, collé au curseur à chaque
+    // frame (sinon la transition CSS "all" du bouton se relance à chaque
+    // mousemove et rentre en concurrence avec elle-même — source de saccades
+    // mesurées en profilage). Le rebond élastique n'a lieu qu'au relâchement.
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const dx = Math.max(-max, Math.min(max, (e.clientX - (rect.left + rect.width / 2)) * strength));
+      const dy = Math.max(-max, Math.min(max, (e.clientY - (rect.top + rect.height / 2)) * strength));
+      btn.style.transition = 'transform 0s';
+      btn.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transition = 'transform .3s cubic-bezier(.16,.8,.3,1)';
+      btn.style.transform = '';
+    });
+  });
+}
+
+// ===== COMPTEURS ANIMÉS — les chiffres clés montent en scrollant jusqu'à eux =====
+if(!reduceMotion){
+  function animateCount(el){
+    const match = el.textContent.trim().match(/^(\d+)(.*)$/);
+    if(!match) return;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2];
+    const duration = 1300;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        animateCount(entry.target);
+        statObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.5});
+  document.querySelectorAll('.stat .num').forEach(el => statObserver.observe(el));
+}
+</script>
+
+</body>
+</html>
